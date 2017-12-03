@@ -60,7 +60,7 @@
     }
 
     AddFolder([IO.DirectoryInfo] $path) {
-	    
+        
         if (!$path.Exists) {
         
             $path = [IO.DirectoryInfo](Join-Path (Get-Location) $path.Name)
@@ -73,13 +73,13 @@
         
         Write-Progress -Activity "Adding or updating files" -Status "Collecting files..."
 
-	    $files = dir $($path.FullName) -File -Recurse -Force -Exclude $this.ExcludedFilePatterns -ErrorAction SilentlyContinue
+        $files = dir $path.FullName -File -Recurse -Force -Exclude $this.ExcludedFilePatterns -ErrorAction SilentlyContinue
 
         if ($this.ExcludedFolders) {
         
             $files = $files | ?{ $file = $_; ($this.ExcludedFolders | ?{ $file.FullName.StartsWith($_) }) -eq $null }
         }
-	
+    
         Write-Progress -Activity "Adding or updating files" -Status "Detecting modified files..."
 
         $files | ?{ $_.LastWriteTime -gt $this.LastUpdated } | %{ $this.Remove($_) }
@@ -95,15 +95,15 @@
 
         for($i = 0; $i -lt $itemsToUpdate.Count; $i++ ) {
         
-		    $currentFile = $itemsToUpdate[$i].('File')
+            $currentFile = $itemsToUpdate[$i].('File')
             $currentOperation = $itemsToUpdate[$i].('Operation')
 
             if ($sw.ElapsedMilliseconds -ge 500) 
             {
                 $activity = if ($currentOperation -eq "Add") { "Calculating Hash..." } else { "Removing from FileHashTable..." }		        
                 Write-Progress -Activity $activity -Status "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" -PercentComple ($i / $itemsToUpdate.Count * 100)
-		        $sw.Restart()
-	        }
+                $sw.Restart()
+            }
 
             if ($currentOperation -eq "Add") 
             {
@@ -138,9 +138,9 @@
         if (!$this.SavedAsFile) {
             Throw "Missing filename for FileHashLookup"
         } 
-	
+    
         New-Item -ItemType File $this.SavedAsFile -Force
-	    Export-Clixml -Path $this.SavedAsFile -InputObject $this        
+        Export-Clixml -Path $this.SavedAsFile -InputObject $this        
     }
     
     static [FileHashLookup] Load([IO.FileInfo] $fileToLoad) {
@@ -177,14 +177,14 @@
 
         for($i = 0; $i -lt $other.File.Count; $i++ )
         {
-		    $currentFile = $files[$i]
+            $currentFile = $files[$i]
             $currentHash = $other.File.($currentFile)
 
             if ($sw.ElapsedMilliseconds -ge 500) 
             {
                 Write-Progress -Activity "Adding..." -Status "($i of $($other.File.Count)) $currentFile" -PercentComple ($i / $other.File.Count * 100)
-		        $sw.Restart()
-	        }
+                $sw.Restart()
+            }
             
             $this.Add($currentFile, $currentHash)		
         }
@@ -200,13 +200,13 @@
 
         for($i = 0; $i -lt $filesToRemove.Count; $i++ ) {
         
-		    $currentFile = $filesToRemove[$i]
+            $currentFile = $filesToRemove[$i]
 
             if ($sw.ElapsedMilliseconds -ge 500) 
             {
                 Write-Progress -Activity "Removing from FileHashTable..." -Status "($i of $($filesToRemove.Count)) $($currentFile.FullName)" -PercentComple ($i / $filesToRemove.Count * 100)
-		        $sw.Restart()
-	        }
+                $sw.Restart()
+            }
 
             $this.Remove($currentFile)
         }
@@ -222,13 +222,13 @@
 
         for($i = 0; $i -lt $filesToRemove.Count; $i++ ) {
         
-		    $currentFile = $filesToRemove[$i]
+            $currentFile = $filesToRemove[$i]
 
             if ($sw.ElapsedMilliseconds -ge 500) 
             {
                 Write-Progress -Activity "Removing from FileHashTable..." -Status "($i of $($filesToRemove.Count)) $($currentFile.FullName)" -PercentComple ($i / $filesToRemove.Count * 100)
-		        $sw.Restart()
-	        }
+                $sw.Restart()
+            }
 
             $this.Remove($currentFile)
         }
@@ -241,18 +241,18 @@
 
     hidden Add ([IO.FileInfo] $file, [string] $hash) {
 
-		$fileName = $file.FullName
+        $fileName = $file.FullName
 
         $fileHash = if (!$hash) { (Get-FileHash -LiteralPath $fileName -Algorithm MD5).Hash } else { $hash }
 
-		if (($this.Hash.ContainsKey($fileHash)) -and (!$this.Hash.($fileHash).Contains($fileName))) {
-			$this.Hash.($fileHash).Add($fileName)
-		}
-		else {
+        if (($this.Hash.ContainsKey($fileHash)) -and (!$this.Hash.($fileHash).Contains($fileName))) {
+            $this.Hash.($fileHash).Add($fileName)
+        }
+        else {
             $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
-		}
-		
-		$this.File.($fileName) = $fileHash
+        }
+        
+        $this.File.($fileName) = $fileHash
     }
 
     hidden Remove ([IO.FileInfo] $file) {

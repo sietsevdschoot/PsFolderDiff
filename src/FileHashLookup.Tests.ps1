@@ -11,25 +11,25 @@ Describe "FileHashLookup" {
         $actual.File | Should -Not -BeNullOrEmpty
         $actual.Hash | Should -Not -BeNullOrEmpty
     }
-    	
-	It "Creates a lookup of all files" {
-		
-		$actual = GetFileHashTable "$TestDrive\MyFolder"
-				
+        
+    It "Creates a lookup of all files" {
+        
+        $actual = GetFileHashTable "$TestDrive\MyFolder"
+                
         $actual.File.Count | Should -Be 3
         $actual.Hash.Count | Should -Be 3
-	}
-	
-	It "Creates a hash and file lookup" {
+    }
     
-		$myFile = gi "$TestDrive\MyFolder\1.txt"
-		$myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
-				
-		$actual = GetFileHashTable "$TestDrive\MyFolder"
+    It "Creates a hash and file lookup" {
     
-		$actual.File.($myFile.FullName) | Should -Be $myHash
-		$actual.Hash.($myHash) | Should -Be $myFile.FullName
-	}
+        $myFile = gi "$TestDrive\MyFolder\1.txt"
+        $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
+                
+        $actual = GetFileHashTable "$TestDrive\MyFolder"
+    
+        $actual.File.($myFile.FullName) | Should -Be $myHash
+        $actual.Hash.($myHash) | Should -Be $myFile.FullName
+    }
     
     It "Exposes the paths which were used" {
         
@@ -54,30 +54,30 @@ Describe "FileHashLookup" {
         $actual | Should -Be $expectedFileName
     }
     
-	It "Creates a file containing the HashTable" { 
+    It "Creates a file containing the HashTable" { 
     
-		$fileHashLookup = GetFileHashTable "$TestDrive\MyFolder"
+        $fileHashLookup = GetFileHashTable "$TestDrive\MyFolder"
 
         $filename =  ((gi "$TestDrive\MyFolder").FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
 
         $actual = Import-Clixml "$($Testdrive)\$filename"
-		
-		$actual.File | Should -Not -BeNullOrEmpty	
-		$actual.Hash | Should -Not -BeNullOrEmpty
-	}
-	
-    It "Creates an arrayList for files which share the same hash" {
-	
-	    1..4 | %{ New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
+        
+        $actual.File | Should -Not -BeNullOrEmpty	
+        $actual.Hash | Should -Not -BeNullOrEmpty
+    }
     
-	    $myHash = (Get-FileHash -LiteralPath (gi "$TestDrive\MyFolder\IdenticalHash1.txt").FullName -Algorithm MD5).Hash
-				
-	    $actual = GetFileHashTable "$TestDrive\MyFolder"
-			
-	    (,$actual.Hash.($myHash)) | Should -BeOfType [Collections.ArrayList]
-	    $actual.Hash.($myHash).Count | Should -Be 4
-		
-	    $actual.File.Count | Should -Be 7
+    It "Creates an arrayList for files which share the same hash" {
+    
+        1..4 | %{ New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
+    
+        $myHash = (Get-FileHash -LiteralPath (gi "$TestDrive\MyFolder\IdenticalHash1.txt").FullName -Algorithm MD5).Hash
+                
+        $actual = GetFileHashTable "$TestDrive\MyFolder"
+            
+        (,$actual.Hash.($myHash)) | Should -BeOfType [Collections.ArrayList]
+        $actual.Hash.($myHash).Count | Should -Be 4
+        
+        $actual.File.Count | Should -Be 7
     }
     
     It "will remove entry and ArrayList if no items left" {
@@ -95,11 +95,11 @@ Describe "FileHashLookup" {
     
     It "will remove entry from arrayList if file with same hash exists" {
     
-		1..4 | %{ New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
+        1..4 | %{ New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
     
-		$myFile = gi "$TestDrive\MyFolder\IdenticalHash1.txt"
+        $myFile = gi "$TestDrive\MyFolder\IdenticalHash1.txt"
         $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
-		
+        
         $actual = GetFileHashTable "$TestDrive\MyFolder"
     
         $actual.Remove($myFile)
