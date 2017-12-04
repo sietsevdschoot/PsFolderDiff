@@ -3,7 +3,6 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileHashLookup" {
 
-
     It "Creates 2-way HashTable" {
         
         $actual = GetFileHashTable "$TestDrive\MyFolder"
