@@ -1,7 +1,7 @@
 ﻿[CmdletBinding()]
 param ()
 
-$modules = dir $PSScriptRoot\*.psm1 -Recurse -Exclude "Pester.psm1" | %{ $_.FullName -replace $_.Extension }
+$modules = dir $PSScriptRoot\*.psm1 -Recurse -Exclude @("Pester.psm1","FileHashLookup.Impl.psm1") | %{ $_.FullName -replace $_.Extension }
 
 foreach ($module in $modules) {
 
