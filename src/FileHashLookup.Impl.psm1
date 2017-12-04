@@ -212,7 +212,7 @@ Class FileHashLookup
         }
     }
 
-    ExludeFolder ([IO.DirectoryInfo] $folder) {
+    ExcludeFolder ([IO.DirectoryInfo] $folder) {
     
         $this.ExcludedFolders.Add($folder.FullName) > $null
 

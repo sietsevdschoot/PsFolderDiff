@@ -297,7 +297,7 @@ Describe "FileHashLookup" {
         New-Item -ItemType File "$TestDrive\MyFolder1\SubFolder\2.txt" -Force
         New-Item -ItemType File "$TestDrive\MyFolder1\SubFolder\Sub\3.txt" -Force
 
-        $actual.ExludeFolder("$TestDrive\MyFolder1\SubFolder\")
+        $actual.ExcludeFolder("$TestDrive\MyFolder1\SubFolder\")
 
         $actual.AddFolder("$TestDrive\MyFolder1\")
 
@@ -312,7 +312,7 @@ Describe "FileHashLookup" {
     
         $actual = GetFileHashTable $TestDrive\MyFolder1
 
-        $actual.ExludeFolder("$TestDrive\MyFolder1\SubFolder\")
+        $actual.ExcludeFolder("$TestDrive\MyFolder1\SubFolder\")
 
         $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
     }
