@@ -1,4 +1,4 @@
-﻿using module '.\FileHashLookup.psm1'
+﻿using module '.\FileHashLookup.Impl.psm1'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileHashLookup" {
