@@ -3,6 +3,26 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileHashLookup" {
 
+    BeforeEach {
+    
+        & "$here\Reload.ps1"
+        
+        $originalLocation = Get-Location 
+        Set-Location $TestDrive
+    
+        1..3 | %{ New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
+    }
+
+    AfterEach {
+        
+        & "$here\Reload.ps1" -unload
+        
+        Set-Location $originalLocation
+    
+        dir $TestDrive -Directory -Recurse | del -Force -Recurse
+        dir $TestDrive -file -Recurse | del -Force
+    }    
+    
     It "Creates 2-way HashTable" {
         
         $actual = GetFileHashTable "$TestDrive\MyFolder"
@@ -358,24 +378,5 @@ Describe "FileHashLookup" {
         $actual = GetFileHashTable .\SubFolder
 
         ($actual.GetFiles()).Count | Should -Be 4
-    }
-
-    BeforeEach {
-    
-        & "$here\Reload.ps1"
-        
-        $originalLocation = Get-Location 
-        Set-Location $TestDrive
-    
-        1..3 | %{ New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
-    }
-
-    AfterEach {
-        
-        & "$here\Reload.ps1" -unload
-        
-        Set-Location $originalLocation
-    
-        dir $TestDrive -file -Recurse | del -Force
     }
 }
