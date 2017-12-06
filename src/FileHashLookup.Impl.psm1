@@ -243,16 +243,19 @@ Class FileHashLookup
 
         $fileName = $file.FullName
 
-        $fileHash = if (!$hash) { (Get-FileHash -LiteralPath $fileName -Algorithm MD5).Hash } else { $hash }
+        $fileHash = if (!$hash) { (Get-FileHash -LiteralPath $fileName -Algorithm MD5 -ErrorAction Continue).Hash } else { $hash }
 
-        if (($this.Hash.ContainsKey($fileHash)) -and (!$this.Hash.($fileHash).Contains($fileName))) {
-            $this.Hash.($fileHash).Add($fileName)
+        if ($fileHash) {
+
+            if (($this.Hash.ContainsKey($fileHash)) -and (!$this.Hash.($fileHash).Contains($fileName))) {
+                $this.Hash.($fileHash).Add($fileName)
+            }
+            else {
+                $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
+            }
+            
+            $this.File.($fileName) = $fileHash
         }
-        else {
-            $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
-        }
-        
-        $this.File.($fileName) = $fileHash
     }
 
     hidden Remove ([IO.FileInfo] $file) {
