@@ -3,6 +3,24 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileUtils" {
 
+    BeforeEach {
+
+        & "$here\Reload.ps1"
+    
+        $originalLocation = Get-Location 
+        Set-Location $TestDrive
+    }
+    
+    AfterEach {
+        
+        & "$here\Reload.ps1" -unload
+        
+        Set-Location $originalLocation
+    
+        dir $TestDrive -Directory | del -Force -Recurse
+        dir $TestDrive -File | del -Force
+    }
+    
     It "MoveFolder-KeepExisting: Copies folder to targetFolder, removes source folders" {
     
         New-Item -ItemType File "$Testdrive\backup\MyDocuments2015\Administration\Invoices\MyInvoice.doc" -Force
@@ -140,27 +158,6 @@ Describe "FileUtils" {
 
         Remove-EmptyFolders $TestDrive\Temp\
 
-        (dir $TestDrive\Temp\ -Directory -Recurse).Length | Should -Be 2    }
-
-    BeforeEach {
-    
-        & "$here\Reload.ps1"
-    
-        dir $TestDrive -Directory | del -Force -Recurse
-        dir $TestDrive -File | del -Force
-
-        $originalLocation = Get-Location 
-        Set-Location $TestDrive
+        (dir $TestDrive\Temp\ -Directory -Recurse).Length | Should -Be 2
     }
-   
-    AfterEach {
-        
-        & "$here\Reload.ps1" -unload
-        
-        Set-Location $originalLocation
-    
-        dir $TestDrive -Directory | del -Force -Recurse
-        dir $TestDrive -File | del -Force
-    }
-
 }
