@@ -327,15 +327,29 @@ class FileHashLookup
 
             Throw "$newFolder does not exist."
         }
+        
+        $filesToUpdate = ($this.GetFiles() | ?{ $_.FullName.StartsWith($originalFolder.FullName)})
 
-        foreach ($file in ($this.GetFiles() | ?{ $_.FullName.StartsWith($originalFolder.FullName)})) {
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+
+        for($i = 0; $i -lt $filesToUpdate.Count; $i++) {
             
-            $fileHash = $this.File.($file.FullName)
-            $newFileName = Join-Path $newFolder.FullName ($file -replace [Regex]::Escape($originalFolder.FullName))
+            $originalFile = $filesToUpdate[$i]
+            $originalFileHash = $this.File.($originalFile.FullName)
+            $newFileName = Join-Path $newFolder.FullName ($originalFile -replace [Regex]::Escape($originalFolder.FullName))
             
-            $this.Remove($file)
-            $this.Add($newFileName, $fileHash)
+            if ($sw.Elapsed.TotalMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Updating folder location" -Status ("($i of $($filesToUpdate.Count)) Processing {0}" -f $originalFile) -PercentComplete ($i / $filesToUpdate.Count * 100)
+                $sw.Restart()
+            }
+
+            $this.Remove($originalFile)
+            $this.Add($newFileName, $originalFileHash)
         }
+
+        $this.Paths.Remove($originalFolder.FullName) > $null
+        $this.Paths.Add($newFolder.FullName) > $null
     }
 
     [string] ToString() 

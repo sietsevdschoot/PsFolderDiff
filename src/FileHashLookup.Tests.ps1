@@ -422,5 +422,7 @@ Describe "FileHashLookup" {
         $actual.GetFiles() | Should -Be $expected
         
         ($actual.Hash.Values | %{ $_ }) | Sort | Should -Be $expected
+
+        $actual.Paths | Sort | Should -be @("$TestDrive\Folder2","$TestDrive\NewFolder")
     }
 }
