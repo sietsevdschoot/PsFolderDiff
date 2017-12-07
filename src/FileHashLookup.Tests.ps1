@@ -1,4 +1,4 @@
-﻿using module '.\FileHashLookup.Impl.psm1'
+﻿#using module '.\FileHashLookup.Impl.psm1'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileHashLookup" {
@@ -131,7 +131,7 @@ Describe "FileHashLookup" {
     
         New-Item -ItemType Directory "$TestDrive\MyFolder2" -Force 
     
-        $actual = (GetFileHashTable)
+        $actual = GetFileHashTable
     
         $actual.AddFolder("$TestDrive\MyFolder2")
     
@@ -140,11 +140,11 @@ Describe "FileHashLookup" {
 
     It "When Save is called without filename, uses last known filename" {
     
-        $myHash = (GetFileHashTable)
+        $actual = GetFileHashTable
 
-        $myHash.Save("$TestDrive\MyFolder\test1.xml")
+        $actual.Save("$TestDrive\MyFolder\test1.xml")
 
-        { $myHash.Save() } | Should -Not -Throw 
+        { $actual.Save() } | Should -Not -Throw 
     }
 
     It "can load new instance from filename" {
@@ -153,7 +153,7 @@ Describe "FileHashLookup" {
 
         $myHash.Save("MyFolder.xml")
 
-        $actual = ([FileHashLookup]::Load("MyFolder.xml"))
+        $actual = (ImportFileHashTable "MyFolder.xml")
 
         $actual | Should -Not -Be $null
         
@@ -252,7 +252,7 @@ Describe "FileHashLookup" {
 
     It "will not contain duplicates files" {
     
-        $myHash = [FileHashLookup]::New()
+        $myHash = GetFileHashTable
 
         $file1 = gi "$TestDrive\MyFolder\1.txt"
         $file1Hash = (Get-FileHash -LiteralPath $file1 -Algorithm MD5).Hash
