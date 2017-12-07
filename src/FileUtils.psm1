@@ -7,7 +7,6 @@
         [IO.FileInfo]$file,
         [Parameter(Position=1)]
         [IO.DirectoryInfo] $destinationPath
-        
     ) 
 
     PROCESS {
@@ -184,7 +183,7 @@ Function Remove-EmptyFolders {
         $folders = dir $path.FullName -Recurse -Directory -Force | Sort -Property @{ Expression={ $_.FullName.Length }; Ascending=$true } 
         $emptyFolders = $folders | ?{ (dir $_.FullName -file -Recurse -Force) -eq $null } 
 
-        $emptyFolders | %{ if (Test-Path $_.FullName) { del $_.FullName -Force -Recurse } }
+        $emptyFolders | %{ if (Test-Path $_.FullName -ErrorAction Continue) { del $_.FullName -Force -Recurse } }
     }
 }
 
