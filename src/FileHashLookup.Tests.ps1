@@ -274,6 +274,8 @@ Describe "FileHashLookup" {
         $folder1Lookup.AddFileHashTable($folder2Lookup)
     
         $folder1Lookup.GetFiles() | %{ [int]($_.Name -replace $_.Extension) } | Should -Be @(1,2,3,4,5,6)
+
+        $folder1Lookup.Paths | Sort | Should -be @("$TestDrive\Folder1", "$TestDrive\Folder2")
     }
    
     It "GetFiles: returns all files" {

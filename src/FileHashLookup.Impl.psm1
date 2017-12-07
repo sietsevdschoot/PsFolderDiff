@@ -190,6 +190,8 @@ class FileHashLookup
             
             $this.Add($currentFile, $currentHash)		
         }
+
+        $this.Paths = [Collections.ArrayList]((($this.Paths + $other.Paths) | Get-Unique))
     } 
 
     ExcludeFilePattern ([string] $filePattern) {
