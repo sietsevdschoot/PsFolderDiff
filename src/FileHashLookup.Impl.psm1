@@ -293,7 +293,7 @@ Class FileHashLookup
             
             if ($sw.Elapsed.TotalMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Comparing hashes" -Status ("Processing {0}" -f $currentFile) -PercentComplete ($i / $other.File.Count * 100) 
+                Write-Progress -Activity "Comparing hashes" -Status ("($i of $($other.File.Count)) Processing {0}" -f $currentFile) -PercentComplete ($i / $other.File.Count * 100)
                 $sw.Restart()
             }
 
@@ -309,6 +309,15 @@ Class FileHashLookup
         }
 
         return $newLookup
+    }
+
+    ChangeFolderLocation([IO.DirectoryInfo] $originalFolder, [IO.DirectoryInfo] $newFolder) {
+
+        if ($this.Paths -inotcontains $originalFolder.FullName) {
+
+            Throw "OriginalFolder is not tracked by FileHashLookup"
+        }
+
     }
 
     [string] ToString() 
