@@ -22,7 +22,7 @@ Describe "FileHashLookup" {
         dir $TestDrive -Directory -Recurse | del -Force -Recurse
         dir $TestDrive -file -Recurse | del -Force
     }    
-    
+
     It "Creates 2-way HashTable" {
         
         $actual = GetFileHashTable "$TestDrive\MyFolder"
@@ -378,5 +378,49 @@ Describe "FileHashLookup" {
         $actual = GetFileHashTable .\SubFolder
 
         ($actual.GetFiles()).Count | Should -Be 4
+    }
+
+
+    It "ChangeFolderLocation: if original directory is unknown throws error" {
+        
+        New-Item -ItemType File "$testDrive\Folder\1.txt" -Force
+
+        $actual = GetFileHashTable "$testDrive\Folder"
+        
+        { $actual.ChangeFolderLocation("$testDrive\AnotherFolder","$testDrive\NewFolder") } | Should -Throw "* is not tracked by FileHashLookup." 
+    }    
+
+    It "ChangeFolderLocation: if newFolder doesn't exist throws exception" {
+
+        New-Item -ItemType File "$testDrive\Folder\1.txt" -Force
+
+        $actual = GetFileHashTable "$testDrive\Folder"
+        
+        { $actual.ChangeFolderLocation("$testDrive\Folder","$testDrive\NewFolder") } | Should -Throw "* does not exist." 
+    }
+
+    It "ChangeFolderLocation: Updates folder location for all tracked files in that folder" {
+    
+        1..2 | %{ New-Item -ItemType File Testdrive:\Folder1\$_.txt -Value "Apples" -Force }    
+        3..4 | %{ New-Item -ItemType File Testdrive:\Folder1\$_.txt -Value "Oranges" -Force }  
+        New-Item -ItemType File Testdrive:\Folder2\document.txt -Force    
+        New-Item -ItemType Directory Testdrive:\NewFolder -Force 
+    
+        $actual = GetFileHashTable $TestDrive\Folder1
+        $actual.AddFolder("$TestDrive\Folder2")
+    
+        $actual.ChangeFolderLocation("$Testdrive\Folder1", "$TestDrive\NewFolder")
+    
+        $expected = @(
+            "$TestDrive\Folder2\document.txt",    
+            "$TestDrive\NewFolder\1.txt",
+            "$TestDrive\NewFolder\2.txt",
+            "$TestDrive\NewFolder\3.txt",
+            "$TestDrive\NewFolder\4.txt"
+        )
+    
+        $actual.GetFiles() | Should -Be $expected
+        
+        ($actual.Hash.Values | %{ $_ }) | Sort | Should -Be $expected
     }
 }

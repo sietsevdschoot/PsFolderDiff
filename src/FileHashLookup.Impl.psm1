@@ -1,4 +1,4 @@
-Class FileHashLookup 
+class FileHashLookup 
 {
     FileHashLookup() 
     {
@@ -24,7 +24,7 @@ Class FileHashLookup
 
         $fileName = ($path.FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
         
-        $this.Save((Join-Path (Get-Location) $fileName))
+        $this.Save((GetAbsolutePath -file $fileName))
     }
 
     hidden [HashTable] $File
@@ -42,9 +42,11 @@ Class FileHashLookup
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
         
-        if ($this.Contains($file))
+        $fileForHash = GetAbsolutePath -file $file
+        
+        if ($this.Contains($fileForHash))
         {
-            $fileHash = $this.File.($file.FullName)
+            $fileHash = $this.File.($fileForHash.FullName)
         } 
         else 
         {
@@ -56,13 +58,13 @@ Class FileHashLookup
 
     [bool] Contains([IO.FileInfo] $file) {
         
-        return $this.File.ContainsKey($file.FullName)
-    }
+        return $this.File.ContainsKey((GetAbsolutePath -file $file).FullName)
+    }   
 
     AddFolder([IO.DirectoryInfo] $path) {
         
         if (!$path.Exists) {
-        
+
             $path = [IO.DirectoryInfo](Join-Path (Get-Location) $path.Name)
         }
         
@@ -313,11 +315,27 @@ Class FileHashLookup
 
     ChangeFolderLocation([IO.DirectoryInfo] $originalFolder, [IO.DirectoryInfo] $newFolder) {
 
+        $originalFolder = GetAbsolutePath -directory $originalFolder
+        $newFolder = GetAbsolutePath -directory $newFolder
+        
         if ($this.Paths -inotcontains $originalFolder.FullName) {
 
-            Throw "OriginalFolder is not tracked by FileHashLookup"
+            Throw "$originalFolder is not tracked by FileHashLookup."
         }
 
+        if (!$newFolder.Exists) {
+
+            Throw "$newFolder does not exist."
+        }
+
+        foreach ($file in ($this.GetFiles() | ?{ $_.FullName.StartsWith($originalFolder.FullName)})) {
+            
+            $fileHash = $this.File.($file.FullName)
+            $newFileName = Join-Path $newFolder.FullName ($file -replace [Regex]::Escape($originalFolder.FullName))
+            
+            $this.Remove($file)
+            $this.Add($newFileName, $fileHash)
+        }
     }
 
     [string] ToString() 
@@ -339,5 +357,22 @@ Class FileHashLookup
         $msg += "`n`nLast updated: $($this.LastUpdated.ToString("dd-MM-yyyy HH:mm:ss"))`n" 
                 
         return $msg
+    }
+}
+
+function GetAbsolutePath {
+    param (
+        [IO.DirectoryInfo] $directory,
+        [IO.FileInfo] $file
+    )
+
+    if ($directory) {
+        $absoluteFolderPath = if ([IO.Path]::IsPathRooted($directory.FullName)) { $directory.FullName } else { (Join-Path (Get-Location) ($directory.Name)) }
+        [IO.DirectoryInfo] $absoluteFolderPath
+    }
+
+    if ($file) {
+        $absoluteFilePath = if ([IO.Path]::IsPathRooted($file.FullName)) { $file.FullName } else { (Join-Path (Get-Location) ($file.Name)) }
+        [IO.FileInfo] $absoluteFilePath 
     }
 }
