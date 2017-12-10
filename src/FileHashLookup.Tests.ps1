@@ -59,7 +59,7 @@ Describe "FileHashLookup" {
     
         $actual.AddFolder("$TestDrive\MyFolder3")
     
-        $actual.Paths | Should -Be @("$TestDrive\MyFolder2", "$TestDrive\MyFolder3")
+        @($actual.Paths) | Should -Be @("$TestDrive\MyFolder2", "$TestDrive\MyFolder3")
     } 
     
     It "Uses the folder path to generate the filename" {
@@ -146,6 +146,21 @@ Describe "FileHashLookup" {
 
         { $actual.Save() } | Should -Not -Throw 
     }
+
+    It "Can save with correct filename when relative path for folder is used" {
+
+        $file = "$TestDrive\MyFolder\Backup\Sub\1.txt"
+
+        New-Item -ItemType File $file -Force
+        
+        $expectedFileName = ("$TestDrive\MyFolder\Backup" -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"
+
+        cd "$TestDrive\MyFolder"
+        
+        GetFileHashTable .\Backup 
+
+        "$TestDrive\MyFolder\$expectedFileName" | Should -Exist
+    } 
 
     It "can load new instance from filename" {
     
@@ -381,7 +396,6 @@ Describe "FileHashLookup" {
 
         ($actual.GetFiles()).Count | Should -Be 4
     }
-
 
     It "ChangeFolderLocation: if original directory is unknown throws error" {
         

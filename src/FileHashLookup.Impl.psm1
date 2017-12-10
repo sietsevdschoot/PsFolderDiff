@@ -13,18 +13,20 @@ class FileHashLookup
 
     FileHashLookup([IO.DirectoryInfo] $path)
     {
+        $absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
+        
         $this.File = @{}
         $this.Hash = @{}
-        $this.Paths = [Collections.ArrayList]@($path.FullName)
+        $this.Paths = [Collections.ArrayList]@($absolutePath.FullName)
         $this.ExcludedFilePatterns = [Collections.ArrayList]@()
         $this.ExcludedFolders = [Collections.ArrayList]@()
 
-        $this.AddFolder($path)
+        $this.AddFolder($absolutePath)
         $this.LastUpdated = Get-Date
 
-        $fileName = ($path.FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
         
-        $this.Save((GetAbsolutePath -file $fileName))
+        $this.Save((GetAbsolutePath $fileName))
     }
 
     hidden [HashTable] $File
@@ -42,7 +44,7 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
         
-        $fileForHash = GetAbsolutePath -file $file
+        $fileForHash = [IO.FileInfo](GetAbsolutePath $file)
         
         if ($this.Contains($fileForHash))
         {
@@ -58,15 +60,12 @@ class FileHashLookup
 
     [bool] Contains([IO.FileInfo] $file) {
         
-        return $this.File.ContainsKey((GetAbsolutePath -file $file).FullName)
+        return $this.File.ContainsKey((GetAbsolutePath $file))
     }   
 
     AddFolder([IO.DirectoryInfo] $path) {
         
-        if (!$path.Exists) {
-
-            $path = [IO.DirectoryInfo](Join-Path (Get-Location) $path.Name)
-        }
+        $path = [IO.DirectoryInfo](GetAbsolutePath $path)
         
         if (!($this.Paths -contains $path.FullName)) {
             
@@ -129,7 +128,7 @@ class FileHashLookup
     
         if ($filename) {
         
-            $this.SavedAsFile = if ($filename.Exists) { $filename.FullName } else { (Join-Path (Get-Location) $filename.Name) }
+            $this.SavedAsFile = (GetAbsolutePath $filename)
         }
         
         $this.Save()
@@ -147,10 +146,7 @@ class FileHashLookup
     
     static [FileHashLookup] Load([IO.FileInfo] $fileToLoad) {
     
-        if (!$fileToLoad.Exists) {
-            
-            $fileToLoad = [IO.FileInfo](Join-Path (Get-Location) $fileToLoad.Name)
-        }
+        $fileToLoad = [IO.FileInfo](GetAbsolutePath $fileToLoad)
         
         if (!$fileToLoad.Exists) {
         
@@ -218,6 +214,8 @@ class FileHashLookup
 
     ExcludeFolder ([IO.DirectoryInfo] $folder) {
     
+        $folder = [IO.DirectoryInfo] (GetAbsolutePath $folder)
+        
         $this.ExcludedFolders.Add($folder.FullName) > $null
 
         $filesToRemove = $this.GetFiles() | ?{ $file = $_; ($this.ExcludedFolders | ?{ $file -ne $null -and $file.FullName.StartsWith($_) }) -ne $null }
@@ -317,8 +315,8 @@ class FileHashLookup
 
     ChangeFolderLocation([IO.DirectoryInfo] $originalFolder, [IO.DirectoryInfo] $newFolder) {
 
-        $originalFolder = GetAbsolutePath -directory $originalFolder
-        $newFolder = GetAbsolutePath -directory $newFolder
+        $originalFolder = [IO.DirectoryInfo](GetAbsolutePath $originalFolder)
+        $newFolder = [IO.DirectoryInfo](GetAbsolutePath $newFolder)
         
         if ($this.Paths -inotcontains $originalFolder.FullName) {
 
@@ -377,18 +375,7 @@ class FileHashLookup
 }
 
 function GetAbsolutePath {
-    param (
-        [IO.DirectoryInfo] $directory,
-        [IO.FileInfo] $file
-    )
+    param([string] $path)
 
-    if ($directory) {
-        $absoluteFolderPath = if ([IO.Path]::IsPathRooted($directory.FullName)) { $directory.FullName } else { (Join-Path (Get-Location) ($directory.Name)) }
-        [IO.DirectoryInfo] $absoluteFolderPath
-    }
-
-    if ($file) {
-        $absoluteFilePath = if ([IO.Path]::IsPathRooted($file.FullName)) { $file.FullName } else { (Join-Path (Get-Location) ($file.Name)) }
-        [IO.FileInfo] $absoluteFilePath 
-    }
+    $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
 }

@@ -10,10 +10,10 @@ function Import-FileHashTable {
     )
 
     if ($module) {
-        & $module.NewBoundScriptBlock({[FileHashLookup]::Load($args[0])}) $file.FullName
+        & $module.NewBoundScriptBlock({[FileHashLookup]::Load($args[0])}) $file
     }
     else {
-        [FileHashLookup]::Load($file.FullName)    
+        [FileHashLookup]::Load($file)    
     }
 }
 

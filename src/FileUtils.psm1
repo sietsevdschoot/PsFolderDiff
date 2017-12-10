@@ -11,10 +11,7 @@
 
     PROCESS {
 
-        if (!$destinationPath.Exists) {
-
-            $destinationPath = [IO.DirectoryInfo](Join-Path (Get-Location) $destinationPath.Name)
-        }
+        $destinationPath = [IO.DirectoryInfo](GetAbsolutePath $destinationPath)
        
         $fileParentFolders = (($file.Directory.FullName -replace [regex]::Escape($file.Directory.Root)) -split [regex]::Escape([IO.Path]::DirectorySeparatorChar))
 
@@ -52,10 +49,7 @@ function Copy-FolderKeepExisting {
 
     PROCESS {
 
-        if (!$destinationPath.Exists) {
-
-            $destinationPath = [IO.DirectoryInfo](Join-Path (Get-Location) $destinationPath.Name)
-        }
+        $destinationPath = [IO.DirectoryInfo](GetAbsolutePath $destinationPath)
 
         $destinationFolder = if ($directlyIntoTargetFolder) { $destinationPath } else { (Join-Path $destinationPath $folder.Name)}
         $files = dir $folder.FullName -file -recurse -force 
@@ -105,10 +99,7 @@ function Move-KeepExisting {
 
     PROCESS {
 
-        if (!$destinationPath.Exists) {
-        
-            $destinationPath = [IO.DirectoryInfo](Join-Path (Get-Location) $destinationPath.Name)
-        }
+        $destinationPath = [IO.DirectoryInfo](GetAbsolutePath $destinationPath)
 
         $file | Copy-KeepExisting $destinationPath
 
@@ -175,16 +166,19 @@ Function Remove-EmptyFolders {
 
     PROCESS {
 
-        if (!$path.Exists) {
-    
-            $path = [IO.DirectoryInfo](Join-Path (Get-Location) $path.Name)
-        }
+        $path = [IO.DirectoryInfo](GetAbsolutePath $path)
 
         $folders = dir $path.FullName -Recurse -Directory -Force | Sort -Property @{ Expression={ $_.FullName.Length }; Ascending=$true } 
         $emptyFolders = $folders | ?{ (dir $_.FullName -file -Recurse -Force) -eq $null } 
 
         $emptyFolders | %{ if (Test-Path $_.FullName -ErrorAction Continue) { del $_.FullName -Force -Recurse } }
     }
+}
+
+function GetAbsolutePath {
+    param([string] $path)
+
+    $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
 }
 
 Set-Alias CopyKeepExisting Copy-KeepExisting
