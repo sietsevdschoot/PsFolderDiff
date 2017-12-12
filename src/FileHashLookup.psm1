@@ -3,20 +3,19 @@
 $script = [ScriptBlock]::Create(((cat "$PSScriptRoot\FileHashLookup.Impl.psm1") -join "`r`n"))
 $module = New-Module 'FileHashLookup-Module' $script | Import-Module -PassThru
 
-function Import-FileHashTable {
-    [CmdletBinding()]
-    param (
-        [IO.FileInfo] $file
-    )
-
-    if ($module) {
-        & $module.NewBoundScriptBlock({[FileHashLookup]::Load($args[0])}) $file
-    }
-    else {
-        [FileHashLookup]::Load($file)    
-    }
-}
-
+<#
+    .SYNOPSIS
+    Allows for comparison of folder contents.
+    .DESCRIPTION
+    Builds a [FileHashTable] of the contents of a directory. 
+    generates a two-way hashs table of the contents of a directory
+    .PARAMETER path
+    Path to folder to build a file hash table of.
+    .EXAMPLE
+    First Example
+    .EXAMPLE
+    Second Example
+#>
 function Get-FileHashTable {
     [CmdletBinding()]
     param (
@@ -38,6 +37,32 @@ function Get-FileHashTable {
         else {
             [FileHashLookup]::New()
         }
+    }
+}
+
+<#
+    .SYNOPSIS
+    Loads a [FileHashTable] from a file
+    .DESCRIPTION
+    Loads a [FileHashTable] from a file
+    .PARAMETER path
+    Path to previously saved .xml file.
+    .EXAMPLE
+    First Example
+    .EXAMPLE
+    Second Example
+#>
+function Import-FileHashTable {
+    [CmdletBinding()]
+    param (
+        [IO.FileInfo] $file
+    )
+
+    if ($module) {
+        & $module.NewBoundScriptBlock({[FileHashLookup]::Load($args[0])}) $file
+    }
+    else {
+        [FileHashLookup]::Load($file)    
     }
 }
 
