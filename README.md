@@ -4,6 +4,30 @@ FolderDiff is a Powershell **command line tool** to compare folders contents.
 <Enter>
 In order to do it quick and thoroughly, it creates a two-way hashtable of all files and their hashcode fingerprint. 
 
+## Installation
+
+Run the setup file
+
+```PowerShell
+.\setup.ps1
+````
+
+## Getting Started
+
+Getting started is straight forward: 
+
+```PowerShell
+$myDocs = Get-FileHashTable "C:\MyDocuments"
+$myBackups = Get-FileHashTable "C:\Backups"
+
+$duplicates = $myDocs.GetMatchesInOther($myBackups)
+
+$duplicates.GetFiles() | del -force
+
+$myBackups.Refresh()
+$myBackups.Save()
+````
+
 ## Operations
 
 #### GetFiles
@@ -28,7 +52,7 @@ Adds all files in **$path** to FileHashLookup
 ```PowerShell
 void AddFileHashTable([FileHashLookup] $other)
 ````
-Adds all files in **$other** to [FileHashsLookup]
+Adds all files in **$other** to [FileHashLookup]
 
 #### Contains
 ```PowerShell
@@ -53,24 +77,36 @@ returns a new [FileHashLookup] with all files in **$other** which don''t match w
 void Refresh()
 ````
 Updates all files in tracked folders: 
-> Added files
-> Removed files
-> Modified files
+* Added files
+* Removed files
+* Modified files
 
 #### Save
 ```PowerShell
 void Save([IO.FileInfo] $filename)
 ````
-Saves the contents in  **$filename** 
+
+Saves the contents in  **$filename**
+
 **$filename** can be omitted if it was saved before. 
 
-## Installation
-
-Run the setup file
-
+#### ExcludeFilePattern
 ```PowerShell
-.\setup.ps1
+void ExcludeFilePattern(string $filePattern)
 ````
+
+Adds a file pattern to exclude. (e.g. *.iso).
+
+This filter is also applied on already tracked files.
+
+#### ExcludeFolder
+```PowerShell
+void ExcludeFolder([IO.DirectoryInfo] $folder)
+````
+Adds a directory to be excluded.
+
+This filter is also applied on already tracked files.
+
 
 ## Requirements
 
