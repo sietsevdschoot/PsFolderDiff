@@ -441,4 +441,24 @@ Describe "FileHashLookup" {
 
         $actual.Paths | Sort | Should -be @("$TestDrive\Folder2","$TestDrive\NewFolder")
     }
+
+    It "GetDuplicateFiles: Returns all duplicates file" {
+
+        $fileContent1 = [Guid]::NewGuid()
+        $fileContent2 = [Guid]::NewGuid()
+
+        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\1.txt"
+        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Backup\copy1.txt"
+        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\tmp1.txt"
+
+        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\2.txt"
+        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Backup\copy2.txt"
+        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\tmp2.txt"
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        $fileHashTable.GetDuplicateFiles() | del
+
+        dir $TestDrive\Duplicates -file -Recurse | Select -exp Name | Should -Be @("1.txt","2.txt") 
+    }
 }

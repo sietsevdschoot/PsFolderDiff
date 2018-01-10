@@ -313,6 +313,20 @@ class FileHashLookup
         return $newLookup
     }
 
+    [IO.FileInfo[]] GetDuplicateFiles() {
+
+        return $this.GetDuplicateFiles( @{ Expression={ $_.FullName.Length }; Ascending=$true } ) 
+    }
+
+    [IO.FileInfo[]] GetDuplicateFiles([HashTable] $sortExpression) {
+
+        $hashesWithDuplicates = ($this.GetFiles() | ?{ ($this.GetFilesByHash($_)).Count -gt 1 } | %{ $this.File.($_.FullName) }) | Select -Unique
+
+        $duplicatesFiles = $hashesWithDuplicates | %{ ( $this.Hash.($_) | %{ [IO.FileInfo]$_ } ) | Sort -prop $sortExpression | Select -Skip 1 }
+
+        return $duplicatesFiles
+    }
+
     ChangeFolderLocation([IO.DirectoryInfo] $originalFolder, [IO.DirectoryInfo] $newFolder) {
 
         $originalFolder = [IO.DirectoryInfo](GetAbsolutePath $originalFolder)
