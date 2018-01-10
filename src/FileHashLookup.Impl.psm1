@@ -327,45 +327,6 @@ class FileHashLookup
         return $duplicatesFiles
     }
 
-    ChangeFolderLocation([IO.DirectoryInfo] $originalFolder, [IO.DirectoryInfo] $newFolder) {
-
-        $originalFolder = [IO.DirectoryInfo](GetAbsolutePath $originalFolder)
-        $newFolder = [IO.DirectoryInfo](GetAbsolutePath $newFolder)
-        
-        if ($this.Paths -inotcontains $originalFolder.FullName) {
-
-            Throw "$originalFolder is not tracked by FileHashLookup."
-        }
-
-        if (!$newFolder.Exists) {
-
-            Throw "$newFolder does not exist."
-        }
-        
-        $filesToUpdate = ($this.GetFiles() | ?{ $_.FullName.StartsWith($originalFolder.FullName)})
-
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-
-        for($i = 0; $i -lt $filesToUpdate.Count; $i++) {
-            
-            $originalFile = $filesToUpdate[$i]
-            $originalFileHash = $this.File.($originalFile.FullName)
-            $newFileName = Join-Path $newFolder.FullName ($originalFile -replace [Regex]::Escape($originalFolder.FullName))
-            
-            if ($sw.Elapsed.TotalMilliseconds -ge 500) 
-            {
-                Write-Progress -Activity "Updating folder location" -Status ("($i of $($filesToUpdate.Count)) Processing {0}" -f $originalFile) -PercentComplete ($i / $filesToUpdate.Count * 100)
-                $sw.Restart()
-            }
-
-            $this.Remove($originalFile)
-            $this.Add($newFileName, $originalFileHash)
-        }
-
-        $this.Paths.Remove($originalFolder.FullName) > $null
-        $this.Paths.Add($newFolder.FullName) > $null
-    }
-
     [string] ToString() 
     {
         $msg = if ($this.File.Keys.Count -eq 0) { "`nFileHashTable is empty." } else { "`nFileHashTable contains $($this.File.Keys.Count) files." } 
