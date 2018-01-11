@@ -320,11 +320,30 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetDuplicateFiles([HashTable] $sortExpression) {
 
-        $hashesWithDuplicates = ($this.GetFiles() | ?{ ($this.GetFilesByHash($_)).Count -gt 1 } | %{ $this.File.($_.FullName) }) | Select -Unique
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        
+        $duplicateFiles =  [Collections.ArrayList]@()
 
-        $duplicatesFiles = $hashesWithDuplicates | %{ ( $this.Hash.($_) | %{ [IO.FileInfo]$_ } ) | Sort -prop $sortExpression | Select -Skip 1 }
+        $duplicateHashes = GetDuplicateHashes $this.File.Values
+                
+        $sw = [Diagnostics.Stopwatch]::StartNew()
 
-        return $duplicatesFiles
+        for($i = 0; $i -lt $duplicateHashes.Length; $i++) {
+            
+            $filesByHash =  $this.Hash.(($duplicateHashes[$i])) | %{ [IO.FileInfo]$_ }
+            
+            $duplicatesToRemove = $filesByHash | Sort -prop $sortExpression | Select -Skip 1
+
+            $duplicateFiles.AddRange(@($duplicatesToRemove)) > $null
+
+            if ($sw.Elapsed.TotalMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Selecting duplicates" -Status ("($i of $($duplicateHashes.Count)) Processing {0}" -f $duplicatesToRemove[0]) -PercentComplete  ($i / $duplicateHashes.Count * 100)
+                $sw.Restart()
+            }
+        }
+
+        return $duplicateFiles
     }
 
     [string] ToString() 
@@ -353,4 +372,35 @@ function GetAbsolutePath {
     param([string] $path)
 
     $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
+}
+
+function GetDuplicateHashes {
+    param([string[]] $hashes)
+
+    $hashTable = @{}
+    $duplicateHashes = @{}
+
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+
+    for($i = 0; $i -lt $hashes.Length; $i++) {
+            
+        $currentHash = $hashes[$i]
+
+        if (!$hashTable.ContainsKey($currentHash)) {
+            
+            $hashTable.($currentHash) = ''
+        }
+        elseif (!$duplicateHashes.ContainsKey($currentHash)) {
+        
+            $duplicateHashes.($currentHash) = ''
+        }
+
+        if ($sw.Elapsed.TotalMilliseconds -ge 500) 
+        {
+            Write-Progress -Activity "Finding duplicate files" -Status ("($i of $($hashes.Count)) Processing filehash {0}" -f $currentHash) -PercentComplete ($i / $hashes.Count * 100)
+            $sw.Restart()
+        }
+    }
+
+    $duplicateHashes.Keys
 }

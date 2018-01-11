@@ -396,7 +396,7 @@ Describe "FileHashLookup" {
 
         ($actual.GetFiles()).Count | Should -Be 4
     }
-
+    
     It "GetDuplicateFiles: Returns all duplicates file" {
 
         $fileContent1 = [Guid]::NewGuid()
