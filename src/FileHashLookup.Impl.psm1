@@ -24,7 +24,7 @@ class FileHashLookup
         $this.AddFolder($absolutePath)
         $this.LastUpdated = Get-Date
 
-        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
         
         $this.Save((GetAbsolutePath $fileName))
     }

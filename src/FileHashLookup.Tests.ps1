@@ -64,9 +64,11 @@ Describe "FileHashLookup" {
     
     It "Uses the folder path to generate the filename" {
     
-        GetFileHashTable "$TestDrive\MyFolder"
+        New-Item -ItemType File -Path "$TestDrive\My Documents\test.txt" -Force 
         
-        $expectedFileName = ((gi "$TestDrive\MyFolder").FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        GetFileHashTable "$TestDrive\My Documents\"
+
+        $expectedFileName = ((gi "$TestDrive\My Documents\").FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
     
         $actual = (dir *.xml | Select -First 1).Name
         
