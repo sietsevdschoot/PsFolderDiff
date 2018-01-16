@@ -315,10 +315,10 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetDuplicateFiles() {
 
-        return $this.GetDuplicateFiles( @{ Expression={ $_.FullName.Length }; Ascending=$true } ) 
+        return $this.GetDuplicateFiles( @{ Expression={ $_.FullName.Length }; Ascending=$true }, 1)  
     }
 
-    [IO.FileInfo[]] GetDuplicateFiles([HashTable] $sortExpression) {
+    [IO.FileInfo[]] GetDuplicateFiles([HashTable] $sortExpression, [int] $nrOfItemsToSkip) { 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
         
@@ -332,7 +332,7 @@ class FileHashLookup
             
             $filesByHash =  $this.Hash.(($duplicateHashes[$i])) | %{ [IO.FileInfo]$_ }
             
-            $duplicatesToRemove = $filesByHash | Sort -prop $sortExpression | Select -Skip 1
+            $duplicatesToRemove = $filesByHash | Sort -prop $sortExpression | Select -Skip $nrOfItemsToSkip 
 
             $duplicateFiles.AddRange(@($duplicatesToRemove)) > $null
 
