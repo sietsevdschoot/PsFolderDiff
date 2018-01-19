@@ -377,8 +377,8 @@ function GetAbsolutePath {
 function GetDuplicateHashes {
     param([string[]] $hashes)
 
-    $hashTable = @{}
-    $duplicateHashes = @{}
+    $hashSet = [Collections.Generic.HashSet[string]] @()
+    $duplicateHashes = [Collections.Generic.HashSet[string]]@()
 
     $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -386,13 +386,13 @@ function GetDuplicateHashes {
             
         $currentHash = $hashes[$i]
 
-        if (!$hashTable.ContainsKey($currentHash)) {
+        if (!$hashSet.Contains($currentHash)) {
             
-            $hashTable.($currentHash) = ''
+            $hashSet.Add($currentHash)
         }
-        elseif (!$duplicateHashes.ContainsKey($currentHash)) {
+        elseif (!$duplicateHashes.Contains($currentHash)) {
         
-            $duplicateHashes.($currentHash) = ''
+            $duplicateHashes.Add($currentHash)
         }
 
         if ($sw.Elapsed.TotalMilliseconds -ge 500) 
@@ -402,5 +402,5 @@ function GetDuplicateHashes {
         }
     }
 
-    $duplicateHashes.Keys
+    $duplicateHashes
 }
