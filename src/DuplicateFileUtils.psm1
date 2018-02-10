@@ -13,8 +13,6 @@ Function Get-FoldersContainingDuplicates {
    
   $foldersByNrOfFiles | Select -exp Path | Out-File ($filename.FullName -replace $filename.Extension, "_folderorder.txt")
       
-  $foldersByNrOfFiles | ft NrOfFiles, Path -AutoSize | Out-String | %{ Write-Host $_ }
-
   $foldersByNrOfFiles 
 }
 

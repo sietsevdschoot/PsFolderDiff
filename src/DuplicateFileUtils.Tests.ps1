@@ -53,8 +53,10 @@ Describe "DuplicateFileUtils" {
 
         $fileHashTable = [FileHashLookup](GetFileHashTable $TestDrive\RootFolder) 
         
-        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select -exp Path | Sort
+        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select -exp Path
         
+        $actual | ft NrOfFiles, Path -AutoSize | Out-String | %{ Write-Host $_ }
+
         $expected = @(
             "$TestDrive\RootFolder",
             "$TestDrive\RootFolder\Folder1",
