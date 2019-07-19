@@ -18,20 +18,20 @@ Describe "DuplicateFileUtils" {
         
         Set-Location $originalLocation
     
-        dir $TestDrive -Directory -Recurse | del -Force -Recurse
-        dir $TestDrive -file -Recurse | del -Force
+        Get-ChildItem $TestDrive -Directory -Recurse | Remove-Item -Force -Recurse
+        Get-ChildItem $TestDrive -file -Recurse | Remove-Item -Force
     } 
     
     It "Get-FoldersContainingDuplicates: List all folders containing duplicates" {
 
         $fileContent = [Guid]::NewGuid()
 
-        1..3 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
-        4..6 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
+        1..3 | ForEach-Object{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
+        4..6 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
 
         $fileHashTable = GetFileHashTable $TestDrive\RootFolder
         
-        $actual = (Get-FoldersContainingDuplicates $fileHashTable) | Select -exp Path | Sort
+        $actual = (Get-FoldersContainingDuplicates $fileHashTable) | Select-Object -exp Path | Sort-Object
         
         $expected = @(
             "$TestDrive\RootFolder",
@@ -48,14 +48,14 @@ Describe "DuplicateFileUtils" {
 
         $fileContent = [Guid]::NewGuid()
 
-        1..2 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
-        3..6 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
+        1..2 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
+        3..6 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
 
         $fileHashTable = GetFileHashTable $TestDrive\RootFolder
         
-        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select -exp Path | Sort
+        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select-Object -exp Path | Sort-Object
         
-        $actual | ft NrOfFiles, Path -AutoSize | Out-String | Write-Verbose
+        $actual | Format-Table NrOfFiles, Path -AutoSize | Out-String | Write-Verbose
 
         $expected = @(
             "$TestDrive\RootFolder",

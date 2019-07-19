@@ -24,7 +24,7 @@ Function Get-DuplicateFolders {
   
   $paths = @($fileHashLookup.Paths)
 
-  $folders = $fileHashLookup.GetDuplicateFiles().GetFiles() | Select -exp Directory | Select -Unique
+  $folders = $fileHashLookup.GetDuplicateFiles().GetFiles() | Select-Object -exp Directory | Select-Object -Unique
   $allFolders = [Collections.ArrayList]$folders
 
   foreach($folder in $folders) {
@@ -40,7 +40,7 @@ Function Get-DuplicateFolders {
     while (($null -eq ($paths | Where-Object{ $_ -eq $parent.FullName })) -and ($null -ne $parent)) 
   }
 
-  $allFolders | Select-Object -Unique | Sort -prop @{ Expression={$_.FullName.Split([IO.Path]::DirectorySeparatorChar)} }
+  $allFolders | Select-Object -Unique | Sort-Object -prop @{ Expression={$_.FullName.Split([IO.Path]::DirectorySeparatorChar)} }
 }
 
 Export-ModuleMember -Function Get-FoldersContainingDuplicates

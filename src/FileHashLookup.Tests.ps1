@@ -11,7 +11,7 @@ Describe "FileHashLookup" {
         $originalLocation = Get-Location 
         Set-Location $TestDrive
     
-        1..3 | %{ New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
     }
 
     AfterEach {
@@ -69,7 +69,7 @@ Describe "FileHashLookup" {
         
         GetFileHashTable "$TestDrive\My Documents\"
 
-        $expectedFileName = ((gi "$TestDrive\My Documents\").FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $expectedFileName = ((gi "$TestDrive\My Documents\").FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
     
         $actual = (dir *.xml | Select -First 1).Name
         
@@ -80,7 +80,7 @@ Describe "FileHashLookup" {
     
         $fileHashLookup = GetFileHashTable "$TestDrive\MyFolder"
 
-        $filename =  ((gi "$TestDrive\MyFolder").FullName -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $filename =  ((gi "$TestDrive\MyFolder").FullName -replace (([IO.Path]::GetInvalidFileNameChars() | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
 
         $actual = Import-Clixml "$($Testdrive)\$filename"
         
@@ -90,7 +90,7 @@ Describe "FileHashLookup" {
     
     It "Creates an arrayList for files which share the same hash" {
     
-        1..4 | %{ New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
+        1..4 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
     
         $myHash = (Get-FileHash -LiteralPath (gi "$TestDrive\MyFolder\IdenticalHash1.txt").FullName -Algorithm MD5).Hash
                 
@@ -117,7 +117,7 @@ Describe "FileHashLookup" {
     
     It "will remove entry from arrayList if file with same hash exists" {
     
-        1..4 | %{ New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
+        1..4 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
     
         $myFile = gi "$TestDrive\MyFolder\IdenticalHash1.txt"
         $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
@@ -156,7 +156,7 @@ Describe "FileHashLookup" {
 
         New-Item -ItemType File $file -Force
         
-        $expectedFileName = ("$TestDrive\MyFolder\Backup" -replace (([IO.Path]::GetInvalidFileNameChars() | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"
+        $expectedFileName = ("$TestDrive\MyFolder\Backup" -replace (([IO.Path]::GetInvalidFileNameChars() | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"
 
         cd "$TestDrive\MyFolder"
         
@@ -180,7 +180,7 @@ Describe "FileHashLookup" {
 
     It "can refresh itself. By adding new files and removing no longer existing files." {
         
-        10..11 | %{ New-Item -ItemType File Testdrive:\MyFolder2\$_.txt -Value "My Test Value" -Force  }    
+        10..11 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder2\$_.txt -Value "My Test Value" -Force  }    
         
         $actual = GetFileHashTable "$TestDrive\MyFolder"
         $actual.AddFolder("$TestDrive\MyFolder2") 
@@ -190,7 +190,7 @@ Describe "FileHashLookup" {
     
         $actual.Refresh()
     
-        $actual.GetFiles() | %{ [int]($_.Name -replace $_.Extension) } | Should -Be @(2,3,4,10,11)
+        $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(2,3,4,10,11)
     }
 
     It "Refresh updates the hash of changed files" {
@@ -231,48 +231,48 @@ Describe "FileHashLookup" {
         
         $myHash = GetFileHashTable "$TestDrive\MyFolder"
         
-        4..8 | %{ New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
+        4..8 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
 
         $newHash = GetFileHashTable "$TestDrive\MyFolder"
 
         $actual = $myHash.GetDiffInOther($newHash)
 
-        $actual.GetFiles() | %{ [int]($_.Name -replace $_.Extension) } | Should -Be @(4,5,6,7,8)
+        $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(4,5,6,7,8)
     }
    
     It "returns matching items from other object it is compared to" {
         
         $myHash = GetFileHashTable "$TestDrive\MyFolder"
         
-        4..8 | %{ New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
+        4..8 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
 
         $newHash = GetFileHashTable "$TestDrive\MyFolder"
 
         $actual = $myHash.GetMatchesInOther($newHash)
 
-        $actual.GetFiles() | %{ [int]($_.Name -replace $_.Extension) } | Should -Be @(1, 2, 3)
+        $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(1, 2, 3)
     }
 
     It "will look at the file hash to determine file equality or difference" {
         
-        1..3 | %{ New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value" -Force  }    
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value" -Force  }    
 
         $myHash = GetFileHashTable "$TestDrive\MyFolder"
 
-        4..5 | %{ New-Item -ItemType File Testdrive:\MyFolder2\$_.txt -Value "My Test Value" -Force  }    
+        4..5 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder2\$_.txt -Value "My Test Value" -Force  }    
 
         $newHash = GetFileHashTable "$TestDrive\MyFolder2"
 
         $actual = $myHash.GetMatchesInOther($newHash)
 
-        $actual.GetFiles() | %{ [int]($_.Name -replace $_.Extension) } | Should -Be @(4, 5)
+        $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(4, 5)
     }
 
     It "will not contain duplicates files" {
     
         $myHash = GetFileHashTable
 
-        $file1 = gi "$TestDrive\MyFolder\1.txt"
+        $file1 = Get-Item "$TestDrive\MyFolder\1.txt"
         $file1Hash = (Get-FileHash -LiteralPath $file1 -Algorithm MD5).Hash
 
         $myHash.Add($file1.FullName)
@@ -283,34 +283,34 @@ Describe "FileHashLookup" {
     
     It "can add other FileHashLookup" {
     
-        1..3 | %{ New-Item -ItemType File Testdrive:\Folder1\$_.txt -Force  }    
-        4..6 | %{ New-Item -ItemType File Testdrive:\Folder2\$_.txt -Force  }    
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\Folder1\$_.txt -Force  }    
+        4..6 | ForEach-Object { New-Item -ItemType File Testdrive:\Folder2\$_.txt -Force  }    
     
         $folder1Lookup = GetFileHashTable "$TestDrive\Folder1"
         $folder2Lookup = GetFileHashTable "$TestDrive\Folder2"
     
         $folder1Lookup.AddFileHashTable($folder2Lookup)
     
-        $folder1Lookup.GetFiles() | %{ [int]($_.Name -replace $_.Extension) } | Should -Be @(1,2,3,4,5,6)
+        $folder1Lookup.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(1,2,3,4,5,6)
 
-        $folder1Lookup.Paths | Sort | Should -be @("$TestDrive\Folder1", "$TestDrive\Folder2")
+        $folder1Lookup.Paths | Sort-Object | Should -be @("$TestDrive\Folder1", "$TestDrive\Folder2")
     }
    
     It "GetFiles: returns all files" {
     
-        1..3 | %{ New-Item -ItemType File Testdrive:\Folder1\$_.txt -Force }    
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\Folder1\$_.txt -Force }    
 
-        $expected = dir "$TestDrive\Folder1\*.txt" | Select -exp FullName
+        $expected = Get-ChildItem "$TestDrive\Folder1\*.txt" | Select-Object -exp FullName
         
-        $actual = (GetFileHashTable "$TestDrive\Folder1").GetFiles() | Select -exp FullName
+        $actual = (GetFileHashTable "$TestDrive\Folder1").GetFiles() | Select-Object -exp FullName
 
         $actual | Should -Be $expected
     }
 
     It "GetFilesByHash: returns all files matching the hash" {
     
-        1..3 | %{ New-Item -ItemType File Testdrive:\Folder1\Apples_$_.txt -Value "Apples" -Force }    
-        1..2 | %{ New-Item -ItemType File Testdrive:\Folder1\Oranges_$_.txt -Value "Oranges" -Force }    
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\Folder1\Apples_$_.txt -Value "Apples" -Force }    
+        1..2 | ForEach-Object { New-Item -ItemType File Testdrive:\Folder1\Oranges_$_.txt -Value "Oranges" -Force }    
     
         $fileHashTable = GetFileHashTable "$TestDrive\Folder1"
         
@@ -341,7 +341,7 @@ Describe "FileHashLookup" {
 
         $actual.AddFolder("$TestDrive\MyFolder1\")
 
-        $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
+        $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
     }
 
     It "Will remove already added files which match excluded folders" { 
@@ -354,7 +354,7 @@ Describe "FileHashLookup" {
 
         $actual.ExcludeFolder("$TestDrive\MyFolder1\SubFolder\")
 
-        $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
+        $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
     }
 
     It "Can exclude file patterns" {
@@ -370,7 +370,7 @@ Describe "FileHashLookup" {
 
          $actual.AddFolder("$TestDrive\MyFolder1")
 
-         $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
+         $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
     It "Will remove already added files which match excludeFilePatterns" {
@@ -386,7 +386,7 @@ Describe "FileHashLookup" {
         $actual.ExcludeFilePattern("*.txt")
         $actual.ExcludeFilePattern("a*")
 
-        $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
+        $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
     It "Can include file patterns" {
@@ -401,7 +401,7 @@ Describe "FileHashLookup" {
 
         $actual.AddFolder("$TestDrive\MyFolder1")
 
-        $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
+        $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
     }
 
     It "Can exclude file patterns" {
@@ -417,14 +417,14 @@ Describe "FileHashLookup" {
 
          $actual.AddFolder("$TestDrive\MyFolder1")
 
-         $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
+         $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
     It "Can add relative folders" {
         
-        1..4 | %{ New-Item -ItemType File "$TestDrive\MyFolder\SubFolder\$_.txt" -Force }
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\MyFolder\SubFolder\$_.txt" -Force }
 
-        cd $TestDrive\MyFolder
+        Set-Location $TestDrive\MyFolder
 
         $actual = GetFileHashTable .\SubFolder
 
@@ -450,13 +450,13 @@ Describe "FileHashLookup" {
 
         foreach ($entry in $duplicates.Hash.GetEnumerator()) {
         
-            $sortedDuplicates = @($entry.Value) | Sort -prop @{ Expression={$_.FullName.Length}; Ascending=$true }
+            $sortedDuplicates = @($entry.Value) | Sort-Object -prop @{ Expression={$_.FullName.Length}; Ascending=$true }
 
             $sortedDuplicates | Out-string | Write-Verbose
 
-            $sortedDuplicates | Select -Skip 1 | Remove-Item
+            $sortedDuplicates | Select-Object -Skip 1 | Remove-Item
         }
 
-        dir $TestDrive\Duplicates -file -Recurse | Select -exp Name | Should -Be @("1.txt","2.txt") 
+        Get-ChildItem $TestDrive\Duplicates -file -Recurse | Select-Object -exp Name | Should -Be @("1.txt","2.txt") 
     }
 }
