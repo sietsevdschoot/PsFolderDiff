@@ -1,4 +1,5 @@
 ﻿#using module '.\FileHashLookup.Impl.psm1'
+
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileHashLookup" {
@@ -388,6 +389,37 @@ Describe "FileHashLookup" {
         $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
+    It "Can include file patterns" {
+
+        $actual = GetFileHashTable
+
+        $actual.IncludeFilePattern("*.txt")
+
+        New-Item -ItemType File "$TestDrive\MyFolder1\1.txt" -Force
+        New-Item -ItemType File "$TestDrive\MyFolder1\administration.doc" -Force
+        New-Item -ItemType File "$TestDrive\MyFolder1\resume.pdf" -Force
+
+        $actual.AddFolder("$TestDrive\MyFolder1")
+
+        $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
+    }
+
+    It "Can exclude file patterns" {
+
+        $actual = GetFileHashTable
+
+        $actual.ExcludeFilePattern("*.txt")
+        $actual.ExcludeFilePattern("a*")
+
+         New-Item -ItemType File "$TestDrive\MyFolder1\1.txt" -Force
+         New-Item -ItemType File "$TestDrive\MyFolder1\administration.doc" -Force
+         New-Item -ItemType File "$TestDrive\MyFolder1\resume.pdf" -Force
+
+         $actual.AddFolder("$TestDrive\MyFolder1")
+
+         $actual.GetFiles() | Select -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
+    }
+
     It "Can add relative folders" {
         
         1..4 | %{ New-Item -ItemType File "$TestDrive\MyFolder\SubFolder\$_.txt" -Force }
@@ -414,7 +446,16 @@ Describe "FileHashLookup" {
 
         $fileHashTable = GetFileHashTable $TestDrive
 
-        $fileHashTable.GetDuplicateFiles() | del
+        $duplicates = $fileHashTable.GetDuplicateFiles()
+
+        foreach ($entry in $duplicates.Hash.GetEnumerator()) {
+        
+            $sortedDuplicates = @($entry.Value) | Sort -prop @{ Expression={$_.FullName.Length}; Ascending=$true }
+
+            $sortedDuplicates | Out-string | Write-Verbose
+
+            $sortedDuplicates | Select -Skip 1 | Remove-Item
+        }
 
         dir $TestDrive\Duplicates -file -Recurse | Select -exp Name | Should -Be @("1.txt","2.txt") 
     }

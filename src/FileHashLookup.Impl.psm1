@@ -6,6 +6,7 @@ class FileHashLookup
         $this.Hash = @{}
         $this.Paths = [Collections.ArrayList]@()
         $this.ExcludedFilePatterns = [Collections.ArrayList]@()
+        $this.IncludedFilePatterns = [Collections.ArrayList]@()
         $this.ExcludedFolders = [Collections.ArrayList]@()
 
         $this.LastUpdated = Get-Date
@@ -19,6 +20,7 @@ class FileHashLookup
         $this.Hash = @{}
         $this.Paths = [Collections.ArrayList]@($absolutePath.FullName)
         $this.ExcludedFilePatterns = [Collections.ArrayList]@()
+        $this.IncludedFilePatterns = [Collections.ArrayList]@()
         $this.ExcludedFolders = [Collections.ArrayList]@()
 
         $this.AddFolder($absolutePath)
@@ -33,6 +35,7 @@ class FileHashLookup
     hidden [HashTable] $Hash
     hidden [Collections.ArrayList] $Paths
     hidden [Collections.ArrayList] $ExcludedFilePatterns
+    hidden [Collections.ArrayList] $IncludedFilePatterns
     hidden [Collections.ArrayList] $ExcludedFolders
     hidden [DateTime] $LastUpdated
     hidden [string] $SavedAsFile
@@ -74,7 +77,19 @@ class FileHashLookup
         
         Write-Progress -Activity "Adding or updating files" -Status "Collecting files..."
 
-        $files = dir $path.FullName -File -Recurse -Force -Exclude $this.ExcludedFilePatterns -ErrorAction SilentlyContinue
+        $getChildItemArgs = @{
+
+            Path = "$($path.FullName)";
+            File = $true;
+            Recurse = $true;
+            Force = $true;
+            ErrorAction = "SilentlyContinue";
+        }
+
+        if ($this.ExcludedFilePatterns) { $getChildItemArgs.Add("Exclude", $this.ExcludedFilePatterns) }
+        if ($this.IncludedFilePatterns) { $getChildItemArgs.Add("Include", $this.IncludedFilePatterns) }
+
+        $files = Get-ChildItem @getChildItemArgs
 
         if ($this.ExcludedFolders) {
         
@@ -190,6 +205,11 @@ class FileHashLookup
         $this.Paths = [Collections.ArrayList]@(@($this.Paths) + @($other.Paths) | Select -Unique) 
     } 
 
+    IncludeFilePattern ([string] $filePattern) { 
+
+        $this.IncludedFilePatterns.Add($filePattern) > $null
+    }
+    
     ExcludeFilePattern ([string] $filePattern) {
         
         $this.ExcludedFilePatterns.Add($filePattern) > $null
@@ -250,9 +270,11 @@ class FileHashLookup
         if ($fileHash) {
 
             if (($this.Hash.ContainsKey($fileHash)) -and (!$this.Hash.($fileHash).Contains($fileName))) {
+                
                 $this.Hash.($fileHash).Add($fileName)
             }
             else {
+                
                 $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
             }
             
@@ -313,34 +335,27 @@ class FileHashLookup
         return $newLookup
     }
 
-    [IO.FileInfo[]] GetDuplicateFiles() {
-
-        return $this.GetDuplicateFiles( @{ Expression={ $_.FullName.Length }; Ascending=$true }, 1)  
-    }
-
-    [IO.FileInfo[]] GetDuplicateFiles([HashTable] $sortExpression, [int] $nrOfItemsToSkip) { 
+    [FileHashLookup] GetDuplicateFiles() { 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
-        
-        $duplicateFiles =  [Collections.ArrayList]@()
 
-        $duplicateHashes = GetDuplicateHashes $this.File.Values
+        $duplicateFiles =  [FileHashLookup]::new()
+
+        $duplicateHashes = (GetDuplicateHashes $this.File.Values)
                 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
-        for($i = 0; $i -lt $duplicateHashes.Length; $i++) {
+        for($i = 0; $i -lt $duplicateHashes.Count; $i++) {
             
-            $filesByHash =  $this.Hash.(($duplicateHashes[$i])) | %{ [IO.FileInfo]$_ }
-            
-            $duplicatesToRemove = $filesByHash | Sort -prop $sortExpression | Select -Skip $nrOfItemsToSkip 
-
-            $duplicateFiles.AddRange(@($duplicatesToRemove)) > $null
+            $filesByHash =  $this.Hash.(@($duplicateHashes)[$i]) | %{ [IO.FileInfo]$_ }
 
             if ($sw.Elapsed.TotalMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Selecting duplicates" -Status ("($i of $($duplicateHashes.Count)) Processing {0}" -f $duplicatesToRemove[0]) -PercentComplete  ($i / $duplicateHashes.Count * 100)
+                Write-Progress -Activity "Selecting duplicates" -Status ("($i of $($duplicateHashes.Count)) Processing {0}" -f @($filesByHash)[0]) -PercentComplete  ($i / $duplicateHashes.Count * 100)
                 $sw.Restart()
             }
+
+            $filesByHash | %{ $duplicateFiles.Add($_) }
         }
 
         return $duplicateFiles
@@ -361,7 +376,7 @@ class FileHashLookup
         if ($this.SavedAsFile) {
             $msg += "`n`nLast saved: $($this.SavedAsFile)" 
         }
-
+    
         $msg += "`n`nLast updated: $($this.LastUpdated.ToString("dd-MM-yyyy HH:mm:ss"))`n" 
                 
         return $msg
@@ -388,11 +403,11 @@ function GetDuplicateHashes {
 
         if (!$hashSet.Contains($currentHash)) {
             
-            $hashSet.Add($currentHash)
+            $hashSet.Add($currentHash) > $null
         }
         elseif (!$duplicateHashes.Contains($currentHash)) {
         
-            $duplicateHashes.Add($currentHash)
+            $duplicateHashes.Add($currentHash) > $null
         }
 
         if ($sw.Elapsed.TotalMilliseconds -ge 500) 

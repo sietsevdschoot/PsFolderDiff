@@ -1,4 +1,4 @@
-using module '.\FileHashLookup.Impl.psm1'
+using module '.\DuplicateFileUtils.psm1'
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -29,7 +29,7 @@ Describe "DuplicateFileUtils" {
         1..3 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
         4..6 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
 
-        $fileHashTable = [FileHashLookup](GetFileHashTable $TestDrive\RootFolder) 
+        $fileHashTable = GetFileHashTable $TestDrive\RootFolder
         
         $actual = (Get-FoldersContainingDuplicates $fileHashTable) | Select -exp Path | Sort
         
@@ -51,11 +51,11 @@ Describe "DuplicateFileUtils" {
         1..2 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
         3..6 | %{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
 
-        $fileHashTable = [FileHashLookup](GetFileHashTable $TestDrive\RootFolder) 
+        $fileHashTable = GetFileHashTable $TestDrive\RootFolder
         
-        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select -exp Path
+        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select -exp Path | Sort
         
-        $actual | ft NrOfFiles, Path -AutoSize | Out-String | %{ Write-Host $_ }
+        $actual | ft NrOfFiles, Path -AutoSize | Out-String | Write-Verbose
 
         $expected = @(
             "$TestDrive\RootFolder",

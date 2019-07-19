@@ -15,7 +15,7 @@
        
         $fileParentFolders = (($file.Directory.FullName -replace [regex]::Escape($file.Directory.Root)) -split [regex]::Escape([IO.Path]::DirectorySeparatorChar))
 
-        $firstMatchingFolder = $fileParentFolders | ?{ Test-Path (Join-Path $destinationPath $_) } | Select -First 1 
+        $firstMatchingFolder = $fileParentFolders | ?{ Test-Path (Join-Path $destinationPath $_) } | Select-Object -First 1 
 
         if ($destinationPath.FullName -eq $file.Directory.FullName) 
         {
@@ -23,7 +23,7 @@
         }
         elseif ($firstMatchingFolder) 
         {
-            $destinationFolder = Join-Path $destinationPath (($fileParentFolders | Select -Skip ($fileParentFolders.IndexOf($firstMatchingFolder))) -join [IO.Path]::DirectorySeparatorChar) 
+            $destinationFolder = Join-Path $destinationPath (($fileParentFolders | Select-Object -Skip ($fileParentFolders.IndexOf($firstMatchingFolder))) -join [IO.Path]::DirectorySeparatorChar) 
         } 
         else 
         {
@@ -52,7 +52,7 @@ function Copy-FolderKeepExisting {
         $destinationPath = [IO.DirectoryInfo](GetAbsolutePath $destinationPath)
 
         $destinationFolder = if ($directlyIntoTargetFolder) { $destinationPath } else { (Join-Path $destinationPath $folder.Name)}
-        $files = dir $folder.FullName -file -recurse -force 
+        $files = Get-ChildItem $folder.FullName -file -recurse -force 
 
         foreach ($file in $files) {
         
@@ -105,7 +105,7 @@ function Move-KeepExisting {
 
         if (Test-Path $file) {
     
-            $file | del -Recurse -Force -ErrorAction Continue
+            $file | Remove-Item -Recurse -Force -ErrorAction Continue
         }
     }
 }
@@ -168,10 +168,10 @@ Function Remove-EmptyFolders {
 
         $path = [IO.DirectoryInfo](GetAbsolutePath $path)
 
-        $folders = dir $path.FullName -Recurse -Directory -Force | Sort -Property @{ Expression={ $_.FullName.Length }; Ascending=$true } 
-        $emptyFolders = $folders | ?{ (dir $_.FullName -file -Recurse -Force) -eq $null } 
+        $folders = Get-ChildItem $path.FullName -Recurse -Directory -Force | Sort-Object -Property @{ Expression={ $_.FullName.Length }; Ascending=$true } 
+        $emptyFolders = $folders | Where-Object { $null -eq (Get-ChildItem $_.FullName -file -Recurse -Force) } 
 
-        $emptyFolders | %{ if (Test-Path $_.FullName -ErrorAction Continue) { del $_.FullName -Force -Recurse } }
+        $emptyFolders | ForEach-Object { if (Test-Path $_.FullName -ErrorAction Continue) { Remove-Item $_.FullName -Force -Recurse } }
     }
 }
 

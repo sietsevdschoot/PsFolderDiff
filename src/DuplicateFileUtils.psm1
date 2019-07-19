@@ -9,9 +9,10 @@ Function Get-FoldersContainingDuplicates {
 
   $folders = Get-DuplicateFolders $fileHashLookup
 
-  $foldersByNrOfFiles = $folders | %{ [PSCustomObject]@{ Path=$_.FullName; NrOfFiles=(dir $_.FullName -File -Recurse -Force).Length } } | Sort -Property NrOfFiles -Descending
+  $foldersByNrOfFiles = $folders | ForEach-Object { `
+      [PSCustomObject]@{ Path=$_.FullName; NrOfFiles=(Get-ChildItem $_.FullName -File -Recurse -Force).Length } } | Sort-Object -Property NrOfFiles -Descending
    
-  $foldersByNrOfFiles | Select -exp Path | Out-File ($filename.FullName -replace $filename.Extension, "_folderorder.txt")
+  $foldersByNrOfFiles | Select-Object -exp Path | Out-File ($filename.FullName -replace $filename.Extension, "_folderorder.txt")
       
   $foldersByNrOfFiles 
 }
@@ -23,7 +24,7 @@ Function Get-DuplicateFolders {
   
   $paths = @($fileHashLookup.Paths)
 
-  $folders = $fileHashLookup.GetDuplicateFiles() | Select -exp Directory | Select -Unique
+  $folders = $fileHashLookup.GetDuplicateFiles().GetFiles() | Select -exp Directory | Select -Unique
   $allFolders = [Collections.ArrayList]$folders
 
   foreach($folder in $folders) {
@@ -36,8 +37,12 @@ Function Get-DuplicateFolders {
 
       $allFolders.Add($parent) > $null
     }
-    while ((($paths | ?{ $_ -eq $parent.FullName }) -eq $null) -and ($parent -ne $null)) 
+    while (($null -eq ($paths | Where-Object{ $_ -eq $parent.FullName })) -and ($null -ne $parent)) 
   }
 
-  $allFolders | Select -Unique
+  $allFolders | Select-Object -Unique | Sort -prop @{ Expression={$_.FullName.Split([IO.Path]::DirectorySeparatorChar)} }
 }
+
+Export-ModuleMember -Function Get-FoldersContainingDuplicates
+
+Export-ModuleMember -Function Get-DuplicateFolders
