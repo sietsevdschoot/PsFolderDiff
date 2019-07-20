@@ -20,8 +20,8 @@ Describe "FileHashLookup" {
         
         Set-Location $originalLocation
     
-        dir $TestDrive -Directory -Recurse | del -Force -Recurse
-        dir $TestDrive -file -Recurse | del -Force
+        Get-ChildItem $TestDrive -Directory -Recurse | Remove-Item -Force -Recurse
+        Get-ChildItem $TestDrive -file -Recurse | Remove-Item -Force
     }    
 
     It "Creates 2-way HashTable" {
@@ -71,7 +71,7 @@ Describe "FileHashLookup" {
 
         $expectedFileName = ((gi "$TestDrive\My Documents\").FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
     
-        $actual = (dir *.xml | Select -First 1).Name
+        $actual = (Get-ChildItem *.xml | Select -First 1).Name
         
         $actual | Should -Be $expectedFileName
     }
@@ -185,7 +185,7 @@ Describe "FileHashLookup" {
         $actual = GetFileHashTable "$TestDrive\MyFolder"
         $actual.AddFolder("$TestDrive\MyFolder2") 
             
-        del Testdrive:\MyFolder\1.txt 
+        Remove-Item Testdrive:\MyFolder\1.txt 
         New-Item -ItemType File Testdrive:\MyFolder\4.txt -Force
     
         $actual.Refresh()
@@ -197,7 +197,7 @@ Describe "FileHashLookup" {
         
         $actual = GetFileHashTable "$TestDrive\MyFolder"
 
-        $file = gi "$TestDrive\MyFolder\2.txt"
+        $file = Get-Item "$TestDrive\MyFolder\2.txt"
 
         Set-Content $file -Value "Changed file"
 

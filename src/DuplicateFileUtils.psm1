@@ -50,11 +50,11 @@ Function ShowDuplicates {
         [FileHashLookup] $fileHashLookup
     )
 
-    $duplicates = $fileHashLookup.Hash.GetEnumerator() | ?{ @($_.Value).Count -gt 1 } 
+    $duplicates = $fileHashLookup.Hash.GetEnumerator() | Where-Object { @($_.Value).Count -gt 1 } 
     
     if ($duplicates) {
     
-        $duplicates | %{ "$($_.Name) `n$((@($_.Value) | %{ "`t > $(([IO.FileInfo]$_).Fullname)" }) -join "`n")" }
+        $duplicates | Foreach-Object { "$($_.Name) `n$((@($_.Value) | Foreach-Object { "`t > $(([IO.FileInfo]$_).Fullname)" }) -join "`n")" }
     }
     else {
         

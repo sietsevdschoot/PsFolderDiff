@@ -1,7 +1,6 @@
 ﻿[Cmdletbinding()]
 param (
-#    [IO.FileInfo] $testFile = ".\FileHashLookup.Tests.ps1"
-    [IO.FileInfo] $testFile = ".\FileUtils.Tests.ps1"
+    [IO.FileInfo] $testFile
 )
 
 $PesterVersion = '4.1.0'
@@ -11,7 +10,7 @@ $location = Get-Location
 Set-Location $psScriptRoot
 
 if (!(Test-Path ".modules")) {
-    md .modules -force > $null
+    New-Item -ItemType Directory .modules -force > $null
 }
 
 if (!(Test-Path ".\.modules\Pester\$PesterVersion")) {
@@ -26,6 +25,15 @@ Copy-Item -Path '.\Assertions\*.ps1' -Destination ".\.modules\Pester\$PesterVers
 Import-Module ".\.modules\Pester\$PesterVersion\Pester.psd1" -Force -Verbose:$false
 
 # Run tests
-Invoke-Pester -Script $testFile
+if (!$testFile) {
+   
+    Get-ChildItem $PSscriptRoot\*.Tests.* | %{ Invoke-Pester -Script $_.FullName }
+    
+} else {
+
+    Invoke-Pester -Script $testFile
+}
+
+
 
 Set-Location $location

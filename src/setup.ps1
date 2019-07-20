@@ -1,8 +1,8 @@
 ﻿[CmdletBinding()]
 param ()
 
-$modules = dir $PSScriptRoot\*.psm1 -Recurse -Exclude @("Pester.psm1")
-#$modules = dir $PSScriptRoot\*.psm1 -Recurse -Exclude @("Pester.psm1","FileHashLookup.Impl.psm1") | %{ $_.FullName -replace $_.Extension }
+$modules = Get-ChildItem $PSScriptRoot\*.psm1 -Recurse -Exclude @("Pester.psm1")
+#$modules = Get-ChildItem $PSScriptRoot\*.psm1 -Recurse -Exclude @("Pester.psm1","FileHashLookup.Impl.psm1") | Foreach-Object { $_.FullName -replace $_.Extension }
 
 
 foreach ($module in $modules) {
@@ -15,6 +15,6 @@ foreach ($module in $modules) {
     {
         $output = Import-Module $module -Force -Verbose:$true 4>&1
 
-        $output | ?{ $line = $_; ( @("*Importing*", "*Loading*") | ?{ $line -like $_ }) -ne $null } | %{ $_ -replace "VERBOSE: " }
+        $output | Where-Object { $line = $_; ( @("*Importing*", "*Loading*") | Where-Object { $line -like $_ }) -ne $null } | Foreach-Object { $_ -replace "VERBOSE: " }
     }
 }

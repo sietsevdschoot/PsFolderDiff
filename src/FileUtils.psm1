@@ -21,7 +21,7 @@
        
         $fileParentFolders = (($file.Directory.FullName -replace [regex]::Escape($file.Directory.Root)) -split [regex]::Escape([IO.Path]::DirectorySeparatorChar))
 
-        $firstMatchingFolder = $fileParentFolders | ?{ Test-Path (Join-Path $destinationPath $_) } | Select-Object -First 1 
+        $firstMatchingFolder = $fileParentFolders | Where-Object { Test-Path (Join-Path $destinationPath $_) } | Select-Object -First 1 
 
         if ($destinationPath.FullName -eq $file.Directory.FullName) 
         {
@@ -99,7 +99,7 @@ function Move-FolderKeepExisting {
     
         if ((Test-Path $folder.FullName)) {
     
-            $folder | del -Recurse -Force -ErrorAction Continue
+            $folder | Remove-Item -Recurse -Force -ErrorAction Continue
         }
     }
 }

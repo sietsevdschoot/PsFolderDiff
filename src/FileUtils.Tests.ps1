@@ -17,8 +17,8 @@ Describe "FileUtils" {
         
         Set-Location $originalLocation
     
-        dir $TestDrive -Directory | del -Force -Recurse
-        dir $TestDrive -File | del -Force
+        Get-ChildItem $TestDrive -Directory | Remove-Item -Force -Recurse
+        Get-ChildItem $TestDrive -File | Remove-Item -Force
     }
     
     It "MoveFolder-KeepExisting: Copies folder to targetFolder, removes source folders" {
@@ -56,9 +56,9 @@ Describe "FileUtils" {
 
         $file = New-Item -ItemType File $Testdrive\MyFolder\test.txt -Force
     
-        1..3 | %{ $file | Copy-KeepExisting $Testdrive\MyFolder } 
+        1..3 | Foreach-Object { $file | Copy-KeepExisting $Testdrive\MyFolder } 
         
-        $filenames = dir "$Testdrive\MyFolder\test - Copy*.txt" | %{ $_.Name -replace $_.Extension } | Sort
+        $filenames = Get-ChildItem "$Testdrive\MyFolder\test - Copy*.txt" | Foreach-Object { $_.Name -replace $_.Extension } | Sort-Object
         $filenames | Should Be @("test - Copy", "test - Copy (2)", "test - Copy (3)")
     }
     
@@ -158,6 +158,6 @@ Describe "FileUtils" {
 
         Remove-EmptyFolders $TestDrive\Temp\
 
-        (dir $TestDrive\Temp\ -Directory -Recurse).Length | Should -Be 2
+        (Get-ChildItem $TestDrive\Temp\ -Directory -Recurse).Length | Should -Be 2
     }
 }

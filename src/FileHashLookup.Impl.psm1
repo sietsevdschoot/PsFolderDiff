@@ -26,7 +26,7 @@ class FileHashLookup
         $this.AddFolder($absolutePath)
         $this.LastUpdated = Get-Date
 
-        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
         
         $this.Save((GetAbsolutePath $fileName))
     }
@@ -42,7 +42,7 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetFiles() {
         
-        return $this.File.Keys | Sort | %{ [IO.FileInfo] $_ }
+        return $this.File.Keys | Sort-Object | Foreach-Object { [IO.FileInfo] $_ }
     }
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
@@ -58,7 +58,7 @@ class FileHashLookup
             $fileHash = (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
         }
         
-        return $this.Hash.($fileHash) | Sort | %{ [IO.FileInfo] $_ }
+        return $this.Hash.($fileHash) | Sort-Object | Foreach-Object { [IO.FileInfo] $_ }
     }
 
     [bool] Contains([IO.FileInfo] $file) {
@@ -93,17 +93,17 @@ class FileHashLookup
 
         if ($this.ExcludedFolders) {
         
-            $files = $files | ?{ $file = $_; ($this.ExcludedFolders | ?{ $file.FullName.StartsWith($_) }) -eq $null }
+            $files = $files | Where-Object { $file = $_; ($this.ExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) -eq $null }
         }
     
         Write-Progress -Activity "Adding or updating files" -Status "Detecting modified files..."
 
-        $files | ?{ $_.LastWriteTime -gt $this.LastUpdated } | %{ $this.Remove($_) }
+        $files | Where-Object { $_.LastWriteTime -gt $this.LastUpdated } | Foreach-Object { $this.Remove($_) }
 
         Write-Progress -Activity "Adding or updating files" -Status "Analyzing differences..."
          
-        $newlyAddedFiles = $files | ?{ !$this.Contains($_.FullName) } | %{ @{ Operation='Add'; File=$_ } }
-        $deletedFiles = $this.GetFiles() | ?{ $_ -ne $null -and !$_.Exists } | %{ @{ Operation='Remove'; File=$_  } }
+        $newlyAddedFiles = $files | Where-Object { !$this.Contains($_.FullName) } | Foreach-Object { @{ Operation='Add'; File=$_ } }
+        $deletedFiles = $this.GetFiles() | Where-Object { $_ -ne $null -and !$_.Exists } | Foreach-Object { @{ Operation='Remove'; File=$_  } }
         
         $itemsToUpdate = @($newlyAddedFiles) + @($deletedFiles)
 
@@ -136,7 +136,7 @@ class FileHashLookup
     
     Refresh() {
         
-       $this.Paths | %{ $this.AddFolder(($_)) }
+       $this.Paths | Foreach-Object { $this.AddFolder(($_)) }
 
        $this.LastUpdated = Get-Date
     }
@@ -205,7 +205,7 @@ class FileHashLookup
         
         $this.ExcludedFilePatterns.Add($filePattern) > $null
 
-        $filesToRemove = $this.GetFiles() | ?{ $file = $_; ( $this.ExcludedFilePatterns | ?{ $file -ne $null -and $file.Name -like $_ } ) -ne $null } 
+        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; ( $this.ExcludedFilePatterns | Where-Object { $file -ne $null -and $file.Name -like $_ } ) -ne $null } 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -229,7 +229,7 @@ class FileHashLookup
         
         $this.ExcludedFolders.Add($folder.FullName) > $null
 
-        $filesToRemove = $this.GetFiles() | ?{ $file = $_; ($this.ExcludedFolders | ?{ $file -ne $null -and $file.FullName.StartsWith($_) }) -ne $null }
+        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; ($this.ExcludedFolders | Where-Object { $file -ne $null -and $file.FullName.StartsWith($_) }) -ne $null }
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -343,7 +343,7 @@ class FileHashLookup
 
         $duplicateFiles = [FileHashLookup]::new()
 
-        $hashEntries = $this.Hash.GetEnumerator() | %{ $_ }
+        $hashEntries = $this.Hash.GetEnumerator() | Foreach-Object { $_ }
 
         for($i = 0; $i -lt $hashEntries.Count; $i++) {
 
@@ -351,7 +351,7 @@ class FileHashLookup
             
             if ($values.Count -gt 1) {
             
-                $values | %{ $duplicateFiles.Add($_) }
+                $values | Foreach-Object { $duplicateFiles.Add($_) }
             }
 
             if ($sw.Elapsed.TotalMilliseconds -ge 500) 
@@ -368,14 +368,14 @@ class FileHashLookup
     {
         $msg = if ($this.File.Keys.Count -eq 0) { "`nFileHashTable is empty." } else { "`nFileHashTable contains $($this.File.Keys.Count) files." } 
     
-        $msg += if ($this.Paths.Count -gt 0) { "`n`nMonitored Folders: `n`n" + (($this.Paths | %{ "  > $_"} ) -join "`r`n") } else { "`n`nMonitored Folders: <none>" }
+        $msg += if ($this.Paths.Count -gt 0) { "`n`nMonitored Folders: `n`n" + (($this.Paths | Foreach-Object { "  > $_"} ) -join "`r`n") } else { "`n`nMonitored Folders: <none>" }
     
         if ($this.IncludedFilePatterns.Count -gt 0) {
-            $msg += "`n`nIncluded file patterns: `n" + ((($this.IncludedFilePatterns) | %{ "  > $_"} ) -join "`r`n")
+            $msg += "`n`nIncluded file patterns: `n" + ((($this.IncludedFilePatterns) | Foreach-Object { "  > $_"} ) -join "`r`n")
         }
         
         if (($this.ExcludedFilePatterns + $this.ExcludedFolders).Count -gt 0) {
-            $msg += "`n`nExcluded Folders and file patterns: `n" + ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | %{ "  > $_"} ) -join "`r`n")
+            $msg += "`n`nExcluded Folders and file patterns: `n" + ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | Foreach-Object { "  > $_"} ) -join "`r`n")
         }
         
         if ($this.SavedAsFile) {
