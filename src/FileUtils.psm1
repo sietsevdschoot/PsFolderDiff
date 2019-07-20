@@ -9,6 +9,12 @@
         [IO.DirectoryInfo] $destinationPath
     ) 
 
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
+
     PROCESS {
 
         $destinationPath = [IO.DirectoryInfo](GetAbsolutePath $destinationPath)
@@ -47,6 +53,12 @@ function Copy-FolderKeepExisting {
         [switch] $directlyIntoTargetFolder
     ) 
 
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
+
     PROCESS {
 
         $destinationPath = [IO.DirectoryInfo](GetAbsolutePath $destinationPath)
@@ -75,11 +87,17 @@ function Move-FolderKeepExisting {
         [switch] $directlyIntoTargetFolder
     ) 
 
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
+
     PROCESS {
 
         $folder | Copy-FolderKeepExisting $destinationPath -directlyIntoTargetFolder:$directlyIntoTargetFolder
     
-        if (Test-Path $folder) {
+        if ((Test-Path $folder.FullName)) {
     
             $folder | del -Recurse -Force -ErrorAction Continue
         }
@@ -96,6 +114,11 @@ function Move-KeepExisting {
         [Parameter(Position=1)]
         [IO.DirectoryInfo] $destinationPath
     ) 
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
 
     PROCESS {
 
@@ -103,9 +126,9 @@ function Move-KeepExisting {
 
         $file | Copy-KeepExisting $destinationPath
 
-        if (Test-Path $file) {
+        if ((Test-Path $file.FullName)) {
     
-            $file | Remove-Item -Recurse -Force -ErrorAction Continue
+            $file | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose:($verbosePreference -eq 'Continue')
         }
     }
 }
@@ -119,6 +142,9 @@ Function Internal-Copy-KeepExisting {
         [IO.DirectoryInfo] $destinationPath
     )    
 
+    if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+    if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+
     $destinationFile = [IO.FileInfo](Join-Path $destinationPath $file.Name)
 
     if ($pscmdlet.ShouldProcess("`n    $($file.FullName) `n    $($destinationFile.FullName)", "Copy-KeepExisting")) {
@@ -130,7 +156,7 @@ Function Internal-Copy-KeepExisting {
     
         if (!(Test-Path $destinationFile)) {
             
-            Copy-Item -Path $file.FullName -Destination $destinationFile -Force
+            Copy-Item -Path $file.FullName -Destination $destinationFile -Force -Verbose:($verbosePreference -eq 'Continue')
         }
         else
         {
@@ -151,7 +177,7 @@ Function Internal-Copy-KeepExisting {
             }
             while (Test-Path $destinationFile) 
         
-            Copy-Item -Path $file.FullName -Destination $destinationFile -Force
+            Copy-Item -Path $file.FullName -Destination $destinationFile -Force -Verbose:($verbosePreference -eq 'Continue')
         }
     }
 }
@@ -163,6 +189,12 @@ Function Remove-EmptyFolders {
         [Alias('FullName')]
         [IO.DirectoryInfo] $path
     )
+
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
 
     PROCESS {
 

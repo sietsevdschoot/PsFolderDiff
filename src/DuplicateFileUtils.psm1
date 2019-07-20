@@ -9,8 +9,8 @@ Function Get-FoldersContainingDuplicates {
 
   $folders = Get-DuplicateFolders $fileHashLookup
 
-  $foldersByNrOfFiles = $folders | ForEach-Object { `
-      [PSCustomObject]@{ Path=$_.FullName; NrOfFiles=(Get-ChildItem $_.FullName -File -Recurse -Force).Length } } | Sort-Object -Property NrOfFiles -Descending
+  $foldersByNrOfFiles = $folders | ForEach-Object { [PSCustomObject] `
+        @{ Path=$_.FullName; NrOfFiles=(Get-ChildItem $_.FullName -File -Recurse -Force).Length } } | Sort-Object -Property NrOfFiles -Descending
    
   $foldersByNrOfFiles | Select-Object -exp Path | Out-File ($filename.FullName -replace $filename.Extension, "_folderorder.txt")
       
@@ -43,6 +43,28 @@ Function Get-DuplicateFolders {
   $allFolders | Select-Object -Unique | Sort-Object -prop @{ Expression={$_.FullName.Split([IO.Path]::DirectorySeparatorChar)} }
 }
 
-Export-ModuleMember -Function Get-FoldersContainingDuplicates
+Function ShowDuplicates {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline)]
+        [FileHashLookup] $fileHashLookup
+    )
 
+    $duplicates = $fileHashLookup.Hash.GetEnumerator() | ?{ @($_.Value).Count -gt 1 } 
+    
+    if ($duplicates) {
+    
+        $duplicates | %{ "$($_.Name) `n$((@($_.Value) | %{ "`t > $(([IO.FileInfo]$_).Fullname)" }) -join "`n")" }
+    }
+    else {
+        
+        "No duplicates found"
+    }
+}
+
+
+Set-Alias displayDuplicates ShowDuplicates
+Export-ModuleMember -Function ShowDuplicates -Alias @("displayDuplicates")
+
+Export-ModuleMember -Function Get-FoldersContainingDuplicates
 Export-ModuleMember -Function Get-DuplicateFolders

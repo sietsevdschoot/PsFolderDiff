@@ -26,7 +26,7 @@ class FileHashLookup
         $this.AddFolder($absolutePath)
         $this.LastUpdated = Get-Date
 
-        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | %{ [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
         
         $this.Save((GetAbsolutePath $fileName))
     }
@@ -42,7 +42,7 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetFiles() {
         
-        return $this.File.Keys | Sort-Object | ForEach-Object { [IO.FileInfo] $_ }
+        return $this.File.Keys | Sort | %{ [IO.FileInfo] $_ }
     }
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
@@ -58,7 +58,7 @@ class FileHashLookup
             $fileHash = (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
         }
         
-        return $this.Hash.($fileHash) | Sort-Object | ForEach-Object { [IO.FileInfo] $_ }
+        return $this.Hash.($fileHash) | Sort | %{ [IO.FileInfo] $_ }
     }
 
     [bool] Contains([IO.FileInfo] $file) {
@@ -93,17 +93,17 @@ class FileHashLookup
 
         if ($this.ExcludedFolders) {
         
-            $files = $files | Where-Object { $file = $_; ($this.ExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) -eq $null }
+            $files = $files | ?{ $file = $_; ($this.ExcludedFolders | ?{ $file.FullName.StartsWith($_) }) -eq $null }
         }
     
         Write-Progress -Activity "Adding or updating files" -Status "Detecting modified files..."
 
-        $files | Where-Object { $_.LastWriteTime -gt $this.LastUpdated } | ForEach-Object { $this.Remove($_) }
+        $files | ?{ $_.LastWriteTime -gt $this.LastUpdated } | %{ $this.Remove($_) }
 
         Write-Progress -Activity "Adding or updating files" -Status "Analyzing differences..."
          
-        $newlyAddedFiles = $files | Where-Object { !$this.Contains($_.FullName) } | ForEach-Object { @{ Operation='Add'; File=$_ } }
-        $deletedFiles = $this.GetFiles() | Where-Object { $_ -ne $null -and !$_.Exists } | ForEach-Object { @{ Operation='Remove'; File=$_  } }
+        $newlyAddedFiles = $files | ?{ !$this.Contains($_.FullName) } | %{ @{ Operation='Add'; File=$_ } }
+        $deletedFiles = $this.GetFiles() | ?{ $_ -ne $null -and !$_.Exists } | %{ @{ Operation='Remove'; File=$_  } }
         
         $itemsToUpdate = @($newlyAddedFiles) + @($deletedFiles)
 
@@ -124,17 +124,19 @@ class FileHashLookup
             if ($currentOperation -eq "Add") 
             {
                 $this.Add($currentFile.FullName)    
+
             } 
             elseif ($currentOperation -eq "Remove") 
             {
                 $this.Remove($currentFile.FullName)
+
             }
         }
     }
     
     Refresh() {
         
-       $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
+       $this.Paths | %{ $this.AddFolder(($_)) }
 
        $this.LastUpdated = Get-Date
     }
@@ -171,17 +173,6 @@ class FileHashLookup
         return ([FileHashLookup] (Import-Clixml -Path $fileToLoad))
     }
 
-    [FileHashLookup] GetDiffInOther([FileHashLookup] $other) { 
-
-        # Powershell does not (yet) support optional args in class methods.. :(
-        return $this.Compare($other, $true, $false)
-    }
-
-    [FileHashLookup] GetMatchesInOther([FileHashLookup] $other) { 
-        # Powershell does not (yet) support optional args in class methods.. :(
-        return $this.Compare($other, $false, $true)
-    }
-
     AddFileHashTable([FileHashLookup] $other) {
     
         $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -214,7 +205,7 @@ class FileHashLookup
         
         $this.ExcludedFilePatterns.Add($filePattern) > $null
 
-        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; ( $this.ExcludedFilePatterns | Where-Object { $file -ne $null -and $file.Name -like $_ } ) -ne $null } 
+        $filesToRemove = $this.GetFiles() | ?{ $file = $_; ( $this.ExcludedFilePatterns | ?{ $file -ne $null -and $file.Name -like $_ } ) -ne $null } 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -238,7 +229,7 @@ class FileHashLookup
         
         $this.ExcludedFolders.Add($folder.FullName) > $null
 
-        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; ($this.ExcludedFolders | Where-Object { $file -ne $null -and $file.FullName.StartsWith($_) }) -ne $null }
+        $filesToRemove = $this.GetFiles() | ?{ $file = $_; ($this.ExcludedFolders | ?{ $file -ne $null -and $file.FullName.StartsWith($_) }) -ne $null }
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -300,6 +291,17 @@ class FileHashLookup
         }
     }
 
+    [FileHashLookup] GetDiffInOther([FileHashLookup] $other) { 
+
+        # Powershell does not (yet) support optional args in class methods.. :(
+        return $this.Compare($other, $true, $false)
+    }
+
+    [FileHashLookup] GetMatchesInOther([FileHashLookup] $other) { 
+        # Powershell does not (yet) support optional args in class methods.. :(
+        return $this.Compare($other, $false, $true)
+    }
+
     hidden [FileHashLookup] Compare([FileHashLookup] $other, [switch] $getDifferences = $false, [switch] $getMatches = $false) {
         
         Write-Progress -Activity "Comparing files" -Status "Analyzing differences..."
@@ -339,23 +341,24 @@ class FileHashLookup
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
-        $duplicateFiles =  [FileHashLookup]::new()
+        $duplicateFiles = [FileHashLookup]::new()
 
-        $duplicateHashes = (GetDuplicateHashes $this.File.Values)
-                
-        $sw = [Diagnostics.Stopwatch]::StartNew()
+        $hashEntries = $this.Hash.GetEnumerator() | %{ $_ }
 
-        for($i = 0; $i -lt $duplicateHashes.Count; $i++) {
+        for($i = 0; $i -lt $hashEntries.Count; $i++) {
+
+            $values = @($hashEntries[$i].Value)
             
-            $filesByHash =  $this.Hash.(@($duplicateHashes)[$i]) | ForEach-Object { [IO.FileInfo]$_ }
+            if ($values.Count -gt 1) {
+            
+                $values | %{ $duplicateFiles.Add($_) }
+            }
 
             if ($sw.Elapsed.TotalMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Selecting duplicates" -Status ("($i of $($duplicateHashes.Count)) Processing {0}" -f @($filesByHash)[0]) -PercentComplete  ($i / $duplicateHashes.Count * 100)
+                Write-Progress -Activity "Selecting duplicates" -Status ("($i of $($hashEntries.Count)) Processing {0}" -f $values[0]) -PercentComplete  ($i / $hashEntries.Count * 100)
                 $sw.Restart()
             }
-
-            $filesByHash | ForEach-Object { $duplicateFiles.Add($_) }
         }
 
         return $duplicateFiles
@@ -365,12 +368,14 @@ class FileHashLookup
     {
         $msg = if ($this.File.Keys.Count -eq 0) { "`nFileHashTable is empty." } else { "`nFileHashTable contains $($this.File.Keys.Count) files." } 
     
-        if ($this.Paths) {
-            $msg += "`n`nMonitored Folders: `n`n" + (($this.Paths | ForEach-Object { "  > $_"} ) -join "`r`n")
-        }
+        $msg += if ($this.Paths.Count -gt 0) { "`n`nMonitored Folders: `n`n" + (($this.Paths | %{ "  > $_"} ) -join "`r`n") } else { "`n`nMonitored Folders: <none>" }
     
+        if ($this.IncludedFilePatterns.Count -gt 0) {
+            $msg += "`n`nIncluded file patterns: `n" + ((($this.IncludedFilePatterns) | %{ "  > $_"} ) -join "`r`n")
+        }
+        
         if (($this.ExcludedFilePatterns + $this.ExcludedFolders).Count -gt 0) {
-            $msg += "`n`nExcluded Folders and file patterns: `n`n" + ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | ForEach-Object { "  > $_"} ) -join "`r`n")
+            $msg += "`n`nExcluded Folders and file patterns: `n" + ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | %{ "  > $_"} ) -join "`r`n")
         }
         
         if ($this.SavedAsFile) {
@@ -387,35 +392,4 @@ function GetAbsolutePath {
     param([string] $path)
 
     $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($path)
-}
-
-function GetDuplicateHashes {
-    param([string[]] $hashes)
-
-    $hashSet = [Collections.Generic.HashSet[string]] @()
-    $duplicateHashes = [Collections.Generic.HashSet[string]]@()
-
-    $sw = [Diagnostics.Stopwatch]::StartNew()
-
-    for($i = 0; $i -lt $hashes.Length; $i++) {
-            
-        $currentHash = $hashes[$i]
-
-        if (!$hashSet.Contains($currentHash)) {
-            
-            $hashSet.Add($currentHash) > $null
-        }
-        elseif (!$duplicateHashes.Contains($currentHash)) {
-        
-            $duplicateHashes.Add($currentHash) > $null
-        }
-
-        if ($sw.Elapsed.TotalMilliseconds -ge 500) 
-        {
-            Write-Progress -Activity "Finding duplicate files" -Status ("($i of $($hashes.Count)) Processing filehash {0}" -f $currentHash) -PercentComplete ($i / $hashes.Count * 100)
-            $sw.Restart()
-        }
-    }
-
-    $duplicateHashes
 }
