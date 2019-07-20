@@ -448,7 +448,7 @@ Describe "FileHashLookup" {
         ($actual.GetFiles()).Count | Should -Be 4
     }
     
-    It "GetDuplicateFiles: Returns all duplicates file" {
+    It "GetDuplicates: Returns all duplicates file" {
 
         $fileContent1 = [Guid]::NewGuid()
         $fileContent2 = [Guid]::NewGuid()
@@ -463,7 +463,7 @@ Describe "FileHashLookup" {
 
         $fileHashTable = GetFileHashTable $TestDrive
 
-        $duplicates = $fileHashTable.GetDuplicateFiles()
+        $duplicates = $fileHashTable.GetDuplicates()
 
         foreach ($entry in $duplicates.Hash.GetEnumerator()) {
         

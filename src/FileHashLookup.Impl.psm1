@@ -96,12 +96,14 @@ class FileHashLookup
 
             $files = Get-ChildItem @getChildItemArgs
 
-            $applicableExcludedFolders = $this.ExcludedFolders | ?{ $_.StartsWith(($path.FullName)) }
+            $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_.StartsWith(($path.FullName)) }
 
             if ($applicableExcludedFolders) {
         
+                # Dont add Files from path which are located in excluded folders                
                 $files = $files | Where-Object { $file = $_; ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) -eq $null }
 
+                # Remove files which were added once, and are now located in excluded folders.
                 $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } |  Where-Object { $file = $_; ($applicableExcludedFolders |  Where-Object { $file.FullName.StartsWith($_) }) } 
             }
         }
@@ -335,7 +337,7 @@ class FileHashLookup
         return $newLookup
     }
 
-    [FileHashLookup] GetDuplicateFiles() { 
+    [FileHashLookup] GetDuplicates() { 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 

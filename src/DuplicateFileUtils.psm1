@@ -24,7 +24,7 @@ Function Get-DuplicateFolders {
   
   $paths = @($fileHashLookup.Paths)
 
-  $folders = $fileHashLookup.GetDuplicateFiles().GetFiles() | Select-Object -exp Directory | Select-Object -Unique
+  $folders = $fileHashLookup.GetDuplicates().GetFiles() | Select-Object -exp Directory | Select-Object -Unique
   $allFolders = [Collections.ArrayList]$folders
 
   foreach($folder in $folders) {
