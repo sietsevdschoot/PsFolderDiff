@@ -106,7 +106,7 @@ Describe "FileHashLookup" {
     
         $actual = GetFileHashTable "$TestDrive\MyFolder"
     
-        $myFile = gi "$TestDrive\MyFolder\1.txt"
+        $myFile = Get-Item "$TestDrive\MyFolder\1.txt"
         $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
     
         $actual.Remove($myFile)
@@ -119,7 +119,7 @@ Describe "FileHashLookup" {
     
         1..4 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
     
-        $myFile = gi "$TestDrive\MyFolder\IdenticalHash1.txt"
+        $myFile = Get-Item "$TestDrive\MyFolder\IdenticalHash1.txt"
         $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
         
         $actual = GetFileHashTable "$TestDrive\MyFolder"
@@ -219,6 +219,23 @@ Describe "FileHashLookup" {
         $actual.Refresh()
 
         $actual.LastUpdated | Should -not -be $lastUpdated
+    }
+
+    It "Refresh Removes folders and files from paths which do no longer exists." {
+    
+        $actual = GetFileHashTable
+
+        1..3 | ForEach-Object { New-Item -ItemType Directory Testdrive:\Folders\$_ -Force }
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\Folders\$_\file.txt -Force }
+
+        Get-ChildItem Testdrive:\Folders -Directory | ForEach-Object { $actual.AddFolder($_) }
+
+        Remove-Item Testdrive:\Folders -Recurse -Force
+
+        $actual.Refresh()
+
+        $actual.Paths | Should -BeNullOrEmpty
+        $actual.GetFiles() | Should -BeNullOrEmpty
     }
 
     It "Sets the LastUpdated time when FileHashTable on instantiation" {
