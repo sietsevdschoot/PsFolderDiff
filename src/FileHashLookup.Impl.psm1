@@ -149,11 +149,16 @@ class FileHashLookup
     
     Refresh() {
 
-       $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
+        $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
 
-       $this.Paths = [Collections.ArrayList]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
+        $this.Paths = [Collections.ArrayList]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
 
-       $this.LastUpdated = Get-Date
+        if (!($this.Paths)) {
+        
+            $this.GetFiles() | ?{ ($_ -ne $null) -and !($_.Exists) } | %{ $this.Remove($_) }
+        }
+
+        $this.LastUpdated = Get-Date
     }
 
     Save([IO.FileInfo] $filename) {

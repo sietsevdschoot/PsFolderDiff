@@ -42,7 +42,7 @@ Describe "FileHashLookup" {
     
     It "Creates a hash and file lookup" {
     
-        $myFile = gi "$TestDrive\MyFolder\1.txt"
+        $myFile = Get-Item "$TestDrive\MyFolder\1.txt"
         $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
                 
         $actual = GetFileHashTable "$TestDrive\MyFolder"
@@ -69,18 +69,18 @@ Describe "FileHashLookup" {
         
         GetFileHashTable "$TestDrive\My Documents\"
 
-        $expectedFileName = ((gi "$TestDrive\My Documents\").FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $expectedFileName = ((Get-Item "$TestDrive\My Documents\").FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
     
-        $actual = (Get-ChildItem *.xml | Select -First 1).Name
+        $actual = (Get-ChildItem *.xml | Select-Object -First 1).Name
         
         $actual | Should -Be $expectedFileName
     }
     
     It "Creates a file containing the HashTable" { 
     
-        $fileHashLookup = GetFileHashTable "$TestDrive\MyFolder"
+        GetFileHashTable "$TestDrive\MyFolder"
 
-        $filename =  ((gi "$TestDrive\MyFolder").FullName -replace (([IO.Path]::GetInvalidFileNameChars() | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
+        $filename =  ((Get-Item "$TestDrive\MyFolder").FullName -replace (([IO.Path]::GetInvalidFileNameChars() | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
 
         $actual = Import-Clixml "$($Testdrive)\$filename"
         
@@ -206,6 +206,21 @@ Describe "FileHashLookup" {
         $actual.Refresh()
         
         $actual.File.($file.FullName) | Should -Be (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
+    }
+
+    It "Refresh will remove non existing files from the FileHashTable if no folders are monitored." {
+
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\SomeFolder\$_.txt -Force }
+
+        $actual = GetFileHashTable 
+
+        Get-ChildItem Testdrive:\SomeFolder\ -File  | ForEach-Object { $actual.Add($_) }
+        
+        Remove-Item Testdrive:\SomeFolder\1.txt
+
+        $actual.Refresh()
+
+        ($actual.GetFiles() | Select-Object -exp Name) | Should -Be @("2.txt","3.txt")
     }
 
     It "Refresh updated the LastUpdated date" {
