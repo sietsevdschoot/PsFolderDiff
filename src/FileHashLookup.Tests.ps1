@@ -158,7 +158,7 @@ Describe "FileHashLookup" {
         
         $expectedFileName = ("$TestDrive\MyFolder\Backup" -replace (([IO.Path]::GetInvalidFileNameChars() | ForEach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"
 
-        cd "$TestDrive\MyFolder"
+        Set-Location "$TestDrive\MyFolder"
         
         GetFileHashTable .\Backup 
 
@@ -453,27 +453,22 @@ Describe "FileHashLookup" {
         $fileContent1 = [Guid]::NewGuid()
         $fileContent2 = [Guid]::NewGuid()
 
-        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\1.txt"
-        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Backup\copy1.txt"
-        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\tmp1.txt"
+        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Folder1\1.txt"
+        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Folder1\2.txt"
+        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Folder1\3.txt"
+        New-Item -ItemType File -Value ([Guid]::NewGuid()) -Force -Path "$TestDrive\Duplicates\Folder1\Unique.txt"
 
-        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\2.txt"
-        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Backup\copy2.txt"
-        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\tmp2.txt"
+        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Folder2\1.txt"
+        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Folder2\2.txt"
+        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Folder2\3.txt"
+        New-Item -ItemType File -Value ([Guid]::NewGuid()) -Force -Path "$TestDrive\Duplicates\Folder2\Unique.txt"
 
-        $fileHashTable = GetFileHashTable $TestDrive
+
+        $fileHashTable = GetFileHashTable $TestDrive\Duplicates
 
         $duplicates = $fileHashTable.GetDuplicates()
 
-        foreach ($entry in $duplicates.Hash.GetEnumerator()) {
-        
-            $sortedDuplicates = @($entry.Value) | Sort-Object -prop @{ Expression={$_.FullName.Length}; Ascending=$true }
-
-            $sortedDuplicates | Out-string | Write-Verbose
-
-            $sortedDuplicates | Select-Object -Skip 1 | Remove-Item
-        }
-
-        Get-ChildItem $TestDrive\Duplicates -file -Recurse | Select-Object -exp Name | Should -Be @("1.txt","2.txt") 
-    }
+        @($duplicates.Hash.Keys).Length | Should -Be 2
+        @($duplicates.File.Keys).Length | Should -Be 6
+   }
 }

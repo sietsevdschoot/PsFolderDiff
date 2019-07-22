@@ -26,7 +26,7 @@ Describe "DuplicateFileUtils" {
 
         $fileContent = [Guid]::NewGuid()
 
-        1..3 | ForEach-Object{ New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
+        1..3 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
         4..6 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
 
         $fileHashTable = GetFileHashTable $TestDrive\RootFolder
@@ -43,29 +43,26 @@ Describe "DuplicateFileUtils" {
 
         $actual | Should -Be $expected
     }
+
+    It "Get-DuplicatesByName: Returns a hashtable of duplicates by only looking at filename" {
     
-    It "Writes out a file containing all the directories, sorted descending by number of files." {
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value "$([Guid]::NewGuid().ToString("N"))" -Force }
+        3..6 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value "$([Guid]::NewGuid().ToString("N"))" -Force }
 
-        $fileContent = [Guid]::NewGuid()
-
-        1..2 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value $fileContent -Force }
-        3..6 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value $fileContent -Force }
-
-        $fileHashTable = GetFileHashTable $TestDrive\RootFolder
+        $fileHashTable = GetFileHashTable $TestDrive\RootFolder\Folder1
         
-        $actual = Get-FoldersContainingDuplicates $fileHashTable | Select-Object -exp Path | Sort-Object
-        
-        $actual | Format-Table NrOfFiles, Path -AutoSize | Out-String | Write-Verbose
+        $actual = Get-DuplicatesByName $fileHashTable
 
-        $expected = @(
-            "$TestDrive\RootFolder",
-            "$TestDrive\RootFolder\Folder1",
-            "$TestDrive\RootFolder\Folder1\SubFolder1",
-            "$TestDrive\RootFolder\Folder1\SubFolder1\Sub",
-            "$TestDrive\RootFolder\Folder1\SubFolder2",
-            "$TestDrive\RootFolder\Folder1\SubFolder2\Sub")
-
-        $actual | Should -Be $expected
+        $expected = @{
             
+            "3.txt" = @("$TestDrive\RootFolder\Folder1\SubFolder1\Sub\3.txt","$TestDrive\RootFolder\Folder1\SubFolder2\Sub\3.txt");
+            "4.txt" = @("$TestDrive\RootFolder\Folder1\SubFolder1\Sub\4.txt","$TestDrive\RootFolder\Folder1\SubFolder2\Sub\4.txt");
+        }
+
+        $expectedEntries = $expected.GetEnumerator() | ForEach-Object { $_ }
+        $actualEntries = $actual.GetEnumerator() | ForEach-Object { $_ }
+        
+        ($actualEntries | Select-Object -exp Key) | Should -Be ($expectedEntries | Select-Object -exp Key)
+        ($actualEntries | Select-Object -exp Value) | Should -Be ($expectedEntries | Select-Object -exp Value)
     }
 }

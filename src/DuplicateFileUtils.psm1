@@ -9,10 +9,9 @@ Function Get-FoldersContainingDuplicates {
 
   $folders = Get-DuplicateFolders $fileHashLookup
 
-  $foldersByNrOfFiles = $folders | ForEach-Object { [PSCustomObject] `
-        @{ Path=$_.FullName; NrOfFiles=(Get-ChildItem $_.FullName -File -Recurse -Force).Length } } | Sort-Object -Property NrOfFiles -Descending
-   
-  $foldersByNrOfFiles | Select-Object -exp Path | Out-File ($filename.FullName -replace $filename.Extension, "_folderorder.txt")
+  $foldersByNrOfFiles = $folders `
+    | ForEach-Object { [PSCustomObject] @{ Path=$_.FullName; NrOfFiles=(Get-ChildItem $_.FullName -File -Recurse -Force).Length } } `
+    | Sort-Object -Property NrOfFiles -Descending
       
   $foldersByNrOfFiles 
 }
@@ -62,9 +61,24 @@ Function ShowDuplicates {
     }
 }
 
+Function Get-DuplicatesByName {
+  [CmdletBinding()]
+  param(
+    [Parameter(ValueFromPipeline)]
+    [FileHashLookup] $fileHashLookup
+  )
+
+  $duplicates = @{}
+
+  $groupByName = $fileHashLookup.GetFiles() | Group-Object -prop Name 
+
+  $groupByName.GetEnumerator() | Where-Object { @($_.Group).Count -gt 1} | ForEach-Object { $duplicates.Add($_.Name, @($_.Group)) }
+
+  $duplicates 
+}
 
 Set-Alias displayDuplicates ShowDuplicates
 Export-ModuleMember -Function ShowDuplicates -Alias @("displayDuplicates")
 
 Export-ModuleMember -Function Get-FoldersContainingDuplicates
-Export-ModuleMember -Function Get-DuplicateFolders
+Export-ModuleMember -Function Get-DuplicatesByName
