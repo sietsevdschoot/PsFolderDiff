@@ -301,16 +301,20 @@ Describe "FileHashLookup" {
     }
 
     It "will not contain duplicates files" {
-    
-        $myHash = GetFileHashTable
 
-        $file1 = Get-Item "$TestDrive\MyFolder\1.txt"
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\SomeFolder\$_.txt -Force }
+
+        $actual = GetFileHashTable 
+
+        Get-ChildItem Testdrive:\SomeFolder\ -File  | ForEach-Object { $actual.Add($_) }
+
+        $file1 = Get-Item "$TestDrive\SomeFolder\1.txt"
         $file1Hash = (Get-FileHash -LiteralPath $file1 -Algorithm MD5).Hash
 
-        $myHash.Add($file1.FullName)
-        $myHash.Add($file1.FullName)
+        $actual.Add($file1.FullName, $file1Hash)
 
-        $myHash.Hash.($file1Hash).Count | Should -Be 1
+        ($actual.GetFiles() | Select-Object -exp Name) | Should -Be @("1.txt", "2.txt","3.txt")
+        $actual.Hash.($file1Hash) | %{ ([IO.FileInfo]$_).Name } | Should -Be @("1.txt", "2.txt","3.txt")
     }
     
     It "can add other FileHashLookup" {

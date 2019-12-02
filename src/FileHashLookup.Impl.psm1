@@ -104,7 +104,7 @@ class FileHashLookup
                 $files = $files | Where-Object { $file = $_; ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) -eq $null }
 
                 # Remove files which were added once, and are now located in excluded folders.
-                $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } |  Where-Object { $file = $_; ($applicableExcludedFolders |  Where-Object { $file.FullName.StartsWith($_) }) } 
+                $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } | Where-Object { $file = $_; ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) } 
             }
         }
 
@@ -155,7 +155,27 @@ class FileHashLookup
 
         if (!($this.Paths)) {
         
-            $this.GetFiles() | ?{ ($_ -ne $null) -and !($_.Exists) } | %{ $this.Remove($_) }
+            Write-Progress -Activity "Refresh: Collecting files to refresh..."
+
+            $files = $this.GetFiles() | ?{ $_ -ne $null }
+
+            $sw = [Diagnostics.Stopwatch]::StartNew()
+            
+            for($i = 0; $i -lt $files.Count; $i++ )
+            {
+                $currentFile = $files[$i]
+                
+                if ($sw.ElapsedMilliseconds -ge 500) 
+                {
+                    Write-Progress -Activity "Refresh: Remove files which no longer exists..." -Status "($i of $($files.Count)) $($currentFile.FullName)" -PercentComple ($i / $files.Count * 100)
+                    $sw.Restart()
+                }
+
+                if (!($currentFile.Exists)) {
+                
+                    $this.Remove($currentFile)
+                }
+            }
         }
 
         $this.LastUpdated = Get-Date
@@ -264,14 +284,15 @@ class FileHashLookup
         $fileHash = if (!$hash) { (Get-FileHash -LiteralPath $fileName -Algorithm MD5 -ErrorAction Continue).Hash } else { $hash }
 
         if ($fileHash) {
-
-            if (($this.Hash.ContainsKey($fileHash)) -and (!$this.Hash.($fileHash).Contains($fileName))) {
+            
+            if (!$this.Hash.ContainsKey($fileHash)) {
+            
+                $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
+            }
+            
+            if ((!$this.Hash.($fileHash).Contains($fileName))) {
                 
                 $this.Hash.($fileHash).Add($fileName)
-            }
-            else {
-                
-                $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
             }
             
             $this.File.($fileName) = $fileHash
