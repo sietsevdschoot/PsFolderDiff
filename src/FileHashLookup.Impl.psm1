@@ -4,10 +4,10 @@ class FileHashLookup
     {
         $this.File = @{}
         $this.Hash = @{}
-        $this.Paths = [Collections.ArrayList]@()
-        $this.ExcludedFilePatterns = [Collections.ArrayList]@()
-        $this.IncludedFilePatterns = [Collections.ArrayList]@()
-        $this.ExcludedFolders = [Collections.ArrayList]@()
+        $this.Paths = [Collections.Generic.List[string]]@()
+        $this.ExcludedFilePatterns = [Collections.Generic.List[string]]@()
+        $this.IncludedFilePatterns = [Collections.Generic.List[string]]@()
+        $this.ExcludedFolders = [Collections.Generic.List[string]]@()
 
         $this.LastUpdated = Get-Date
     }
@@ -18,10 +18,10 @@ class FileHashLookup
         
         $this.File = @{}
         $this.Hash = @{}
-        $this.Paths = [Collections.ArrayList]@($absolutePath.FullName)
-        $this.ExcludedFilePatterns = [Collections.ArrayList]@()
-        $this.IncludedFilePatterns = [Collections.ArrayList]@()
-        $this.ExcludedFolders = [Collections.ArrayList]@()
+        $this.Paths = [Collections.Generic.List[string]]@($absolutePath.FullName)
+        $this.ExcludedFilePatterns = [Collections.Generic.List[string]]@()
+        $this.IncludedFilePatterns = [Collections.Generic.List[string]]@()
+        $this.ExcludedFolders = [Collections.Generic.List[string]]@()
 
         $this.AddFolder($absolutePath)
         $this.LastUpdated = Get-Date
@@ -33,10 +33,10 @@ class FileHashLookup
 
     hidden [HashTable] $File
     hidden [HashTable] $Hash
-    hidden [Collections.ArrayList] $Paths
-    hidden [Collections.ArrayList] $ExcludedFilePatterns
-    hidden [Collections.ArrayList] $IncludedFilePatterns
-    hidden [Collections.ArrayList] $ExcludedFolders
+    hidden [Collections.Generic.List[string]] $Paths
+    hidden [Collections.Generic.List[string]] $ExcludedFilePatterns
+    hidden [Collections.Generic.List[string]] $IncludedFilePatterns
+    hidden [Collections.Generic.List[string]] $ExcludedFolders
     hidden [DateTime] $LastUpdated
     hidden [string] $SavedAsFile
 
@@ -79,7 +79,7 @@ class FileHashLookup
         
             if (!($this.Paths -contains $path.FullName)) {
             
-                $this.Paths.Add($path.FullName) > $null
+                $this.Paths.Add($path.FullName)
             }
 
             $getChildItemArgs = @{
@@ -101,7 +101,7 @@ class FileHashLookup
             if ($applicableExcludedFolders) {
         
                 # Dont add Files from path which are located in excluded folders                
-                $files = $files | Where-Object { $file = $_; ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) -eq $null }
+                $files = $files | Where-Object { $file = $_; $null -eq ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) }
 
                 # Remove files which were added once, and are now located in excluded folders.
                 $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } | Where-Object { $file = $_; ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) } 
@@ -151,13 +151,13 @@ class FileHashLookup
 
         $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
 
-        $this.Paths = [Collections.ArrayList]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
+        $this.Paths = [Collections.Generic.List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
 
         if (!($this.Paths)) {
         
             Write-Progress -Activity "Refresh: Collecting files to refresh..."
 
-            $files = $this.GetFiles() | ?{ $_ -ne $null }
+            $files = $this.GetFiles() | Where-Object { $_ -ne $null }
 
             $sw = [Diagnostics.Stopwatch]::StartNew()
             
@@ -233,19 +233,19 @@ class FileHashLookup
             $this.Add($currentFile, $currentHash)		
         }
 
-        $this.Paths = [Collections.ArrayList]@(@($this.Paths) + @($other.Paths) | Select -Unique) 
+        $this.Paths = [Collections.Generic.List[string]]@(@($this.Paths) + @($other.Paths) | Select-Object -Unique) 
     } 
 
     IncludeFilePattern ([string] $filePattern) { 
 
-        $this.IncludedFilePatterns.Add($filePattern) > $null
+        $this.IncludedFilePatterns.Add($filePattern)
     }
     
     ExcludeFilePattern ([string] $filePattern) {
         
-        $this.ExcludedFilePatterns.Add($filePattern) > $null
+        $this.ExcludedFilePatterns.Add($filePattern)
 
-        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; ( $this.ExcludedFilePatterns | Where-Object { $file -ne $null -and $file.Name -like $_ } ) -ne $null } 
+        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; $null -ne ( $this.ExcludedFilePatterns | Where-Object { $null -ne $file -and $file.Name -like $_ } ) } 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -267,7 +267,7 @@ class FileHashLookup
     
         $folder = [IO.DirectoryInfo] (GetAbsolutePath $folder)
         
-        $this.ExcludedFolders.Add($folder.FullName) > $null
+        $this.ExcludedFolders.Add($folder.FullName)
 
         $this.Refresh()
     }
@@ -287,7 +287,7 @@ class FileHashLookup
             
             if (!$this.Hash.ContainsKey($fileHash)) {
             
-                $this.Hash.($fileHash) = [Collections.ArrayList] @($fileName)
+                $this.Hash.($fileHash) = [Collections.Generic.List[string]] @($fileName)
             }
             
             if ((!$this.Hash.($fileHash).Contains($fileName))) {
