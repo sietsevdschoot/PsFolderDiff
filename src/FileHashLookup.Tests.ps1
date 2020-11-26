@@ -1,25 +1,29 @@
-﻿#using module '.\FileHashLookup.Impl.psm1'
-
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+﻿using namespace System.Collections.Generic
 
 Describe "FileHashLookup" {
 
-    BeforeEach {
-    
-        & "$here\Reload.ps1"
-        
+    BeforeAll {
+
+        & ".\Reload.ps1"
+
         $originalLocation = Get-Location 
-        Set-Location $TestDrive
+    }
+
+    AfterAll {
+
+        Set-Location $originalLocation
+
+        & ".\Reload.ps1" -unload
+    }
     
+    BeforeEach {
+        
         1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
+        Set-Location $TestDrive
     }
 
     AfterEach {
         
-        & "$here\Reload.ps1" -unload
-        
-        Set-Location $originalLocation
-    
         Get-ChildItem $TestDrive -Directory -Recurse | Remove-Item -Force -Recurse
         Get-ChildItem $TestDrive -file -Recurse | Remove-Item -Force
     }    
@@ -47,8 +51,8 @@ Describe "FileHashLookup" {
                 
         $actual = GetFileHashTable "$TestDrive\MyFolder"
     
-        $actual.File.($myFile.FullName) | Should -Be $myHash
-        $actual.Hash.($myHash) | Should -Be $myFile.FullName
+        $actual.File.($myFile.FullName).Hash | Should -Be $myHash
+        $actual.Hash.($myHash).FullName | Should -Be $myFile.FullName
     }
     
     It "Exposes the paths which were used" {
@@ -88,21 +92,21 @@ Describe "FileHashLookup" {
         $actual.Hash | Should -Not -BeNullOrEmpty
     }
     
-    It "Creates an arrayList for files which share the same hash" {
-    
+    It "Creates a List for files which share the same hash" {
+            
         1..4 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
     
         $myHash = (Get-FileHash -LiteralPath (gi "$TestDrive\MyFolder\IdenticalHash1.txt").FullName -Algorithm MD5).Hash
                 
         $actual = GetFileHashTable "$TestDrive\MyFolder"
-            
-        (,$actual.Hash.($myHash)) | Should -BeOfType [Collections.ArrayList]
-        $actual.Hash.($myHash).Count | Should -Be 4
+
+        $actual.Hash[$myHash] -is [System.Collections.Generic.List[BasicFileInfo]] | Should -BeTrue
+        $actual.Hash[$myHash].Count | Should -Be 4
         
         $actual.File.Count | Should -Be 7
     }
     
-    It "will remove entry and ArrayList if no items left" {
+    It "will remove entry and List if no items left" {
     
         $actual = GetFileHashTable "$TestDrive\MyFolder"
     
@@ -115,7 +119,7 @@ Describe "FileHashLookup" {
         $actual.Hash.ContainsKey($myHash) | Should -Be $false
     }
     
-    It "will remove entry from arrayList if file with same hash exists" {
+    It "will remove entry from List if file with same hash exists" {
     
         1..4 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt -Value "Identical Hash" -Force }
     
@@ -167,15 +171,17 @@ Describe "FileHashLookup" {
 
     It "can load new instance from filename" {
     
+        4..5 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value" -Force  }
+
         $myHash = GetFileHashTable "$TestDrive\MyFolder"
 
-        $myHash.Save("MyFolder.xml")
+        $myHash.Save("$TestDrive\MyFolder.xml")
 
-        $actual = (ImportFileHashTable "MyFolder.xml")
+        $actual = (ImportFileHashTable "$TestDrive\MyFolder.xml")
 
         $actual | Should -Not -Be $null
         
-        $actual.GetType().Name | Should -Be "FileHashLookup"
+        $actual | Should -BeOfType [FileHashLookup]
     } 
 
     It "can refresh itself. By adding new files and removing no longer existing files." {
@@ -205,7 +211,7 @@ Describe "FileHashLookup" {
 
         $actual.Refresh()
         
-        $actual.File.($file.FullName) | Should -Be (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
+        $actual.File.($file.FullName).Hash | Should -Be (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
     }
 
     It "Refresh will remove non existing files from the FileHashTable if no folders are monitored." {
@@ -259,7 +265,7 @@ Describe "FileHashLookup" {
          (GetFileHashTable).LastUpdated | Should -Not -Be $null
     }
 
-    It "returns unique items from other object it is compared to" {
+    It "Returns unique items from other object it is compared to" {
         
         $myHash = GetFileHashTable "$TestDrive\MyFolder"
         
@@ -466,28 +472,4 @@ Describe "FileHashLookup" {
 
         ($actual.GetFiles()).Count | Should -Be 4
     }
-    
-    It "GetDuplicates: Returns all duplicates file" {
-
-        $fileContent1 = [Guid]::NewGuid()
-        $fileContent2 = [Guid]::NewGuid()
-
-        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Folder1\1.txt"
-        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Folder1\2.txt"
-        New-Item -ItemType File -Value $fileContent1 -Force -Path "$TestDrive\Duplicates\Folder1\3.txt"
-        New-Item -ItemType File -Value ([Guid]::NewGuid()) -Force -Path "$TestDrive\Duplicates\Folder1\Unique.txt"
-
-        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Folder2\1.txt"
-        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Folder2\2.txt"
-        New-Item -ItemType File -Value $fileContent2 -Force -Path "$TestDrive\Duplicates\Folder2\3.txt"
-        New-Item -ItemType File -Value ([Guid]::NewGuid()) -Force -Path "$TestDrive\Duplicates\Folder2\Unique.txt"
-
-
-        $fileHashTable = GetFileHashTable $TestDrive\Duplicates
-
-        $duplicates = $fileHashTable.GetDuplicates()
-
-        @($duplicates.Hash.Keys).Length | Should -Be 2
-        @($duplicates.File.Keys).Length | Should -Be 6
-   }
 }

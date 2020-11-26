@@ -1,26 +1,33 @@
 ﻿using module '.\FileUtils.psm1'
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Describe "FileUtils" {
 
-    BeforeEach {
+    BeforeAll {
 
-        & "$here\Reload.ps1"
-    
+        & ".\Reload.ps1"
+
         $originalLocation = Get-Location 
+    }
+
+    AfterAll {
+
+        Set-Location $originalLocation
+
+        & ".\Reload.ps1" -unload
+    }
+    
+    BeforeEach {
+        
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
         Set-Location $TestDrive
     }
-    
+
     AfterEach {
         
-        & "$here\Reload.ps1" -unload
-        
-        Set-Location $originalLocation
-    
-        Get-ChildItem $TestDrive -Directory | Remove-Item -Force -Recurse
-        Get-ChildItem $TestDrive -File | Remove-Item -Force
-    }
-    
+        Get-ChildItem $TestDrive -Directory -Recurse | Remove-Item -Force -Recurse
+        Get-ChildItem $TestDrive -file -Recurse | Remove-Item -Force
+    }    
+
     It "MoveFolder-KeepExisting: Copies folder to targetFolder, removes source folders" {
     
         New-Item -ItemType File "$Testdrive\backup\MyDocuments2015\Administration\Invoices\MyInvoice.doc" -Force
@@ -59,7 +66,7 @@ Describe "FileUtils" {
         1..3 | Foreach-Object { $file | Copy-KeepExisting $Testdrive\MyFolder } 
         
         $filenames = Get-ChildItem "$Testdrive\MyFolder\test - Copy*.txt" | Foreach-Object { $_.Name -replace $_.Extension } | Sort-Object
-        $filenames | Should Be @("test - Copy", "test - Copy (2)", "test - Copy (3)")
+        $filenames | Should -Be @("test - Copy", "test - Copy (2)", "test - Copy (3)")
     }
     
     # Path matching examples:

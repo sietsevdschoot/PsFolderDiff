@@ -1,26 +1,32 @@
 using module '.\DuplicateFileUtils.psm1'
 
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-
 Describe "DuplicateFileUtils" {
 
-    BeforeEach {
-    
-        & "$here\Reload.ps1"
-        
+    BeforeAll {
+
+        & ".\Reload.ps1"
+
         $originalLocation = Get-Location 
+    }
+
+    AfterAll {
+
+        Set-Location $originalLocation
+
+        & ".\Reload.ps1" -unload
+    }
+    
+    BeforeEach {
+        
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }
         Set-Location $TestDrive
     }
 
     AfterEach {
         
-        & "$here\Reload.ps1" -unload
-        
-        Set-Location $originalLocation
-    
         Get-ChildItem $TestDrive -Directory -Recurse | Remove-Item -Force -Recurse
         Get-ChildItem $TestDrive -file -Recurse | Remove-Item -Force
-    } 
+    }    
     
     It "Get-FoldersContainingDuplicates: List all folders containing duplicates" {
 

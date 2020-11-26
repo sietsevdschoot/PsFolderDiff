@@ -1,42 +1,46 @@
+using namespace System.Collections.Generic;
+
 class FileHashLookup 
 {
     FileHashLookup() 
     {
-        $this.File = @{}
-        $this.Hash = @{}
-        $this.Paths = [Collections.Generic.List[string]]@()
-        $this.ExcludedFilePatterns = [Collections.Generic.List[string]]@()
-        $this.IncludedFilePatterns = [Collections.Generic.List[string]]@()
-        $this.ExcludedFolders = [Collections.Generic.List[string]]@()
-
-        $this.LastUpdated = Get-Date
+        $this.Init($null)
     }
-
+    
     FileHashLookup([IO.DirectoryInfo] $path)
     {
-        $absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
-        
-        $this.File = @{}
-        $this.Hash = @{}
-        $this.Paths = [Collections.Generic.List[string]]@($absolutePath.FullName)
-        $this.ExcludedFilePatterns = [Collections.Generic.List[string]]@()
-        $this.IncludedFilePatterns = [Collections.Generic.List[string]]@()
-        $this.ExcludedFolders = [Collections.Generic.List[string]]@()
-
-        $this.AddFolder($absolutePath)
-        $this.LastUpdated = Get-Date
-
-        $fileName = ($absolutePath.FullName -replace (([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach-Object { [Regex]::Escape($_) }) -join "|"), "_") + ".xml"  
-        
-        $this.Save((GetAbsolutePath $fileName))
+        $this.Init($path)
     }
 
-    hidden [HashTable] $File
-    hidden [HashTable] $Hash
-    hidden [Collections.Generic.List[string]] $Paths
-    hidden [Collections.Generic.List[string]] $ExcludedFilePatterns
-    hidden [Collections.Generic.List[string]] $IncludedFilePatterns
-    hidden [Collections.Generic.List[string]] $ExcludedFolders
+    hidden [void] Init([IO.DirectoryInfo] $path)
+    {
+        $this.File = [Dictionary[string, BasicFileInfo]]@{}
+        $this.Hash = [Dictionary[string, List[BasicFileInfo]]]@{}
+        $this.ExcludedFilePatterns = [List[string]]@()
+        $this.IncludedFilePatterns = [List[string]]@()
+        $this.ExcludedFolders = [List[string]]@()
+        $this.Paths = [List[string]]@{}
+
+        if ($path) {
+
+            $absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
+            $this.AddFolder($absolutePath)
+
+            $replaceableChars = (([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach-Object { [Regex]::Escape($_) }) -join "|")
+            $fileName = "$($absolutePath.FullName -replace $replaceableChars, "_").xml"  
+
+            $this.Save((GetAbsolutePath $fileName))
+        }
+
+        $this.LastUpdated = Get-Date
+    }
+
+    hidden [Dictionary[string, BasicFileInfo]] $File
+    hidden [Dictionary[string, List[BasicFileInfo]]] $Hash
+    hidden [List[string]] $Paths
+    hidden [List[string]] $ExcludedFilePatterns
+    hidden [List[string]] $IncludedFilePatterns
+    hidden [List[string]] $ExcludedFolders
     hidden [DateTime] $LastUpdated
     hidden [string] $SavedAsFile
 
@@ -46,19 +50,12 @@ class FileHashLookup
     }
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
-        
+
         $fileForHash = [IO.FileInfo](GetAbsolutePath $file)
         
-        if ($this.Contains($fileForHash))
-        {
-            $fileHash = $this.File.($fileForHash.FullName)
-        } 
-        else 
-        {
-            $fileHash = (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
-        }
+        $fileHash = $this.File.($fileForHash.FullName).Hash ?? ([BasicFileInfo]::New($fileForHash)).Hash   
         
-        return $this.Hash.($fileHash) | Sort-Object | Foreach-Object { [IO.FileInfo] $_ }
+        return $this.Hash.($fileHash) | Sort-Object | Foreach-Object { [IO.FileInfo] $_.FullName }
     }
 
     [bool] Contains([IO.FileInfo] $file) {
@@ -84,7 +81,7 @@ class FileHashLookup
 
             $getChildItemArgs = @{
 
-                Path = "$($path.FullName)";
+                Path = $path.FullName;
                 File = $true;
                 Recurse = $true;
                 Force = $true;
@@ -104,7 +101,7 @@ class FileHashLookup
                 $files = $files | Where-Object { $file = $_; $null -eq ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) }
 
                 # Remove files which were added once, and are now located in excluded folders.
-                $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } | Where-Object { $file = $_; ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) } 
+                $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } | Where-Object { $file = $_; $null -ne ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) } 
             }
         }
 
@@ -136,13 +133,12 @@ class FileHashLookup
 
             if ($currentOperation -eq "Add") 
             {
-                $this.Add($currentFile.FullName)    
+                $this.Add($currentFile)    
 
             } 
             elseif ($currentOperation -eq "Remove") 
             {
-                $this.Remove($currentFile.FullName)
-
+                $this.Remove($currentFile)
             }
         }
     }
@@ -151,7 +147,7 @@ class FileHashLookup
 
         $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
 
-        $this.Paths = [Collections.Generic.List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
+        $this.Paths = [List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
 
         if (!($this.Paths)) {
         
@@ -209,31 +205,49 @@ class FileHashLookup
         
             Throw "'$($fileToLoad.FullName)' does not exist."
         }
+
+        $deserialized = Import-Clixml -Path $fileToLoad
+        $newLookup = [FileHashLookup]::new()
+
+        $newLookup.File = [Dictionary[string, BasicFileInfo]] [List[KeyValuePair[string, BasicFileInfo]]] `
+            ($deserialized.File.GetEnumerator() | ForEach-Object {  `
+            [KeyValuePair[string, BasicFileInfo]]::new($_.Name, [BasicFileInfo]$_.Value) })
+
+        $newLookup.Hash = [Dictionary[string, [List[BasicFileInfo]]]] [List[KeyValuePair[string, List[BasicFileInfo]]]] `
+            ($deserialized.Hash.GetEnumerator() | ForEach-Object { `
+             $entries = ($_.Value | ForEach-Object{ [BasicFileInfo]$_.Value });
+            [KeyValuePair[string, List[BasicFileInfo]]]::new($_.Name, ([List[BasicFileInfo]] $entries ))})
         
-        return ([FileHashLookup] (Import-Clixml -Path $fileToLoad))
+        $newLookup.Paths = $deserialized.Paths
+        $newLookup.ExcludedFilePatterns = $deserialized.ExcludedFilePatterns
+        $newLookup.IncludedFilePatterns = $deserialized.IncludedFilePatterns
+        $newLookup.ExcludedFolders = $deserialized.ExcludedFolders
+        $newLookup.LastUpdated = $deserialized.LastUpdated
+        $newLookup.SavedAsFile = $deserialized.SavedAsFile
+
+        return $newLookup
     }
 
     AddFileHashTable([FileHashLookup] $other) {
     
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
-        $files = @($other.File.Keys)
+        $files = @($other.File.Values)
 
         for($i = 0; $i -lt $other.File.Count; $i++ )
         {
             $currentFile = $files[$i]
-            $currentHash = $other.File.($currentFile)
 
             if ($sw.ElapsedMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Adding..." -Status "($i of $($other.File.Count)) $currentFile" -PercentComple ($i / $other.File.Count * 100)
+                Write-Progress -Activity "Adding..." -Status "($i of $($other.File.Count)) $($currentFile.FullName)" -PercentComple ($i / $other.File.Count * 100)
                 $sw.Restart()
             }
             
-            $this.Add($currentFile, $currentHash)		
+            $this.Add($currentFile.FullName, $currentFile.Hash)		
         }
 
-        $this.Paths = [Collections.Generic.List[string]]@(@($this.Paths) + @($other.Paths) | Select-Object -Unique) 
+        $this.Paths = [List[string]]@(@($this.Paths) + @($other.Paths) | Select-Object -Unique) 
     } 
 
     IncludeFilePattern ([string] $filePattern) { 
@@ -279,115 +293,84 @@ class FileHashLookup
 
     hidden Add ([IO.FileInfo] $file, [string] $hash) {
 
-        $fileName = $file.FullName
+        $this.Add([BasicFileInfo]::new($file, $hash))
+    }
+   
+    hidden Add ([BasicFileInfo] $newFile) {
 
-        $fileHash = if (!$hash) { (Get-FileHash -LiteralPath $fileName -Algorithm MD5 -ErrorAction Continue).Hash } else { $hash }
+        if ($newFile.Hash) {
 
-        if ($fileHash) {
+            if (!$this.Hash.ContainsKey($newFile.Hash)) {
             
-            if (!$this.Hash.ContainsKey($fileHash)) {
-            
-                $this.Hash.($fileHash) = [Collections.Generic.List[string]] @($fileName)
+                $this.Hash.($newFile.Hash) = [List[BasicFileInfo]]@($newFile)
             }
-            
-            if ((!$this.Hash.($fileHash).Contains($fileName))) {
+    
+            if ($this.Hash.($newFile.Hash) -notcontains $newFile) {
                 
-                $this.Hash.($fileHash).Add($fileName)
+                $this.Hash.($newFile.Hash).Add($newFile)
             }
             
-            $this.File.($fileName) = $fileHash
+            $this.File.($newFile.FullName) = $newFile
         }
     }
 
     hidden Remove ([IO.FileInfo] $file) {
     
-        $fileName = $file.FullName
-        
-        if ($this.File.ContainsKey($fileName)) {
+        if ($this.File.ContainsKey($file.FullName)) {
             
-            $fileHash = $this.File.($fileName)
+            $fileToRemove = $this.File.($file.FullName)
             
-            $this.File.Remove($fileName)
+            $this.File.Remove($fileToRemove.FullName)
             
-            $this.Hash.($fileHash).Remove($fileName)
+            $this.Hash.($fileToRemove.Hash).Remove($fileToRemove)
 
-            if ($this.Hash.($fileHash).Count -eq 0) {
-                $this.Hash.Remove($fileHash)
+            if ($this.Hash.($fileToRemove.Hash).Count -eq 0) {
+
+                $this.Hash.Remove($fileToRemove.Hash)
             }
         }
     }
 
     [FileHashLookup] GetDiffInOther([FileHashLookup] $other) { 
 
-        # Powershell does not (yet) support optional args in class methods.. :(
-        return $this.Compare($other, $true, $false)
+        return $this.Compare($other).Differences
     }
 
     [FileHashLookup] GetMatchesInOther([FileHashLookup] $other) { 
-        # Powershell does not (yet) support optional args in class methods.. :(
-        return $this.Compare($other, $false, $true)
+
+        return $this.Compare($other).Matches
     }
 
-    hidden [FileHashLookup] Compare([FileHashLookup] $other, [switch] $getDifferences = $false, [switch] $getMatches = $false) {
+    hidden [PsCustomObject] Compare([FileHashLookup] $other) {
         
         Write-Progress -Activity "Comparing files" -Status "Analyzing differences..."
         
-        $newLookup = [FileHashLookup]::New()
+        $differencesLookup = [FileHashLookup]::New() 
+        $matchesLookup = [FileHashLookup]::New() 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
         
-        $otherFiles = $other.GetFiles()
+        $otherFiles = $other.File.Values.GetEnumerator() | ForEach-Object { $_ } 
         
-        for($i = 0; $i -lt $other.File.Count; $i++) {
+        for($i = 0; $i -lt $otherFiles.Count; $i++) {
             
-            $currentFile = $otherFiles[$i].FullName
-            $currentHash = $other.File.($currentFile)
+            $currentFile = $otherFiles[$i]
             
             if ($sw.Elapsed.TotalMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Comparing hashes" -Status ("($i of $($other.File.Count)) Processing {0}" -f $currentFile) -PercentComplete ($i / $other.File.Count * 100)
+                Write-Progress -Activity "Comparing hashes" -Status "($i of $($otherFiles.Count)) Processing $($currentFile.FullName)" -PercentComplete ($i / $otherFiles.Count * 100)
                 $sw.Restart()
             }
 
-            if ($getDifferences -and !$this.Hash.ContainsKey($currentHash)) {
-                
-                $newLookup.Add($currentFile, $currentHash);
+            if ($this.Hash.ContainsKey($currentFile.Hash))  {
+                 $matchesLookup.Add($currentFile)
             }
-
-            if ($getMatches -and $this.Hash.ContainsKey($currentHash)) {
-                
-                $newLookup.Add($currentFile, $currentHash);
+            else {
+                $differencesLookup.Add($currentFile)
             }
         }
 
-        return $newLookup
-    }
-
-    [FileHashLookup] GetDuplicates() { 
-
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-
-        $duplicateFiles = [FileHashLookup]::new()
-
-        $hashEntries = $this.Hash.GetEnumerator() | Foreach-Object { $_ }
-
-        for($i = 0; $i -lt $hashEntries.Count; $i++) {
-
-            $values = @($hashEntries[$i].Value)
-            
-            if ($values.Count -gt 1) {
-            
-                $values | Foreach-Object { $duplicateFiles.Add($_) }
-            }
-
-            if ($sw.Elapsed.TotalMilliseconds -ge 500) 
-            {
-                Write-Progress -Activity "Selecting duplicates" -Status ("($i of $($hashEntries.Count)) Processing {0}" -f $values[0]) -PercentComplete  ($i / $hashEntries.Count * 100)
-                $sw.Restart()
-            }
-        }
-
-        return $duplicateFiles
+        return [PsCustomObject]@{ Matches=$matchesLookup; Differences=$differencesLookup; }
     }
 
     [string] ToString() 
@@ -411,6 +394,65 @@ class FileHashLookup
         $msg += "`n`nLast updated: $($this.LastUpdated.ToString("dd-MM-yyyy HH:mm:ss"))`n" 
                 
         return $msg
+    }
+}
+
+class BasicFileInfo : IComparable
+{
+    BasicFileInfo()
+    {
+    }
+    
+    BasicFileInfo([IO.FileInfo] $file)
+    {
+        $this.Init($file, $null)
+    }
+
+    BasicFileInfo([IO.FileInfo] $file, [string] $hash)
+    {
+        $this.Init($file, $hash)
+    }
+
+    hidden [void] Init([IO.FileInfo] $file, [string] $hash)
+    {
+        $this.FullName = $file.FullName
+        $this.CreationTime = $file.CreationTime
+        $this.LastWriteTime = $file.LastWriteTime
+
+        # Null coalescing doesn't work here because passing $null as a string becomes "" for $hash :(
+        $this.Hash = ![string]::IsNullOrEmpty($hash) ? $hash : (Get-FileHash -LiteralPath $file -Algorithm MD5 -ErrorAction SilentlyContinue).Hash
+    }
+
+    [string] $FullName
+    [DateTime] $CreationTime
+    [DateTime] $LastWriteTime
+    [string] $Hash
+
+    [bool] Equals ($that) 
+    {
+        if (@([IO.FileInfo], [BasicFileInfo]) -notcontains $that.GetType()) {
+            return $false
+        }
+
+        $isEqual = $this.FullName -eq $that.FullName -and $this.CreationTime -eq $that.CreationTime -and $this.LastWriteTime -eq $that.LastWriteTime
+
+        return $that -is [BasicFileInfo] `
+            ? $isEqual -and $this.Hash -eq $that.Hash `
+            : $isEqual
+    }    
+
+    [int] CompareTo($that)
+    {
+        if (@([IO.FileInfo], [BasicFileInfo]) -notcontains $that.GetType()) {
+            Throw "Can't compare"
+        }
+        
+        return (($this.CreationTime - $that.CreationTime) + ($this.LastWriteTime - $that.LastWriteTime)).TotalSeconds  
+    }    
+
+    static [IO.FileInfo] op_Implicit([BasicFileInfo] $instance) {
+        
+        return [IO.FileInfo] $instance.FullName
     }
 }
 
