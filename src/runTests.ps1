@@ -1,23 +1,21 @@
 ﻿using module '.\FileHashLookup.Impl.psm1'
+using module '.\BasicFileInfo.psm1'
 
 [Cmdletbinding()]
 param (
     [IO.FileInfo] $testFile
 )
 
-$location = Get-Location
-
 Set-Location $psScriptRoot
 
 if (!(Get-Module Pester)) {
-
+    
     Import-Module Pester -Force
 }
 
 [PesterConfiguration]::Default.Debug.ShowFullErrors = $true
 [PesterConfiguration]::Default.Debug.WriteDebugMessages = $true
-[PesterConfiguration]::Default.Output.Verbosity = "normal"
-
+[PesterConfiguration]::Default.Output.Verbosity = "Diagnostic"
 
 # Run tests
 if (!$testFile) {

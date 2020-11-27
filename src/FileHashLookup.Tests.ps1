@@ -179,9 +179,12 @@ Describe "FileHashLookup" {
 
         $actual = (ImportFileHashTable "$TestDrive\MyFolder.xml")
 
-        $actual | Should -Not -Be $null
+        $actual | Should  -Not -Be $null
         
-        $actual | Should -BeOfType [FileHashLookup]
+        # Note: This line fails every 2nd test run in vscode.
+        # $actual | Should -BeOfType [FileHashLookup]
+        
+        $actual.GetType().Name | Should -Be "FileHashLookup"
     } 
 
     It "can refresh itself. By adding new files and removing no longer existing files." {

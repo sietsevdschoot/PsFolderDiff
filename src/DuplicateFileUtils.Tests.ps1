@@ -28,7 +28,7 @@ Describe "DuplicateFileUtils" {
         Get-ChildItem $TestDrive -file -Recurse | Remove-Item -Force
     }    
     
-    It "Get-FoldersContainingDuplicates: List all folders containing duplicates" {
+    It "Get-FoldersContainingDuplicates: List all folders containing duplicates" -Skip {
 
         $fileContent = [Guid]::NewGuid()
 
@@ -50,7 +50,7 @@ Describe "DuplicateFileUtils" {
         $actual | Should -Be $expected
     }
 
-    It "Get-DuplicatesByName: Returns a hashtable of duplicates by only looking at filename" {
+    It "Get-DuplicatesByName: Returns a hashtable of duplicates by only looking at filename" -Skip {
     
         1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder1\Sub\$_.txt" -Value "$([Guid]::NewGuid().ToString("N"))" -Force }
         3..6 | ForEach-Object { New-Item -ItemType File "$TestDrive\RootFolder\Folder1\SubFolder2\Sub\$_.txt" -Value "$([Guid]::NewGuid().ToString("N"))" -Force }

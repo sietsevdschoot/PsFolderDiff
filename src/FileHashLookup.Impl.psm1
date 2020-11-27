@@ -1,3 +1,4 @@
+using module .\BasicFileInfo.psm1
 using namespace System.Collections.Generic;
 
 class FileHashLookup 
@@ -26,7 +27,7 @@ class FileHashLookup
             $absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
             $this.AddFolder($absolutePath)
 
-            $replaceableChars = (([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach-Object { [Regex]::Escape($_) }) -join "|")
+            $replaceableChars = ([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach-Object { [Regex]::Escape($_) }) -join "|"
             $fileName = "$($absolutePath.FullName -replace $replaceableChars, "_").xml"  
 
             $this.Save((GetAbsolutePath $fileName))
@@ -55,7 +56,7 @@ class FileHashLookup
         
         $fileHash = $this.File.($fileForHash.FullName).Hash ?? ([BasicFileInfo]::New($fileForHash)).Hash   
         
-        return $this.Hash.($fileHash) | Sort-Object | Foreach-Object { [IO.FileInfo] $_.FullName }
+        return $this.Hash.($fileHash) | Sort-Object | Foreach-Object { [IO.FileInfo]$_ }
     }
 
     [bool] Contains([IO.FileInfo] $file) {
@@ -394,65 +395,6 @@ class FileHashLookup
         $msg += "`n`nLast updated: $($this.LastUpdated.ToString("dd-MM-yyyy HH:mm:ss"))`n" 
                 
         return $msg
-    }
-}
-
-class BasicFileInfo : IComparable
-{
-    BasicFileInfo()
-    {
-    }
-    
-    BasicFileInfo([IO.FileInfo] $file)
-    {
-        $this.Init($file, $null)
-    }
-
-    BasicFileInfo([IO.FileInfo] $file, [string] $hash)
-    {
-        $this.Init($file, $hash)
-    }
-
-    hidden [void] Init([IO.FileInfo] $file, [string] $hash)
-    {
-        $this.FullName = $file.FullName
-        $this.CreationTime = $file.CreationTime
-        $this.LastWriteTime = $file.LastWriteTime
-
-        # Null coalescing doesn't work here because passing $null as a string becomes "" for $hash :(
-        $this.Hash = ![string]::IsNullOrEmpty($hash) ? $hash : (Get-FileHash -LiteralPath $file -Algorithm MD5 -ErrorAction SilentlyContinue).Hash
-    }
-
-    [string] $FullName
-    [DateTime] $CreationTime
-    [DateTime] $LastWriteTime
-    [string] $Hash
-
-    [bool] Equals ($that) 
-    {
-        if (@([IO.FileInfo], [BasicFileInfo]) -notcontains $that.GetType()) {
-            return $false
-        }
-
-        $isEqual = $this.FullName -eq $that.FullName -and $this.CreationTime -eq $that.CreationTime -and $this.LastWriteTime -eq $that.LastWriteTime
-
-        return $that -is [BasicFileInfo] `
-            ? $isEqual -and $this.Hash -eq $that.Hash `
-            : $isEqual
-    }    
-
-    [int] CompareTo($that)
-    {
-        if (@([IO.FileInfo], [BasicFileInfo]) -notcontains $that.GetType()) {
-            Throw "Can't compare"
-        }
-        
-        return (($this.CreationTime - $that.CreationTime) + ($this.LastWriteTime - $that.LastWriteTime)).TotalSeconds  
-    }    
-
-    static [IO.FileInfo] op_Implicit([BasicFileInfo] $instance) {
-        
-        return [IO.FileInfo] $instance.FullName
     }
 }
 
