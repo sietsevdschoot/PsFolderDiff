@@ -47,22 +47,23 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetFiles() {
         
-        return $this.File.Keys | Sort-Object | Foreach-Object { [IO.FileInfo] $_ }
+        return $this.File.Keys | Sort-Object -prop FullName | Foreach-Object { [IO.FileInfo]$_ }
     }
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
 
         $fileForHash = [IO.FileInfo](GetAbsolutePath $file)
         
-        $fileHash = $this.File.($fileForHash.FullName).Hash ?? ([BasicFileInfo]::New($fileForHash)).Hash   
+        $fileHash = $this.File.($fileForHash).Hash ?? ([BasicFileInfo]::New($fileForHash)).Hash   
         
-        return $this.Hash.($fileHash) | Sort-Object | Foreach-Object { [IO.FileInfo]$_ }
+        return $this.Hash.($fileHash) | Sort-Object -prop FullName | Foreach-Object { [IO.FileInfo]$_ }
     }
 
     [bool] Contains([IO.FileInfo] $file) {
         
         return $this.File.ContainsKey((GetAbsolutePath $file))
     }   
+
 
     AddFolder([IO.DirectoryInfo] $path) {
         
@@ -97,24 +98,25 @@ class FileHashLookup
             $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_.StartsWith(($path.FullName)) }
 
             if ($applicableExcludedFolders) {
-        
+
                 # Dont add Files from path which are located in excluded folders                
                 $files = $files | Where-Object { $file = $_; $null -eq ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) }
 
                 # Remove files which were added once, and are now located in excluded folders.
-                $filesToExclude = $this.GetFiles() | Where-Object { $_ -ne $null } | Where-Object { $file = $_; $null -ne ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) } 
+                $filesToExclude = $this.GetFiles() | Where-Object { $file = $_; $null -ne ($applicableExcludedFolders | Where-Object { $null -ne $file -and $file.FullName.StartsWith($_) }) } 
             }
         }
 
         Write-Progress -Activity "Adding or updating files" -Status "Detecting modified files..."
 
-        $files | Where-Object { $_.LastWriteTime -gt $this.LastUpdated } | Foreach-Object { $this.Remove($_) }
+        # Later modified files should be refreshed
+        $files | Where-Object { $this.Contains($_) -and $this.File.($_) -le $_ } | Foreach-Object { $this.Remove($_) }
 
         Write-Progress -Activity "Adding or updating files" -Status "Analyzing differences..."
          
-        $newlyAddedFiles = $files | Where-Object { !$this.Contains($_.FullName) } | Foreach-Object { @{ Operation='Add'; File=$_ } }
-        $deletedFiles = $this.GetFiles() | Where-Object { $_ -ne $null -and !$_.Exists } | Foreach-Object { @{ Operation='Remove'; File=$_  } }
-        $excludedFiles = $filesToExclude | Where-Object { $_ -ne $null } | Foreach-Object { @{ Operation='Remove'; File=$_  } }
+        $newlyAddedFiles = $files | Where-Object { !$this.Contains($_) } | Foreach-Object { @{ Operation='Add'; File=$_ } }
+        $deletedFiles = $this.GetFiles() | Where-Object {$_ -ne $null -and !$_.Exists } | Foreach-Object { @{ Operation='Remove'; File=$_  } }
+        $excludedFiles = $filesToExclude | Foreach-Object { @{ Operation='Remove'; File=$_  } }
         
         $itemsToUpdate = @($newlyAddedFiles) + @($deletedFiles) + @($excludedFiles)
 
@@ -135,7 +137,6 @@ class FileHashLookup
             if ($currentOperation -eq "Add") 
             {
                 $this.Add($currentFile)    
-
             } 
             elseif ($currentOperation -eq "Remove") 
             {
@@ -143,7 +144,7 @@ class FileHashLookup
             }
         }
     }
-    
+	    
     Refresh() {
 
         $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
@@ -219,7 +220,6 @@ class FileHashLookup
              $entries = ($_.Value | ForEach-Object{ [BasicFileInfo]$_.Value });
             [KeyValuePair[string, List[BasicFileInfo]]]::new($_.Name, ([List[BasicFileInfo]] $entries ))})
         
-        $newLookup.Paths = $deserialized.Paths
         $newLookup.ExcludedFilePatterns = $deserialized.ExcludedFilePatterns
         $newLookup.IncludedFilePatterns = $deserialized.IncludedFilePatterns
         $newLookup.ExcludedFolders = $deserialized.ExcludedFolders
@@ -260,7 +260,7 @@ class FileHashLookup
         
         $this.ExcludedFilePatterns.Add($filePattern)
 
-        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; $null -ne ( $this.ExcludedFilePatterns | Where-Object { $null -ne $file -and $file.Name -like $_ } ) } 
+        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; $null -ne ( $this.ExcludedFilePatterns | Where-Object { $file.Name -like $_ } ) } 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
@@ -277,6 +277,7 @@ class FileHashLookup
             $this.Remove($currentFile)
         }
     }
+
 
     ExcludeFolder ([IO.DirectoryInfo] $folder) {
     

@@ -53,8 +53,7 @@ Describe "BasicFileInfo" {
         Set-Content $file -Value "Updated!"
 
         $updatedFile =  [IO.FileInfo]"$Testdrive\MyFolder\1.txt"
-        $updatedBasicFileInfo = [BasicFileInfo]::new($updatedFile)
 
-        $updatedBasicFileInfo -gt $basicFileInfo | Should -BeTrue
+        $basicFileInfo | Should -BeLessThan $updatedFile 
     }
 }

@@ -199,7 +199,7 @@ Describe "FileHashLookup" {
     
         $actual.Refresh()
     
-        $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(2,3,4,10,11)
+        $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Sort-Object | Should -Be @(2,3,4,10,11)
     }
 
     It "Refresh updates the hash of changed files" {
