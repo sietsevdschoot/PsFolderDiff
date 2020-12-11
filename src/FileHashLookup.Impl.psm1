@@ -111,7 +111,6 @@ class FileHashLookup
             }
         }
     }
- 
 
     AddFolder([IO.DirectoryInfo] $path) {
         
@@ -201,40 +200,6 @@ class FileHashLookup
         }
     }
 	    
-    Refresh() {
-
-        $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
-
-        $this.Paths = [List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
-
-        if (!($this.Paths)) {
-        
-            Write-Progress -Activity "Refresh: Collecting files to refresh..."
-
-            $files = $this.GetFiles() | Where-Object { $_ -ne $null }
-
-            $sw = [Diagnostics.Stopwatch]::StartNew()
-            
-            for($i = 0; $i -lt $files.Count; $i++ )
-            {
-                $currentFile = $files[$i]
-                
-                if ($sw.ElapsedMilliseconds -ge 500) 
-                {
-                    Write-Progress -Activity "Refresh: Remove files which no longer exists..." -Status "($i of $($files.Count)) $($currentFile.FullName)" -PercentComple ($i / $files.Count * 100)
-                    $sw.Restart()
-                }
-
-                if (!($currentFile.Exists)) {
-                
-                    $this.Remove($currentFile)
-                }
-            }
-        }
-
-        $this.LastUpdated = Get-Date
-    }
-
     AddFileHashTable([FileHashLookup] $other) {
     
         $sw = [Diagnostics.Stopwatch]::StartNew()
