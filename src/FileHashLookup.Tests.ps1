@@ -466,6 +466,13 @@ Describe "FileHashLookup" {
          $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
+    It "Can display contents by using .ToString()" {
+
+        $actual = GetFileHashTable
+
+        $actual.ToString() -like "*Monitored Folders:*" | Should -BeTrue
+    } 
+
     It "Can add relative folders" {
         
         1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\MyFolder\SubFolder\$_.txt" -Force }
@@ -474,6 +481,6 @@ Describe "FileHashLookup" {
 
         $actual = GetFileHashTable .\SubFolder
 
-        ($actual.GetFiles()).Count | Should -Be 4
+        $actual.GetFiles() | Should -HaveCount 4
     }
 }

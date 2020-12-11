@@ -7,7 +7,7 @@
     .SYNOPSIS
     Allows for comparison of folder contents.
     .DESCRIPTION
-    Builds a [FileHashTable] of the contents of a directory. 
+    Builds a [FileHashLookup] of the contents of a directory. 
     generates a two-way hashs table of the contents of a directory
     .PARAMETER path
     Path to folder to build a file hash table of.

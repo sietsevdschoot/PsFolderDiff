@@ -20,7 +20,7 @@ class FileHashLookup
         $this.ExcludedFilePatterns = [List[string]]@()
         $this.IncludedFilePatterns = [List[string]]@()
         $this.ExcludedFolders = [List[string]]@()
-        $this.Paths = [List[string]]@{}
+        $this.Paths = [List[string]]@()
 
         if ($path) {
 
@@ -65,8 +65,53 @@ class FileHashLookup
     [bool] Contains([IO.FileInfo] $file) {
         
         return $this.File.ContainsKey((GetAbsolutePath $file))
-    }   
+    }
 
+    hidden Add ([IO.FileInfo] $file) {
+
+        $this.Add($file, $null)
+    }
+
+    hidden Add ([IO.FileInfo] $file, [string] $hash) {
+
+        $this.Add([BasicFileInfo]::new($file, $hash))
+    }
+   
+    hidden Add ([BasicFileInfo] $newFile) {
+
+        if ($newFile.Hash) {
+
+            if (!$this.Hash.ContainsKey($newFile.Hash)) {
+            
+                $this.Hash.($newFile.Hash) = [List[BasicFileInfo]]@($newFile)
+            }
+    
+            if ($this.Hash.($newFile.Hash) -notcontains $newFile) {
+                
+                $this.Hash.($newFile.Hash).Add($newFile)
+            }
+            
+            $this.File.($newFile.FullName) = $newFile
+        }
+    }
+
+    hidden Remove ([IO.FileInfo] $file) {
+    
+        if ($this.File.ContainsKey($file.FullName)) {
+            
+            $fileToRemove = $this.File.($file.FullName)
+            
+            $this.File.Remove($fileToRemove.FullName)
+            
+            $this.Hash.($fileToRemove.Hash).Remove($fileToRemove)
+
+            if ($this.Hash.($fileToRemove.Hash).Count -eq 0) {
+
+                $this.Hash.Remove($fileToRemove.Hash)
+            }
+        }
+    }
+ 
 
     AddFolder([IO.DirectoryInfo] $path) {
         
@@ -113,12 +158,12 @@ class FileHashLookup
         Write-Progress -Activity "Adding or updating files" -Status "Detecting modified files..."
 
         # Later modified files should be refreshed
-        $files | Where-Object { $this.Contains($_) -and $this.File.($_) -le $_ } | Foreach-Object { $this.Remove($_) }
+        $files | Where-Object { $this.Contains($_) -and $this.File.($_) -lt $_ } | Foreach-Object { $this.Remove($_) }
 
         Write-Progress -Activity "Adding or updating files" -Status "Analyzing differences..."
          
         $newlyAddedFiles = $files | Where-Object { !$this.Contains($_) } | Foreach-Object { @{ Operation='Add'; File=$_ } }
-        $deletedFiles = $this.GetFiles() | Where-Object {$_ -ne $null -and !$_.Exists } | Foreach-Object { @{ Operation='Remove'; File=$_  } }
+        $deletedFiles = $this.GetFiles() | Where-Object {$_ -ne $null -and !$_.Exists } | Foreach-Object { @{ Operation='Remove'; File=$_ } }
         $excludedFiles = $filesToExclude | Foreach-Object { @{ Operation='Remove'; File=$_  } }
         
         $itemsToUpdate = @($newlyAddedFiles) + @($deletedFiles) + @($excludedFiles)
@@ -133,8 +178,9 @@ class FileHashLookup
 
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-                $activity = if ($currentOperation -eq "Add") { "Calculating Hash..." } else { "Removing from FileHashTable..." }		        
-                Write-Progress -Activity $activity -Status "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" -PercentComple ($i / $itemsToUpdate.Count * 100)
+
+                $activity = $currentOperation -eq "Add" ?  "Calculating Hash..." : "Removing from FileHashTable..."	        
+                Write-Progress -Activity $activity -Status "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" -PercentComplete ($i / $itemsToUpdate.Count * 100)
                 $updateStatusTimer.Restart()
             }
             
@@ -190,6 +236,125 @@ class FileHashLookup
     }
 
     Save([IO.FileInfo] $filename) {
+    
+        if ($filename) {
+        
+            $this.SavedAsFile = (GetAbsolutePath $filename)
+        }
+        
+        $this.Save()
+    }
+    
+    Save() {
+    
+        if (!$this.SavedAsFile) {
+            Throw "Missing filename for FileHashLookup"
+        } 
+    
+        New-Item -ItemType File $this.SavedAsFile -Force
+        Export-Clixml -Path $this.SavedAsFile -InputObject $this        
+    }
+    
+    static [FileHashLookup] Load([IO.FileInfo] $fileToLoad) {
+    
+        $fileToLoad = [IO.FileInfo](GetAbsolutePath $fileToLoad)
+        
+        if (!$fileToLoad.Exists) {
+        
+            Throw "'$($fileToLoad.FullName)' does not exist."
+        }
+    }
+   
+    AddFileHashTable([FileHashLookup] $other) {
+    
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+
+        $files = @($other.File.Values)
+
+        for($i = 0; $i -lt $other.File.Count; $i++ )
+        {
+            $currentFile = $files[$i]
+
+            if ($sw.ElapsedMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Adding..." -Status "($i of $($other.File.Count)) $($currentFile.FullName)" -PercentComple ($i / $other.File.Count * 100)
+                $sw.Restart()
+            }
+            
+            $this.Add($currentFile.FullName, $currentFile.Hash)		
+        }
+
+        $this.Paths = [List[string]]@(@($this.Paths) + @($other.Paths) | Select-Object -Unique) 
+    } 
+
+    IncludeFilePattern ([string] $filePattern) { 
+
+        $this.IncludedFilePatterns.Add($filePattern)
+    }
+    
+    ExcludeFilePattern ([string] $filePattern) {
+        
+        $this.ExcludedFilePatterns.Add($filePattern)
+
+        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; $null -ne ( $this.ExcludedFilePatterns | Where-Object { $file.Name -like $_ } ) } 
+
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+
+        for($i = 0; $i -lt $filesToRemove.Count; $i++ ) {
+        
+            $currentFile = $filesToRemove[$i]
+
+            if ($sw.ElapsedMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Removing from FileHashTable..." -Status "($i of $($filesToRemove.Count)) $($currentFile.FullName)" -PercentComple ($i / $filesToRemove.Count * 100)
+                $sw.Restart()
+            }
+
+            $this.Remove($currentFile)
+        }
+    }
+
+    ExcludeFolder ([IO.DirectoryInfo] $folder) {
+    
+        $folder = [IO.DirectoryInfo] (GetAbsolutePath $folder)
+        
+        $this.ExcludedFolders.Add($folder.FullName)
+
+        $this.Refresh()
+    }
+    
+    Refresh() {
+
+        $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
+
+        $this.Paths = [List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
+
+        Write-Progress -Activity "Refresh: Collecting files to refresh..."
+
+        $files = $this.GetFiles() | Where-Object { $_ -ne $null }
+
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        
+        for($i = 0; $i -lt $files.Count; $i++ )
+        {
+            $currentFile = $files[$i]
+            
+            if ($sw.ElapsedMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Refresh: Remove files which no longer exists..." -Status "($i of $($files.Count)) $($currentFile.FullName)" -PercentComple ($i / $files.Count * 100)
+                $sw.Restart()
+            }
+
+            if (!($currentFile.Exists)) {
+            
+                $this.Remove($currentFile)
+            }
+        }
+
+        $this.LastUpdated = Get-Date
+    }
+
+   Save([IO.FileInfo] $filename) {
     
         if ($filename) {
         
@@ -262,88 +427,6 @@ class FileHashLookup
         $this.Paths = [List[string]]@(@($this.Paths) + @($other.Paths) | Select-Object -Unique) 
     } 
 
-    IncludeFilePattern ([string] $filePattern) { 
-
-        $this.IncludedFilePatterns.Add($filePattern)
-    }
-    
-    ExcludeFilePattern ([string] $filePattern) {
-        
-        $this.ExcludedFilePatterns.Add($filePattern)
-
-        $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; $null -ne ( $this.ExcludedFilePatterns | Where-Object { $file.Name -like $_ } ) } 
-
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-
-        for($i = 0; $i -lt $filesToRemove.Count; $i++ ) {
-        
-            $currentFile = $filesToRemove[$i]
-
-            if ($sw.ElapsedMilliseconds -ge 500) 
-            {
-                Write-Progress -Activity "Removing from FileHashTable..." -Status "($i of $($filesToRemove.Count)) $($currentFile.FullName)" -PercentComple ($i / $filesToRemove.Count * 100)
-                $sw.Restart()
-            }
-
-            $this.Remove($currentFile)
-        }
-    }
-
-
-    ExcludeFolder ([IO.DirectoryInfo] $folder) {
-    
-        $folder = [IO.DirectoryInfo] (GetAbsolutePath $folder)
-        
-        $this.ExcludedFolders.Add($folder.FullName)
-
-        $this.Refresh()
-    }
-
-    hidden Add ([IO.FileInfo] $file) {
-
-        $this.Add($file, $null)
-    }
-
-    hidden Add ([IO.FileInfo] $file, [string] $hash) {
-
-        $this.Add([BasicFileInfo]::new($file, $hash))
-    }
-   
-    hidden Add ([BasicFileInfo] $newFile) {
-
-        if ($newFile.Hash) {
-
-            if (!$this.Hash.ContainsKey($newFile.Hash)) {
-            
-                $this.Hash.($newFile.Hash) = [List[BasicFileInfo]]@($newFile)
-            }
-    
-            if ($this.Hash.($newFile.Hash) -notcontains $newFile) {
-                
-                $this.Hash.($newFile.Hash).Add($newFile)
-            }
-            
-            $this.File.($newFile.FullName) = $newFile
-        }
-    }
-
-    hidden Remove ([IO.FileInfo] $file) {
-    
-        if ($this.File.ContainsKey($file.FullName)) {
-            
-            $fileToRemove = $this.File.($file.FullName)
-            
-            $this.File.Remove($fileToRemove.FullName)
-            
-            $this.Hash.($fileToRemove.Hash).Remove($fileToRemove)
-
-            if ($this.Hash.($fileToRemove.Hash).Count -eq 0) {
-
-                $this.Hash.Remove($fileToRemove.Hash)
-            }
-        }
-    }
-
     [FileHashLookup] GetDiffInOther([FileHashLookup] $other) { 
 
         return $this.Compare($other).Differences
@@ -363,7 +446,7 @@ class FileHashLookup
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
         
-        $otherFiles = $other.File.Values.GetEnumerator() | ForEach-Object { $_ } 
+        $otherFiles = @($other.File.Values.GetEnumerator()) 
         
         for($i = 0; $i -lt $otherFiles.Count; $i++) {
             
@@ -388,25 +471,30 @@ class FileHashLookup
 
     [string] ToString() 
     {
-        $msg = if ($this.File.Keys.Count -eq 0) { "`nFileHashTable is empty." } else { "`nFileHashTable contains $($this.File.Keys.Count) files." } 
-    
-        $msg += if ($this.Paths.Count -gt 0) { "`n`nMonitored Folders: `n`n" + (($this.Paths | Foreach-Object { "  > $_"} ) -join "`r`n") } else { "`n`nMonitored Folders: <none>" }
+        $msg = [Text.StringBuilder]::new($this.File.Keys.Count -eq 0 `
+            ? "`nFileHashTable is empty.`n" `
+            : "`nFileHashTable contains $($this.File.Keys.Count) files.`n")
+            
+        $msg.AppendLine($this.Paths.Count -gt 0 `
+            ? "`nMonitored Folders: `n`n" + (($this.Paths | Foreach-Object { "  > $_"} ) -join "`r`n") `
+            : "`nMonitored Folders: <none>") 
     
         if ($this.IncludedFilePatterns.Count -gt 0) {
-            $msg += "`n`nIncluded file patterns: `n" + ((($this.IncludedFilePatterns) | Foreach-Object { "  > $_"} ) -join "`r`n")
+            $msg.AppendLine("`nIncluded file patterns: `n" + ((($this.IncludedFilePatterns) | Foreach-Object { "  > $_"} ) -join "`r`n"))
         }
         
         if (($this.ExcludedFilePatterns + $this.ExcludedFolders).Count -gt 0) {
-            $msg += "`n`nExcluded Folders and file patterns: `n" + ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | Foreach-Object { "  > $_"} ) -join "`r`n")
+            $excludedItems = ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | Foreach-Object { "  > $_"} ) -join "`r`n")
+            $msg.AppendLine("`nExcluded Folders and file patterns: `n" + $excludedItems) 
         }
         
         if ($this.SavedAsFile) {
-            $msg += "`n`nLast saved: $($this.SavedAsFile)" 
+            $msg.AppendLine("`nLast saved: $($this.SavedAsFile)")
         }
     
-        $msg += "`n`nLast updated: $($this.LastUpdated.ToString("dd-MM-yyyy HH:mm:ss"))`n" 
+        $msg.AppendLine("`nLast updated: $($this.LastUpdated.ToString("dd-MM-yyyy HH:mm:ss"))`n") 
                 
-        return $msg
+        return $msg.ToString()
     }
 }
 
