@@ -12,7 +12,7 @@ foreach ($module in $modules) {
 
     Remove-Module ($module.FullName -replace $module.Extension) -Force -ErrorAction SilentlyContinue
     
-    $output = Import-Module $module -Force 4>&1
+    $output = Import-Module $module -Force -Verbose:($VerbosePreference -eq 'Continue') 4>&1
 
     $output | Select-String "Importing|Loading"
 }
