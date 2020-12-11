@@ -1,13 +1,13 @@
 ﻿using module .\FileHashLookup.Impl.psm1
 
-$script = [ScriptBlock]::Create(((cat "$PSScriptRoot\FileHashLookup.Impl.psm1") -join "`r`n"))
-$module = New-Module 'FileHashLookup-Module' $script | Import-Module -PassThru -Verbose:$false
+# $script = [ScriptBlock]::Create(((cat "$PSScriptRoot\FileHashLookup.Impl.psm1") -join "`r`n"))
+# $module = New-Module 'FileHashLookup-Module' $script | Import-Module -PassThru -Verbose:$false
 
 <#
     .SYNOPSIS
     Allows for comparison of folder contents.
     .DESCRIPTION
-    Builds a [FileHashTable] of the contents of a directory. 
+    Builds a [FileHashLookup] of the contents of a directory. 
     generates a two-way hashs table of the contents of a directory
     .PARAMETER path
     Path to folder to build a file hash table of.

@@ -1,13 +1,18 @@
-﻿[CmdletBinding()]
+﻿#Requires -Version 7
+
+[CmdletBinding()]
 param ()
 
-$modules = Get-ChildItem $PSScriptRoot\*.psm1 -Recurse -Exclude @("Pester.psm1")
+. ([ScriptBlock]::Create("using module $PSScriptRoot\BasicFileInfo.psm1"))
+. ([ScriptBlock]::Create("using module $PSScriptRoot\FileHashLookup.Impl.psm1"))
+
+$modules = Get-ChildItem $PSScriptRoot\*.psm1 -Recurse
 
 foreach ($module in $modules) {
 
-    Remove-Module ($module.FullName -replace $module.Extension) -ErrorAction SilentlyContinue
+    Remove-Module ($module.FullName -replace $module.Extension) -Force -ErrorAction SilentlyContinue
     
-    $output = Import-Module $module -Force -Verbose:($VerbosePreference -eq 'Continue') 4>&1
+    $output = Import-Module $module -Force 4>&1
 
-    $output | Where-Object { $line = $_; ( @("*Importing*", "*Loading*") | Where-Object { $line -like $_ }) -ne $null } | Foreach-Object { $_ -replace "VERBOSE: " }
+    $output | Select-String "Importing|Loading"
 }

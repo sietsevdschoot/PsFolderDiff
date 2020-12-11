@@ -44,9 +44,9 @@ class BasicFileInfo : IComparable
             -and $this.LastWriteTime -eq $that.LastWriteTime `
             -and $this.Length -eq $that.Length
 
-        return $that -is [BasicFileInfo] `
-            ? $isEqual -and $this.Hash -eq $that.Hash `
-            : $isEqual
+        return $that -is [IO.FileInfo] `
+            ? $isEqual `
+            : $isEqual -and $this.Hash -eq $that.Hash 
     }    
 
     [int] CompareTo($that)
