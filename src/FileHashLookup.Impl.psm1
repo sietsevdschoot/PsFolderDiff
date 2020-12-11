@@ -25,12 +25,15 @@ class FileHashLookup
         if ($path) {
 
             $absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
-            $this.AddFolder($absolutePath)
 
             $replaceableChars = ([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach-Object { [Regex]::Escape($_) }) -join "|"
             $fileName = "$($absolutePath.FullName -replace $replaceableChars, "_").xml"  
 
-            $this.Save((GetAbsolutePath $fileName))
+            $this.SavedAsFile = (GetAbsolutePath $fileName)
+
+            $this.AddFolder($absolutePath)
+
+            $this.Save()
         }
 
         $this.LastUpdated = Get-Date
@@ -120,18 +123,25 @@ class FileHashLookup
         
         $itemsToUpdate = @($newlyAddedFiles) + @($deletedFiles) + @($excludedFiles)
 
-        $sw = [Diagnostics.Stopwatch]::StartNew()
+        $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
+        $saveProgressTimer =  [Diagnostics.Stopwatch]::StartNew()
 
         for($i = 0; $i -lt $itemsToUpdate.Count; $i++ ) {
         
             $currentFile = $itemsToUpdate[$i].('File')
             $currentOperation = $itemsToUpdate[$i].('Operation')
 
-            if ($sw.ElapsedMilliseconds -ge 500) 
+            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
                 $activity = if ($currentOperation -eq "Add") { "Calculating Hash..." } else { "Removing from FileHashTable..." }		        
                 Write-Progress -Activity $activity -Status "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" -PercentComple ($i / $itemsToUpdate.Count * 100)
-                $sw.Restart()
+                $updateStatusTimer.Restart()
+            }
+            
+            if ($saveProgressTimer.Elapsed -ge ([Timespan]::FromMinutes(15)))
+            {
+                $this.Save()
+                $saveProgressTimer.Restart()
             }
 
             if ($currentOperation -eq "Add") 
@@ -192,7 +202,8 @@ class FileHashLookup
     Save() {
     
         if (!$this.SavedAsFile) {
-            Throw "Missing filename for FileHashLookup"
+
+            $this.SavedAsFile = (New-TemporaryFile).FullName
         } 
     
         New-Item -ItemType File $this.SavedAsFile -Force

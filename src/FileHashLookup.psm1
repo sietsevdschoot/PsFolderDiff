@@ -1,7 +1,7 @@
 ﻿using module .\FileHashLookup.Impl.psm1
 
-$script = [ScriptBlock]::Create(((cat "$PSScriptRoot\FileHashLookup.Impl.psm1") -join "`r`n"))
-$module = New-Module 'FileHashLookup-Module' $script | Import-Module -PassThru -Verbose:$false
+# $script = [ScriptBlock]::Create(((cat "$PSScriptRoot\FileHashLookup.Impl.psm1") -join "`r`n"))
+# $module = New-Module 'FileHashLookup-Module' $script | Import-Module -PassThru -Verbose:$false
 
 <#
     .SYNOPSIS

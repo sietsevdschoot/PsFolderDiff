@@ -134,7 +134,7 @@ Describe "FileHashLookup" {
         $actual.Hash.($myHash).Count | Should -Be 3 
     }
 
-    It "won't allow save without filename" {
+    It "Save without filename will pick tempfile name" {
     
         New-Item -ItemType Directory "$TestDrive\MyFolder2" -Force 
     
@@ -142,7 +142,8 @@ Describe "FileHashLookup" {
     
         $actual.AddFolder("$TestDrive\MyFolder2")
     
-        { $actual.Save() } | Should -Throw
+        { $actual.Save() } | Should -Not -Throw
+        ([IO.FileInfo]$actual.SavedAsFile).Directory.FullName | Should -Be (New-TemporaryFile).Directory.FullName
     }
 
     It "When Save is called without filename, uses last known filename" {
