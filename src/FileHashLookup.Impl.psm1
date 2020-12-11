@@ -235,36 +235,6 @@ class FileHashLookup
         $this.LastUpdated = Get-Date
     }
 
-    Save([IO.FileInfo] $filename) {
-    
-        if ($filename) {
-        
-            $this.SavedAsFile = (GetAbsolutePath $filename)
-        }
-        
-        $this.Save()
-    }
-    
-    Save() {
-    
-        if (!$this.SavedAsFile) {
-            Throw "Missing filename for FileHashLookup"
-        } 
-    
-        New-Item -ItemType File $this.SavedAsFile -Force
-        Export-Clixml -Path $this.SavedAsFile -InputObject $this        
-    }
-    
-    static [FileHashLookup] Load([IO.FileInfo] $fileToLoad) {
-    
-        $fileToLoad = [IO.FileInfo](GetAbsolutePath $fileToLoad)
-        
-        if (!$fileToLoad.Exists) {
-        
-            Throw "'$($fileToLoad.FullName)' does not exist."
-        }
-    }
-   
     AddFileHashTable([FileHashLookup] $other) {
     
         $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -404,28 +374,6 @@ class FileHashLookup
 
         return $newLookup
     }
-
-    AddFileHashTable([FileHashLookup] $other) {
-    
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-
-        $files = @($other.File.Values)
-
-        for($i = 0; $i -lt $other.File.Count; $i++ )
-        {
-            $currentFile = $files[$i]
-
-            if ($sw.ElapsedMilliseconds -ge 500) 
-            {
-                Write-Progress -Activity "Adding..." -Status "($i of $($other.File.Count)) $($currentFile.FullName)" -PercentComple ($i / $other.File.Count * 100)
-                $sw.Restart()
-            }
-            
-            $this.Add($currentFile.FullName, $currentFile.Hash)		
-        }
-
-        $this.Paths = [List[string]]@(@($this.Paths) + @($other.Paths) | Select-Object -Unique) 
-    } 
 
     [FileHashLookup] GetDiffInOther([FileHashLookup] $other) { 
 
