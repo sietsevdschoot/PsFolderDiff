@@ -5,10 +5,12 @@ param()
 
 if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
 
-$googlePhotos = ImportFileHashTable D:\Temp\TempDrive\myGooglePhotos.xml
+$music = [FileHashLookup]::Load("G:\Mijn Documenten\Sietse\Computer\PSFolderDiffs\New\fileServerMusic.xml")
 
-$VerbosePreference = 'Silent'
+# $googlePhotos = ImportFileHashTable D:\Temp\TempDrive\myGooglePhotos.xml
 
-$duplicates = $googlePhotos.GetDuplicateFiles()
+# $VerbosePreference = 'Silent'
 
-$duplicates
+# $duplicates = $googlePhotos.GetDuplicateFiles()
+
+# $duplicates

@@ -331,9 +331,10 @@ class FileHashLookup
              $entries = ($_.Value | ForEach-Object{ [BasicFileInfo]$_.Value });
             [KeyValuePair[string, List[BasicFileInfo]]]::new($_.Name, ([List[BasicFileInfo]] $entries ))})
         
-        $newLookup.ExcludedFilePatterns = $deserialized.ExcludedFilePatterns
-        $newLookup.IncludedFilePatterns = $deserialized.IncludedFilePatterns
-        $newLookup.ExcludedFolders = $deserialized.ExcludedFolders
+        $newLookup.Paths = ($deserialized.Paths | Where-Object { $_ })
+        $newLookup.ExcludedFilePatterns = ($deserialized.ExcludedFilePatterns | Where-Object { $_ })
+        $newLookup.IncludedFilePatterns = ($deserialized.IncludedFilePatterns | Where-Object { $_ })
+        $newLookup.ExcludedFolders = ($deserialized.ExcludedFolders | Where-Object { $_ })
         $newLookup.LastUpdated = $deserialized.LastUpdated
         $newLookup.SavedAsFile = $deserialized.SavedAsFile
 
