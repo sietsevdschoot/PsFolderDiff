@@ -434,9 +434,9 @@ class FileHashLookup
         if ($this.File.Keys.Count -gt 0) {
 
             $size = $this.File.Values | Measure-Object -Prop Length -Sum | Select-Object -exp Sum
-            $sizeMsg = if (($size / 1Gb) -ge 1) { "$($size / 1Gb) Gb." } else { "$($size / 1Mb) Mb." }
+            $sizeMsg = if (($size / 1Gb) -ge 1) { "$($size / 1Gb) Gb" } else { "$($size / 1Mb) Mb" }
 
-            $msg = [Text.StringBuilder]::new("`nFileHashTable contains $($this.File.Keys.Count) files. ($sizeMsg)`n")
+            $msg = [Text.StringBuilder]::new("`nFileHashTable contains $($this.File.Keys.Count) files ($sizeMsg).`n")
         }
             
         $msg.AppendLine($this.Paths.Count -gt 0 `
