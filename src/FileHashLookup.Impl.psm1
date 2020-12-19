@@ -146,7 +146,7 @@ class FileHashLookup
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
                 $updateProgressArgs.CurrentOperation = "($i of $total) $($currentFile.FullName)"
-                $updateProgressArgs.PercentComplete =  ($i / $total * 100)
+                $updateProgressArgs.PercentComplete =  (($i / $total) * 100)
                 Write-Progress @updateProgressArgs
 
                 $updateStatusTimer.Restart()
@@ -182,7 +182,7 @@ class FileHashLookup
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
                 $updateProgressArgs.CurrentOperation = "($($files.Count + $i) of $total) $($currentFile.FullName)"
-                $updateProgressArgs.PercentComplete =  (($files.Count + $i) / $total * 100)
+                $updateProgressArgs.PercentComplete =  ((($files.Count + $i) / $total) * 100)
                 Write-Progress @updateProgressArgs
 
                 $updateStatusTimer.Restart()
