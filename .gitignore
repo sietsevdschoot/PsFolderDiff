@@ -22,6 +22,7 @@ build/
 
 .modules/
 .vscode/
+.vs/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
