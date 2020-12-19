@@ -251,7 +251,7 @@ class FileHashLookup
     
         $sw = [Diagnostics.Stopwatch]::StartNew()
 
-        $files = @($other.File.Values)
+        $files = @($other.File.Values.GetEnumerator())
 
         for($i = 0; $i -lt $other.File.Count; $i++ )
         {
@@ -351,15 +351,30 @@ class FileHashLookup
         $deserialized = Import-Clixml -Path $fileToLoad
         $newLookup = [FileHashLookup]::new()
 
-        $newLookup.File = [Dictionary[string, BasicFileInfo]] [List[KeyValuePair[string, BasicFileInfo]]] `
-            ($deserialized.File.GetEnumerator() | ForEach-Object {  `
-            [KeyValuePair[string, BasicFileInfo]]::new($_.Name, [BasicFileInfo]$_.Value) })
-
-        $newLookup.Hash = [Dictionary[string, [List[BasicFileInfo]]]] [List[KeyValuePair[string, List[BasicFileInfo]]]] `
-            ($deserialized.Hash.GetEnumerator() | ForEach-Object { `
-             $entries = ($_.Value | ForEach-Object{ [BasicFileInfo]$_.Value });
-            [KeyValuePair[string, List[BasicFileInfo]]]::new($_.Name, ([List[BasicFileInfo]] $entries ))})
+        $fileItems = @($deserialized.File.GetEnumerator())
+        $hashItems = @($deserialized.Hash.GetEnumerator())
         
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+
+        for($i = 0; $i -lt $fileItems.Count; $i++ ) {
+        
+            $currentFileItem = $fileItems[$i]
+
+            if ($sw.ElapsedMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Importing FileHashTable..." -PercentComple ($i / $fileItems.Count * 100)
+                $sw.Restart()
+            }
+
+            $newLookup.File.Add($currentFileItem.Name, [BasicFileInfo]$currentFileItem.Value)
+
+            if ($i -lt $hashItems.Count) {
+
+                $currentHashItem = $hashItems[$i]
+                $newLookup.Hash.Add($currentHashItem.Name, ($currentHashItem.Value | ForEach-Object{ [BasicFileInfo]$_.Value }))
+            }
+        }
+
         $newLookup.Paths = ($deserialized.Paths | Where-Object { $_ })
         $newLookup.ExcludedFilePatterns = ($deserialized.ExcludedFilePatterns | Where-Object { $_ })
         $newLookup.IncludedFilePatterns = ($deserialized.IncludedFilePatterns | Where-Object { $_ })
@@ -389,7 +404,7 @@ class FileHashLookup
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
         
-        $otherFiles = @($other.File.Values) 
+        $otherFiles = @($other.File.Values.GetEnumerator()) 
         
         for($i = 0; $i -lt $otherFiles.Count; $i++) {
             
