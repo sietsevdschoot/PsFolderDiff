@@ -6,7 +6,8 @@ Describe "FileHashLookup" {
 
         & ".\Reload.ps1"
 
-        $originalLocation = Get-Location 
+        $originalLocation = Get-Location
+        $ProgressPreference = "SilentlyContinue"
     }
 
     AfterAll {
@@ -14,6 +15,7 @@ Describe "FileHashLookup" {
         Set-Location $originalLocation
 
         & ".\Reload.ps1" -unload
+        $ProgressPreference = "Continue"
     }
     
     BeforeEach {
@@ -213,24 +215,13 @@ Describe "FileHashLookup" {
 
         $file.LastWriteTime = (Get-Date).AddMinutes(15)
 
+        $updatedItems = $actual.GetFilesToAddOrUpdate("$TestDrive\MyFolder")
+
         $actual.Refresh()
         
+        $updatedItems | Should -HaveCount 2
+        $updatedItems | ?{ $_.File.Name -eq "2.txt" } | Select-Object -exp Operation | Should -Be @("Remove", "Add")
         $actual.File.($file.FullName).Hash | Should -Be (Get-FileHash -LiteralPath $file -Algorithm MD5).Hash
-    }
-
-    It "Refresh will remove non existing files from the FileHashTable if no folders are monitored." {
-
-        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\SomeFolder\$_.txt -Force }
-
-        $actual = GetFileHashTable 
-
-        Get-ChildItem Testdrive:\SomeFolder\ -File  | ForEach-Object { $actual.Add($_) }
-        
-        Remove-Item Testdrive:\SomeFolder\1.txt
-
-        $actual.Refresh()
-
-        ($actual.GetFiles() | Select-Object -exp Name) | Should -Be @("2.txt","3.txt")
     }
 
     It "Refresh updated the LastUpdated date" {
@@ -239,7 +230,7 @@ Describe "FileHashLookup" {
 
         $lastUpdated = $actual.LastUpdated
 
-        Start-Sleep -Milliseconds 1
+        Start-Sleep -Milliseconds 3
 
         $actual.Refresh()
 
@@ -250,8 +241,8 @@ Describe "FileHashLookup" {
     
         $actual = GetFileHashTable
 
-        1..3 | ForEach-Object { New-Item -ItemType Directory Testdrive:\Folders\$_ -Force }
-        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\Folders\$_\file.txt -Force }
+        1..3 | ForEach-Object { New-Item -ItemType Directory Testdrive:\Folders\$_ -Force > $null }
+        1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\Folders\$_\file.txt -Force  > $null }
 
         Get-ChildItem Testdrive:\Folders -Directory | ForEach-Object { $actual.AddFolder($_) }
 

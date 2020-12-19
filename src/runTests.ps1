@@ -1,5 +1,6 @@
 ﻿using module '.\FileHashLookup.Impl.psm1'
 using module '.\BasicFileInfo.psm1'
+using namespace System.Collections.Generic
 
 [Cmdletbinding()]
 param (
@@ -18,13 +19,18 @@ if (!(Get-Module Pester)) {
 [PesterConfiguration]::Default.Output.Verbosity = "Diagnostic"
 
 # Run tests
+
+$testResults = [List[PsCustomObject]]@()
+
 if (!$testFile) {
    
-    Get-ChildItem *.Tests.* | ForEach-Object { Invoke-Pester -Script $_.FullName }
+    Get-ChildItem *.Tests.* | ForEach-Object { $testResults.Add((Invoke-Pester -Script $_.FullName -PassThru)) }
     
 } else {
 
-    Invoke-Pester -Script $testFile
+    $testResults.Add((Invoke-Pester -Script $testFile -PassThru))
 }
+
+$testResults | ForEach-Object { $_.Failed | Select-Object ExpandedPath, ErrorRecord } 
 
 Set-Location $location

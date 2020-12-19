@@ -112,72 +112,119 @@ class FileHashLookup
         }
     }
 
-    AddFolder([IO.DirectoryInfo] $path) {
-        
-        $path = [IO.DirectoryInfo](GetAbsolutePath $path)
-        
-        Write-Progress -Activity "Adding or updating files" -Status "Collecting files..."
+    hidden [PsCustomObject[]] GetFilesToAddOrUpdate([IO.DirectoryInfo] $path) {
 
-        $files = @()
-        $filesToExclude = @()
+        $getFilesArgs = @{
 
-        if ($path.Exists) {
-        
-            if (!($this.Paths -contains $path.FullName)) {
-            
-                $this.Paths.Add($path.FullName)
+            Path = $path.FullName;
+            File = $true;
+            Recurse = $true;
+            Force = $true;
+            ErrorAction = "SilentlyContinue";
+        }
+
+        if ($this.ExcludedFilePatterns) { $getFilesArgs.Add("Exclude", $this.ExcludedFilePatterns) }
+        if ($this.IncludedFilePatterns) { $getFilesArgs.Add("Include", $this.IncludedFilePatterns) }
+
+        $files = Get-ChildItem @getFilesArgs
+        $trackedFiles = $this.GetFiles()
+
+        $total = $files.Count + $trackedFiles.Count
+        $updateProgressArgs = @{ Activity = "Adding or updating files"; Status = "Detecting modified files..."; }
+
+        Write-Progress @updateProgressArgs
+
+        $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_.StartsWith(($path.FullName)) }
+
+        $itemsToUpdate = [List[PsCustomObject]]@()
+        $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
+
+        for($i = 0; $i -lt $files.Count; $i++) {
+
+            $currentFile = $files[$i]
+
+            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
+            {
+                $updateProgressArgs.CurrentOperation = "($i of $total) $($currentFile.FullName)"
+                $updateProgressArgs.PercentComplete =  ($i / $total * 100)
+                Write-Progress @updateProgressArgs
+
+                $updateStatusTimer.Restart()
             }
 
-            $getChildItemArgs = @{
-
-                Path = $path.FullName;
-                File = $true;
-                Recurse = $true;
-                Force = $true;
-                ErrorAction = "SilentlyContinue";
+            # File in excluded folder
+            if ($applicableExcludedFolders -and ($null -ne ($applicableExcludedFolders | Where-Object { $currentFile.FullName.StartsWith($_) }))) {
+               continue 
             }
 
-            if ($this.ExcludedFilePatterns) { $getChildItemArgs.Add("Exclude", $this.ExcludedFilePatterns) }
-            if ($this.IncludedFilePatterns) { $getChildItemArgs.Add("Include", $this.IncludedFilePatterns) }
+            # Later modified files should be refreshed
+            if ($this.Contains($currentFile) -and $this.File.($currentFile.FullName) -lt $currentFile) {
 
-            $files = Get-ChildItem @getChildItemArgs
+                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
+                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Add'; File=$currentFile }))
+            }
 
-            $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_.StartsWith(($path.FullName)) }
+            # Newly added files
+            if (!$this.Contains($currentFile)) {
 
-            if ($applicableExcludedFolders) {
-
-                # Dont add Files from path which are located in excluded folders                
-                $files = $files | Where-Object { $file = $_; $null -eq ($applicableExcludedFolders | Where-Object { $file.FullName.StartsWith($_) }) }
-
-                # Remove files which were added once, and are now located in excluded folders.
-                $filesToExclude = $this.GetFiles() | Where-Object { $file = $_; $null -ne ($applicableExcludedFolders | Where-Object { $null -ne $file -and $file.FullName.StartsWith($_) }) } 
+                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Add'; File=$currentFile }))
             }
         }
 
-        Write-Progress -Activity "Adding or updating files" -Status "Detecting modified files..."
+        for($i = 0; $i -lt $trackedFiles.Count; $i++) {
 
-        # Later modified files should be refreshed
-        $files | Where-Object { $this.Contains($_) -and $this.File.($_) -lt $_ } | Foreach-Object { $this.Remove($_) }
+            $currentFile = $trackedFiles[$i]
 
-        Write-Progress -Activity "Adding or updating files" -Status "Analyzing differences..."
-         
-        $newlyAddedFiles = $files | Where-Object { !$this.Contains($_) } | Foreach-Object { @{ Operation='Add'; File=$_ } }
-        $deletedFiles = $this.GetFiles() | Where-Object {$_ -ne $null -and !$_.Exists } | Foreach-Object { @{ Operation='Remove'; File=$_ } }
-        $excludedFiles = $filesToExclude | Foreach-Object { @{ Operation='Remove'; File=$_  } }
+            if ($null -eq $currentFile){
+                continue
+            }
+
+            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
+            {
+                $updateProgressArgs.CurrentOperation = "($($files.Count + $i) of $total) $($currentFile.FullName)"
+                $updateProgressArgs.PercentComplete =  (($files.Count + $i) / $total * 100)
+                Write-Progress @updateProgressArgs
+
+                $updateStatusTimer.Restart()
+            }
+
+            # Remove files which were added once, and are now located in excluded folders.
+            if ($applicableExcludedFolders -and ($null -ne ($applicableExcludedFolders | Where-Object { $currentFile.FullName.StartsWith($_) }))) {
+                
+                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
+            }
+
+            # Deleted files.
+            if (!$currentFile.Exists) {
+
+                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
+            }
+        }
+
+        return $itemsToUpdate | Sort-Object -Property @{ Expression={$_.Operation}; Descending=$true; }    
+    }
+
+    AddFolder([IO.DirectoryInfo] $path) {
         
-        $itemsToUpdate = @($newlyAddedFiles) + @($deletedFiles) + @($excludedFiles)
+        $path = [IO.DirectoryInfo](GetAbsolutePath $path)
+
+        if (!($this.Paths -contains $path.FullName)) {
+            
+            $this.Paths.Add($path.FullName)
+        }
+
+        $itemsToUpdate = $this.GetFilesToAddOrUpdate($path)
 
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
         $saveProgressTimer =  [Diagnostics.Stopwatch]::StartNew()
 
         for($i = 0; $i -lt $itemsToUpdate.Count; $i++ ) {
         
-            $currentFile = $itemsToUpdate[$i].('File')
-            $currentOperation = $itemsToUpdate[$i].('Operation')
+            $currentFile = $itemsToUpdate[$i].File
+            $currentOperation = $itemsToUpdate[$i].Operation
 
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-
                 $activity = $currentOperation -eq "Add" ?  "Calculating Hash..." : "Removing from FileHashTable..."	        
                 Write-Progress -Activity $activity -Status "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" -PercentComplete ($i / $itemsToUpdate.Count * 100)
                 $updateStatusTimer.Restart()
@@ -247,6 +294,8 @@ class FileHashLookup
 
             $this.Remove($currentFile)
         }
+
+        $this.LastUpdated = Get-Date
     }
 
     ExcludeFolder ([IO.DirectoryInfo] $folder) {
@@ -260,31 +309,11 @@ class FileHashLookup
     
     Refresh() {
 
+        Write-Progress -Activity "Refresh: Collecting files to refresh..."
+
         $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
 
         $this.Paths = [List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
-
-        Write-Progress -Activity "Refresh: Collecting files to refresh..."
-
-        $files = $this.GetFiles() | Where-Object { $_ -ne $null }
-
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-        
-        for($i = 0; $i -lt $files.Count; $i++ )
-        {
-            $currentFile = $files[$i]
-            
-            if ($sw.ElapsedMilliseconds -ge 500) 
-            {
-                Write-Progress -Activity "Refresh: Remove files which no longer exists..." -Status "($i of $($files.Count)) $($currentFile.FullName)" -PercentComple ($i / $files.Count * 100)
-                $sw.Restart()
-            }
-
-            if (!($currentFile.Exists)) {
-            
-                $this.Remove($currentFile)
-            }
-        }
 
         $this.LastUpdated = Get-Date
     }
@@ -360,7 +389,7 @@ class FileHashLookup
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
         
-        $otherFiles = @($other.File.Values.GetEnumerator()) 
+        $otherFiles = @($other.File.Values) 
         
         for($i = 0; $i -lt $otherFiles.Count; $i++) {
             
@@ -385,9 +414,15 @@ class FileHashLookup
 
     [string] ToString() 
     {
-        $msg = [Text.StringBuilder]::new($this.File.Keys.Count -eq 0 `
-            ? "`nFileHashTable is empty.`n" `
-            : "`nFileHashTable contains $($this.File.Keys.Count) files.`n")
+        $msg = [Text.StringBuilder]::new("`nFileHashTable is empty.`n")
+            
+        if ($this.File.Keys.Count -gt 0) {
+
+            $size = $this.File.Values | Measure-Object -Prop Length -Sum | Select-Object -exp Sum
+            $sizeMsg = if (($size / 1Gb) -ge 1) { "$($size / 1Gb) Gb." } else { "$($size / 1Mb) Mb." }
+
+            $msg = [Text.StringBuilder]::new("`nFileHashTable contains $($this.File.Keys.Count) files. ($sizeMsg)`n")
+        }
             
         $msg.AppendLine($this.Paths.Count -gt 0 `
             ? "`nMonitored Folders: `n`n" + (($this.Paths | Foreach-Object { "  > $_"} ) -join "`r`n") `
@@ -401,7 +436,7 @@ class FileHashLookup
             $excludedItems = ((($this.ExcludedFilePatterns + $this.ExcludedFolders) | Foreach-Object { "  > $_"} ) -join "`r`n")
             $msg.AppendLine("`nExcluded Folders and file patterns: `n" + $excludedItems) 
         }
-        
+
         if ($this.SavedAsFile) {
             $msg.AppendLine("`nLast saved: $($this.SavedAsFile)")
         }
