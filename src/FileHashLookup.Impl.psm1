@@ -134,7 +134,7 @@ class FileHashLookup
 
         Write-Progress @updateProgressArgs
 
-        $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_.StartsWith(($path.FullName)) }
+        $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_ -and $_.StartsWith(($path.FullName)) }
 
         $itemsToUpdate = [List[PsCustomObject]]@()
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
