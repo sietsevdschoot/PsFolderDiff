@@ -5,12 +5,6 @@ param()
 
 if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
 
-$music = [FileHashLookup]::Load("G:\Mijn Documenten\Sietse\Computer\PSFolderDiffs\New\fileServerMusic.xml")
+. ([ScriptBlock]::Create("using module $PSScriptRoot\BasicFileInfo.psm1"))
+. ([ScriptBlock]::Create("using module $PSScriptRoot\FileHashLookup.Impl.psm1"))
 
-# $googlePhotos = ImportFileHashTable D:\Temp\TempDrive\myGooglePhotos.xml
-
-# $VerbosePreference = 'Silent'
-
-# $duplicates = $googlePhotos.GetDuplicateFiles()
-
-# $duplicates

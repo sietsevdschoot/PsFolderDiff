@@ -1,8 +1,5 @@
 ﻿using module .\FileHashLookup.Impl.psm1
 
-# $script = [ScriptBlock]::Create(((cat "$PSScriptRoot\FileHashLookup.Impl.psm1") -join "`r`n"))
-# $module = New-Module 'FileHashLookup-Module' $script | Import-Module -PassThru -Verbose:$false
-
 <#
     .SYNOPSIS
     Allows for comparison of folder contents.
@@ -22,21 +19,11 @@ function Get-FileHashTable {
         [IO.DirectoryInfo] $path = $null
     )
 
-    if ($module) {
-        if ($path) {
-            & $module.NewBoundScriptBlock({[FileHashLookup]::New($args[0])}) $path
-        }
-        else {
-            & $module.NewBoundScriptBlock({[FileHashLookup]::New()})
-        }
+    if ($path) {
+        [FileHashLookup]::New($path)
     }
     else {
-        if ($path) {
-            [FileHashLookup]::New($path)
-        }
-        else {
-            [FileHashLookup]::New()
-        }
+        [FileHashLookup]::New()
     }
 }
 
@@ -58,12 +45,7 @@ function Import-FileHashTable {
         [IO.FileInfo] $file
     )
 
-    if ($module) {
-        & $module.NewBoundScriptBlock({[FileHashLookup]::Load($args[0])}) $file
-    }
-    else {
-        [FileHashLookup]::Load($file)    
-    }
+    [FileHashLookup]::Load($file)    
 }
 
 Set-Alias GetFileHashTable Get-FileHashTable

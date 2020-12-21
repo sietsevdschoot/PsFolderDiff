@@ -188,7 +188,21 @@ Describe "FileHashLookup" {
         # $actual | Should -BeOfType [FileHashLookup]
         
         $actual.GetType().Name | Should -Be "FileHashLookup"
-    } 
+    }
+    
+    It "After load, can retrieve File and hash" {
+    
+        $myFile = Get-Item "$TestDrive\MyFolder\1.txt"
+        $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
+                
+        $actual = GetFileHashTable "$TestDrive\MyFolder"
+    
+        $actual.Save()
+        $deserialized = [FileHashLookup]::Load($actual.SavedAsFile) 
+
+        $deserialized.File.($myFile.FullName).Hash | Should -Be $myHash
+        $deserialized.Hash.($myHash).FullName | Should -Be $myFile.FullName
+    }
 
     It "can refresh itself. By adding new files and removing no longer existing files." {
         

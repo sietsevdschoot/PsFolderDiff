@@ -55,11 +55,9 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
 
-        $fileForHash = [IO.FileInfo](GetAbsolutePath $file)
+        $fileHash = $this.File.($file.FullName).Hash ?? ([BasicFileInfo]::New($file)).Hash   
         
-        $fileHash = $this.File.($fileForHash).Hash ?? ([BasicFileInfo]::New($fileForHash)).Hash   
-        
-        return $this.Hash.($fileHash) | Sort-Object -prop FullName | Foreach-Object { [IO.FileInfo]$_ }
+        return $this.Hash.($fileHash) | ForEach-Object { [IO.FileInfo]$_ }
     }
 
     [bool] Contains([IO.FileInfo] $file) {
@@ -127,6 +125,8 @@ class FileHashLookup
         $itemsToUpdate = $this.InternalGetFilesToAddOrUpdate($path, $files)
 
         $this.InternalApplyChanges($itemsToUpdate)
+
+        $this.LastUpdated = Get-Date
     }
 
     hidden [IO.FileInfo[]] InternalGetFiles([IO.DirectoryInfo] $path)
@@ -375,7 +375,7 @@ class FileHashLookup
         New-Item -ItemType File $this.SavedAsFile -Force
         Export-Clixml -Path $this.SavedAsFile -InputObject $this        
     }
-    
+
     static [FileHashLookup] Load([IO.FileInfo] $fileToLoad) {
     
         $fileToLoad = [IO.FileInfo](GetAbsolutePath $fileToLoad)
@@ -408,7 +408,7 @@ class FileHashLookup
             if ($i -lt $hashItems.Count) {
 
                 $currentHashItem = $hashItems[$i]
-                $newLookup.Hash.Add($currentHashItem.Name, ($currentHashItem.Value | ForEach-Object{ [BasicFileInfo]$_.Value }))
+                $newLookup.Hash.Add($currentHashItem.Name, ([BasicFileInfo[]]$currentHashItem.Value))
             }
         }
 

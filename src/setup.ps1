@@ -10,7 +10,7 @@ $modules = Get-ChildItem $PSScriptRoot\*.psm1 -Recurse
 
 foreach ($module in $modules) {
 
-    Remove-Module ($module.FullName -replace $module.Extension) -Force -ErrorAction SilentlyContinue
+    Remove-Module $module.BaseName -Force -ErrorAction SilentlyContinue
     
     $output = Import-Module $module -Force -Verbose:($VerbosePreference -eq 'Continue') 4>&1
 
