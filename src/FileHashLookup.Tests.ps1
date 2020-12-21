@@ -207,7 +207,9 @@ Describe "FileHashLookup" {
 
     It "Refresh updates the hash of changed files" {
         
-        $actual = GetFileHashTable "$TestDrive\MyFolder"
+        $path = "$TestDrive\MyFolder"
+        
+        $actual = GetFileHashTable $path 
 
         $file = Get-Item "$TestDrive\MyFolder\2.txt"
 
@@ -215,7 +217,8 @@ Describe "FileHashLookup" {
 
         $file.LastWriteTime = (Get-Date).AddMinutes(15)
 
-        $updatedItems = $actual.GetFilesToAddOrUpdate("$TestDrive\MyFolder")
+        $files = $actual.InternalGetFiles($path)
+        $updatedItems = $actual.InternalGetFilesToAddOrUpdate($path, $files)
 
         $actual.Refresh()
         

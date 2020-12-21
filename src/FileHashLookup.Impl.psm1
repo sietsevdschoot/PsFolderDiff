@@ -50,7 +50,7 @@ class FileHashLookup
 
     [IO.FileInfo[]] GetFiles() {
         
-        return $this.File.Keys | Sort-Object -prop FullName | Foreach-Object { [IO.FileInfo]$_ }
+        return $this.File.Keys.ForEach({ [IO.FileInfo]$_ })
     }
 
     [IO.FileInfo[]] GetFilesByHash([IO.FileInfo] $file) {
@@ -79,6 +79,7 @@ class FileHashLookup
    
     hidden Add ([BasicFileInfo] $newFile) {
 
+        # Hash needs to be provided or calculated. 
         if ($newFile.Hash) {
 
             if (!$this.Hash.ContainsKey($newFile.Hash)) {
@@ -112,7 +113,25 @@ class FileHashLookup
         }
     }
 
-    hidden [PsCustomObject[]] GetFilesToAddOrUpdate([IO.DirectoryInfo] $path) {
+    AddFolder([IO.DirectoryInfo] $path) {
+        
+        $path = [IO.DirectoryInfo](GetAbsolutePath $path)
+
+        if ($this.Paths -notcontains $path.FullName) {
+            
+            $this.Paths.Add($path.FullName)
+        }
+
+        $files = $this.InternalGetFiles($path)
+
+        $itemsToUpdate = $this.InternalGetFilesToAddOrUpdate($path, $files)
+
+        $this.InternalApplyChanges($itemsToUpdate)
+    }
+
+    hidden [IO.FileInfo[]] InternalGetFiles([IO.DirectoryInfo] $path)
+    {
+        Write-Progress -Activity "Adding or updating files" -Status "Collecting files: $($path)" `
 
         $getFilesArgs = @{
 
@@ -126,14 +145,11 @@ class FileHashLookup
         if ($this.ExcludedFilePatterns) { $getFilesArgs.Add("Exclude", $this.ExcludedFilePatterns) }
         if ($this.IncludedFilePatterns) { $getFilesArgs.Add("Include", $this.IncludedFilePatterns) }
 
-        $files = Get-ChildItem @getFilesArgs
-        $trackedFiles = $this.GetFiles()
+        return @(Get-ChildItem @getFilesArgs)
+    }
 
-        $total = $files.Count + $trackedFiles.Count
-        $updateProgressArgs = @{ Activity = "Adding or updating files"; Status = "Detecting modified files..."; }
-
-        Write-Progress @updateProgressArgs
-
+    hidden [PsCustomObject[]] InternalGetFilesToAddOrUpdate([IO.DirectoryInfo] $path, [IO.FileInfo[]] $files) 
+    {
         $applicableExcludedFolders = $this.ExcludedFolders | Where-Object { $_ -and $_.StartsWith(($path.FullName)) }
 
         $itemsToUpdate = [List[PsCustomObject]]@()
@@ -145,16 +161,23 @@ class FileHashLookup
 
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-                $updateProgressArgs.CurrentOperation = "($i of $total) $($currentFile.FullName)"
-                $updateProgressArgs.PercentComplete =  (($i / $total) * 100)
-                Write-Progress @updateProgressArgs
+                Write-Progress -Activity "Adding or updating files" `
+                    -Status "Analyzing differences..." `
+                    -PercentComplete (($i / $files.Count) * 100) `
+                    -CurrentOperation "($i of $($files.Count)) $($currentFile.FullName)"
 
                 $updateStatusTimer.Restart()
             }
 
-            # File in excluded folder
+            # Remove files which were added once, and are now located in excluded folders.
             if ($applicableExcludedFolders -and ($null -ne ($applicableExcludedFolders | Where-Object { $currentFile.FullName.StartsWith($_) }))) {
-               continue 
+               
+                if ($this.Contains($currentFile)) {
+
+                    $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
+                }
+
+                continue 
             }
 
             # Later modified files should be refreshed
@@ -171,50 +194,11 @@ class FileHashLookup
             }
         }
 
-        for($i = 0; $i -lt $trackedFiles.Count; $i++) {
-
-            $currentFile = $trackedFiles[$i]
-
-            if ($null -eq $currentFile){
-                continue
-            }
-
-            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
-            {
-                $updateProgressArgs.CurrentOperation = "($($files.Count + $i) of $total) $($currentFile.FullName)"
-                $updateProgressArgs.PercentComplete =  ((($files.Count + $i) / $total) * 100)
-                Write-Progress @updateProgressArgs
-
-                $updateStatusTimer.Restart()
-            }
-
-            # Remove files which were added once, and are now located in excluded folders.
-            if ($applicableExcludedFolders -and ($null -ne ($applicableExcludedFolders | Where-Object { $currentFile.FullName.StartsWith($_) }))) {
-                
-                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
-            }
-
-            # Deleted files.
-            if (!$currentFile.Exists) {
-
-                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
-            }
-        }
-
-        return $itemsToUpdate | Sort-Object -Property @{ Expression={$_.Operation}; Descending=$true; }    
+        return @($itemsToUpdate | Sort-Object -Property @{ Expression={$_.Operation}; Descending=$true; })
     }
 
-    AddFolder([IO.DirectoryInfo] $path) {
-        
-        $path = [IO.DirectoryInfo](GetAbsolutePath $path)
-
-        if (!($this.Paths -contains $path.FullName)) {
-            
-            $this.Paths.Add($path.FullName)
-        }
-
-        $itemsToUpdate = $this.GetFilesToAddOrUpdate($path)
-
+    hidden InternalApplyChanges([PsCustomObject[]] $itemsToUpdate) 
+    {
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
         $saveProgressTimer =  [Diagnostics.Stopwatch]::StartNew()
 
@@ -225,8 +209,13 @@ class FileHashLookup
 
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-                $activity = $currentOperation -eq "Add" ?  "Calculating Hash..." : "Removing from FileHashTable..."	        
-                Write-Progress -Activity $activity -Status "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" -PercentComplete ($i / $itemsToUpdate.Count * 100)
+                $status = $currentOperation -eq "Add" ?  "Calculating Hash..." : "Removing from FileHashTable..."	        
+
+                Write-Progress -Activity "Adding or updating files" `
+                    -Status $status `
+                    -PercentComplete (($i / $itemsToUpdate.Count) * 100) `
+                    -CurrentOperation "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)"
+
                 $updateStatusTimer.Restart()
             }
             
@@ -246,10 +235,10 @@ class FileHashLookup
             }
         }
     }
-	    
+  
     AddFileHashTable([FileHashLookup] $other) {
     
-        $sw = [Diagnostics.Stopwatch]::StartNew()
+        $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
 
         $files = @($other.File.Values.GetEnumerator())
 
@@ -257,10 +246,13 @@ class FileHashLookup
         {
             $currentFile = $files[$i]
 
-            if ($sw.ElapsedMilliseconds -ge 500) 
+            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Adding..." -Status "($i of $($other.File.Count)) $($currentFile.FullName)" -PercentComple ($i / $other.File.Count * 100)
-                $sw.Restart()
+                Write-Progress -Activity "Adding..." `
+                    -Status "($i of $($other.File.Count)) $($currentFile.FullName)" `
+                    -PercentComple ($i / $other.File.Count * 100)
+                
+                $updateStatusTimer.Restart()
             }
             
             $this.Add($currentFile.FullName, $currentFile.Hash)		
@@ -280,16 +272,19 @@ class FileHashLookup
 
         $filesToRemove = $this.GetFiles() | Where-Object { $file = $_; $null -ne ( $this.ExcludedFilePatterns | Where-Object { $file.Name -like $_ } ) } 
 
-        $sw = [Diagnostics.Stopwatch]::StartNew()
+        $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
 
         for($i = 0; $i -lt $filesToRemove.Count; $i++ ) {
         
             $currentFile = $filesToRemove[$i]
 
-            if ($sw.ElapsedMilliseconds -ge 500) 
+            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Removing from FileHashTable..." -Status "($i of $($filesToRemove.Count)) $($currentFile.FullName)" -PercentComple ($i / $filesToRemove.Count * 100)
-                $sw.Restart()
+                Write-Progress -Activity "Removing from FileHashTable..." `
+                    -Status "($i of $($filesToRemove.Count)) $($currentFile.FullName)" `
+                    -PercentComple ($i / $filesToRemove.Count * 100)
+                
+                $updateStatusTimer.Restart()
             }
 
             $this.Remove($currentFile)
@@ -311,9 +306,51 @@ class FileHashLookup
 
         Write-Progress -Activity "Refresh: Collecting files to refresh..."
 
-        $this.Paths | ForEach-Object { $this.AddFolder(($_)) }
+        $allFiles = [List[IO.FileInfo]]@()
+        $itemsToUpdate = [List[PsCustomObject]]@()
 
-        $this.Paths = [List[string]]@(($this.Paths | Where-Object { ([IO.DirectoryInfo]$_).Exists }))
+        foreach ($path in $this.Paths) 
+        {
+            $files = $this.InternalGetFiles($path)
+            $allFiles.AddRange($files)
+            
+            $updatedItems = $this.InternalGetFilesToAddOrUpdate($path, $files)
+            $itemsToUpdate.AddRange($updatedItems)
+        }
+
+        $filesLookup = [HashSet[IO.FileInfo]]::new($allFiles)
+        $trackedFiles = $this.GetFiles()
+
+        $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
+
+        for($i = 0; $i -lt $trackedFiles.Count; $i++) {
+
+            $currentFile = $trackedFiles[$i]
+
+            if ($null -eq $currentFile) {
+                continue
+            }
+
+            # Tracked file that is now deleted.
+            if (!$filesLookup.Contains($currentFile) -and !$currentFile.Exists) {
+
+                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
+            }
+
+            if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
+            {
+                Write-Progress -Activity "Adding or updating files" `
+                    -Status "Checking tracked files..." `
+                    -PercentComplete (($i / $trackedFiles.Count) * 100) `
+                    -CurrentOperation "($i of $($trackedFiles.Count)) $($currentFile.FullName)"
+
+                $updateStatusTimer.Restart()
+            }
+        }
+
+        $this.InternalApplyChanges($itemsToUpdate)
+
+        $this.Paths = [List[string]] ($this.Paths.Where{ ([IO.DirectoryInfo]$_).Exists })
 
         $this.LastUpdated = Get-Date
     }
@@ -416,10 +453,12 @@ class FileHashLookup
                 $sw.Restart()
             }
 
-            if ($this.Hash.ContainsKey($currentFile.Hash))  {
+            if ($this.Hash.ContainsKey($currentFile.Hash))  
+            {
                  $matchesLookup.Add($currentFile)
             }
-            else {
+            else 
+            {
                 $differencesLookup.Add($currentFile)
             }
         }
