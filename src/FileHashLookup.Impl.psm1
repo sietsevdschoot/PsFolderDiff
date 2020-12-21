@@ -209,7 +209,7 @@ class FileHashLookup
 
             if ($updateStatusTimer.ElapsedMilliseconds -ge 500) 
             {
-                $status = $currentOperation -eq "Add" ?  "Calculating Hash..." : "Removing from FileHashTable..."	        
+                $status = $currentOperation -eq "Add" ? "Calculating Hash..." : "Removing from FileHashTable..."	        
 
                 Write-Progress -Activity "Adding or updating files" `
                     -Status $status `
