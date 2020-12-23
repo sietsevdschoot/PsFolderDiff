@@ -232,7 +232,7 @@ Describe "FileHashLookup" {
         $file.LastWriteTime = (Get-Date).AddMinutes(15)
 
         $files = $actual.InternalGetFiles($path)
-        $updatedItems = $actual.InternalGetFilesToAddOrUpdate($path, $files)
+        $updatedItems = $actual.InternalGetFilesToAddOrUpdate($files)
 
         $actual.Refresh()
         
@@ -408,6 +408,8 @@ Describe "FileHashLookup" {
 
         $actual.ExcludeFolder("$TestDrive\MyFolder1\SubFolder\")
 
+        $actual.Refresh()
+
         $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\1.txt")
     }
 
@@ -424,6 +426,8 @@ Describe "FileHashLookup" {
 
          $actual.AddFolder("$TestDrive\MyFolder1")
 
+         $actual.Refresh()
+
          $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
@@ -439,6 +443,8 @@ Describe "FileHashLookup" {
 
         $actual.ExcludeFilePattern("*.txt")
         $actual.ExcludeFilePattern("a*")
+
+        $actual.Refresh()
 
         $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
