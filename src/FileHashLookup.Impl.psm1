@@ -234,7 +234,7 @@ class FileHashLookup
             $excludeFilePatternRegex = [Regex]::new($excludeFilePatternStr, [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
     
             $trackedFilesToExclude = $trackedFilesToRefresh.Where({ `
-                (!$this.ExcludedFolders -or $excludePathRegex.IsMatch($_.FullName)) -and `
+                (!$this.ExcludedFolders -or $excludePathRegex.IsMatch($_.FullName)) -or `
                 (!$this.ExcludedFilePatterns -or $excludeFilePatternRegex.IsMatch($_.Name)) })  
 
             $itemsToUpdate.AddRange(($trackedFilesToExclude.ForEach({[PsCustomObject]@{ Operation='Remove'; File=$_ }})))
@@ -448,7 +448,10 @@ class FileHashLookup
             
             if ($sw.Elapsed.TotalMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Comparing hashes" -Status "($i of $($otherFiles.Count)) Processing $($currentFile.FullName)" -PercentComplete ($i / $otherFiles.Count * 100)
+                Write-Progress -Activity "Comparing hashes" `
+                    -Status "($i of $($otherFiles.Count)) Processing $($currentFile.FullName)" `
+                    -PercentComplete ($i / $otherFiles.Count * 100)
+
                 $sw.Restart()
             }
 
