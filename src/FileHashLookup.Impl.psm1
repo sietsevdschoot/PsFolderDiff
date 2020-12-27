@@ -430,10 +430,11 @@ class FileHashLookup
             }
         }
 
-        $newLookup.Paths = ($deserialized.Paths | Where-Object { $_ })
-        $newLookup.ExcludedFilePatterns = ($deserialized.ExcludedFilePatterns | Where-Object { $_ })
-        $newLookup.IncludedFilePatterns = ($deserialized.IncludedFilePatterns | Where-Object { $_ })
-        $newLookup.ExcludedFolders = ($deserialized.ExcludedFolders | Where-Object { $_ })
+        $items = [string[]]@($deserialized.Paths | Where-Object { $_ }); if ($items) { $newLookup.Paths.AddRange($items) } 
+        $items = [string[]]@($deserialized.IncludedFilePatterns | Where-Object { $_ }); if ($items) { $newLookup.IncludedFilePatterns.AddRange($items) } 
+        $items = [string[]]@($deserialized.ExcludedFilePatterns | Where-Object { $_ }); if ($items) { $newLookup.ExcludedFilePatterns.AddRange($items) } 
+        $items = [string[]]@($deserialized.ExcludedFolders | Where-Object { $_ }); if ($items) { $newLookup.ExcludedFolders.AddRange($items) } 
+
         $newLookup.LastUpdated = $deserialized.LastUpdated
         $newLookup.SavedAsFile = $deserialized.SavedAsFile
 

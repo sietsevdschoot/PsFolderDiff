@@ -190,7 +190,7 @@ Describe "FileHashLookup" {
         $actual.GetType().Name | Should -Be "FileHashLookup"
     }
     
-    It "After load, can retrieve File and hash" {
+    It "After load, can use all properties" {
     
         $myFile = Get-Item "$TestDrive\MyFolder\1.txt"
         $myHash = (Get-FileHash -LiteralPath $myFile.FullName -Algorithm MD5).Hash
@@ -200,8 +200,12 @@ Describe "FileHashLookup" {
         $actual.Save()
         $deserialized = [FileHashLookup]::Load($actual.SavedAsFile) 
 
+        $deserialized.ExcludeFilePattern("*.txt")
+
+        $deserialized.ExcludedFilePatterns | Should -HaveCount 1
         $deserialized.File.($myFile.FullName).Hash | Should -Be $myHash
         $deserialized.Hash.($myHash).FullName | Should -Be $myFile.FullName
+
     }
 
     It "can refresh itself. By adding new files and removing no longer existing files." {
