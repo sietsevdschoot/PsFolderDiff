@@ -56,4 +56,19 @@ Describe "BasicFileInfo" {
 
         $basicFileInfo | Should -BeLessThan $updatedFile 
     }
+        
+    It "Can be saved and loaded again" {
+        
+        $file =  [IO.FileInfo]"$Testdrive\MyFolder\1.txt"
+        $basicFileInfo = [BasicFileInfo]::new($file)
+
+        $tempFile = New-TemporaryFile
+
+        $basicFileInfo | Export-Clixml -Path $tempFile.FullName
+        $loadedBasicFileInfo = [BasicFileInfo](Import-Clixml -Path $tempFile.FullName)        
+
+        Remove-Item $tempFile
+
+        $basicFileInfo -eq $loadedBasicFileInfo | Should -BeTrue
+    }
 }

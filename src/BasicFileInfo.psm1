@@ -1,3 +1,5 @@
+using namespace System.Collections.Generic
+
 class BasicFileInfo : IComparable
 {
     BasicFileInfo()
@@ -25,6 +27,8 @@ class BasicFileInfo : IComparable
         $this.Hash = ![string]::IsNullOrEmpty($hash) `
             ? $hash `
             : (Get-FileHash -LiteralPath $file -Algorithm MD5 -ErrorAction SilentlyContinue).Hash
+
+        $this.ValidTypes = [HashSet[string]](@([IO.FileInfo], [BasicFileInfo]) | ForEach-Object { $_.Name })
     }
 
     [string] $FullName
@@ -33,9 +37,11 @@ class BasicFileInfo : IComparable
     [string] $Hash
     [long] $Length
 
+    hidden [HashSet[string]] $ValidTypes
+
     [bool] Equals ($that) 
     {
-        if (@([IO.FileInfo], [BasicFileInfo]) -notcontains $that.GetType()) {
+        if (!$this.ValidTypes.Contains($that.GetType().Name)) {
             return $false
         }
 
@@ -51,10 +57,10 @@ class BasicFileInfo : IComparable
 
     [int] CompareTo($that)
     {
-        if (@([IO.FileInfo], [BasicFileInfo]) -notcontains $that.GetType()) {
+        if (!$this.ValidTypes.Contains($that.GetType())) {
             Throw "Can't compare"
         }
-        
+      
         return (($this.CreationTime - $that.CreationTime) + ($this.LastWriteTime - $that.LastWriteTime)).TotalMilliseconds
     }    
 

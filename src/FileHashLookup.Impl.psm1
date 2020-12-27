@@ -162,13 +162,19 @@ class FileHashLookup
     
     ExcludeFilePattern ([string] $filePattern) {
         
+        try { [Regex]::new($this.CreateExcludedFilePatternRegexString(($this.ExcludedFilePatterns + @($filePattern)))) }
+        catch { Throw "'$filePattern' is not valid. `n$($_.Exception.Message)" }
+        
         $this.ExcludedFilePatterns.Add($filePattern)
     }
 
     ExcludeFolder ([IO.DirectoryInfo] $folder) {
     
         $folder = [IO.DirectoryInfo] (GetAbsolutePath $folder)
-        
+
+        try { [Regex]::new($this.CreateExcludedFilePathRegexString(($this.ExcludedFolders + @($folder.FullName)))) }
+        catch { Throw "'$($folder.FullName)' is not valid. `n$($_.Exception.Message)" }
+
         $this.ExcludedFolders.Add($folder.FullName)
     }
     
@@ -221,21 +227,15 @@ class FileHashLookup
 
             Write-Progress -Activity "Refresh: Checking files to exclude..."
 
-            $isExtensionRegex = [Regex]::new("^\*\.[a-z0-9]*$", [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
+            $excludePathRegexStr = $this.CreateExcludedFilePathRegexString($this.ExcludedFolders)
+            $excludePathRegex = [Regex]::new($excludePathRegexStr, [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
 
-            $myExcludedExtensions = @($this.ExcludedFilePatterns).Where({ $isExtensionRegex.IsMatch($_) }).ForEach({ $_.Trim("*",".") })
-            $myExcludedPatterns = @($this.ExcludedFilePatterns).Where({ !$isExtensionRegex.IsMatch($_) }).ForEach({ "^$((($_ -replace "\.", "\.") -replace "\*", "(.*)"))" })
-            $myExcludedPaths = @($this.ExcludedFolders).ForEach({ "^$([regex]::Escape($_))(.*)" })
-            
-            $excludeFilePatternStr = (@("(.*)\.($($myExcludedExtensions -Join "|"))$") + $myExcludedPatterns) -Join "|"
-            $excludePathStr = @($myExcludedPaths) -Join "|"
-            
-            $excludePathRegex = [Regex]::new($excludePathStr, [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
-            $excludeFilePatternRegex = [Regex]::new($excludeFilePatternStr, [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
+            $excludeFilePatternRegexStr = $this.CreateExcludedFilePatternRegexString($this.ExcludedFilePatterns)
+            $excludeFilePatternRegex = [Regex]::new($excludeFilePatternRegexStr, [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
     
-            $trackedFilesToExclude = $trackedFilesToRefresh.Where({ `
-                (!$this.ExcludedFolders -or $excludePathRegex.IsMatch($_.FullName)) -or `
-                (!$this.ExcludedFilePatterns -or $excludeFilePatternRegex.IsMatch($_.Name)) })  
+            $trackedFilesToExclude = $trackedFilesToRefresh.Where({$file = $_; `
+                ($this.ExcludedFolders -and $excludePathRegex.IsMatch($file.FullName)) -or `
+                ($this.ExcludedFilePatterns -and $excludeFilePatternRegex.IsMatch($file.Name)) })  
 
             $itemsToUpdate.AddRange(($trackedFilesToExclude.ForEach({[PsCustomObject]@{ Operation='Remove'; File=$_ }})))
         }
@@ -250,7 +250,7 @@ class FileHashLookup
 
     hidden [IO.FileInfo[]] InternalGetFiles([IO.DirectoryInfo] $path)
     {
-        Write-Progress -Activity "Adding or updating files" -Status "Collecting files: $($path)" `
+        Write-Progress -Activity "Adding or updating files" -Status "Collecting files: '$($path.FullName)'" `
 
         $getFilesArgs = @{
 
@@ -270,7 +270,7 @@ class FileHashLookup
 
         if ($applicableExcludedFolders) {
 
-            $regexStr = ($applicableExcludedFolders.ForEach({ "^$([regex]::Escape($_))(.*)" })) -Join "|"
+            $regexStr = $this.CreateExcludedFilePathRegexString($applicableExcludedFolders)
             $excludedPathsRegex = [Regex]::new($regexStr, [RegexOptions]::Compiled -bor [RegexOptions]::IgnoreCase)
 
             $files = $files.Where({!$excludedPathsRegex.IsMatch($_.FullName)})
@@ -298,16 +298,20 @@ class FileHashLookup
                 $updateStatusTimer.Restart()
             }
 
-            # Later modified files should be refreshed
-            if ($this.Contains($currentFile) -and $this.File.($currentFile.FullName) -lt $currentFile) {
+            $trackedFile = $this.File.($currentFile.FullName)
 
-                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
-                $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Add'; File=$currentFile }))
+            if ($trackedFile) {
+
+                # Later modified files should be refreshed
+                if ($trackedFile -lt $currentFile) {
+
+                    $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Remove'; File=$currentFile }))
+                    $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Add'; File=$currentFile }))
+                }
             }
-
-            # Newly added files
-            if (!$this.Contains($currentFile)) {
-
+            else {
+    
+                # Newly added files
                 $itemsToUpdate.Add(([PsCustomObject]@{ Operation='Add'; File=$currentFile }))
             }
         }
@@ -352,6 +356,21 @@ class FileHashLookup
                 $this.Remove($currentFile)
             }
         }
+    }
+
+    hidden [string] CreateExcludedFilePatternRegexString([string[]] $excludedPatterns) {
+
+        $isExtensionRegex = [Regex]::new("^\*\.[a-z0-9_-]*$", [RegexOptions]::IgnoreCase)
+
+        $myExcludedExtensions = $excludedPatterns.Where({ $isExtensionRegex.IsMatch($_) }).ForEach({ $_.Trim("*",".") })
+        $myExcludedPatterns = $excludedPatterns.Where({ !$isExtensionRegex.IsMatch($_) }).ForEach({ "^$((($_ -replace "\.", "\.") -replace "\*", "(.*)"))" })
+        
+        return (@("(.*)\.($($myExcludedExtensions -Join "|"))$") + $myExcludedPatterns) -Join "|"
+    }
+
+    hidden [string] CreateExcludedFilePathRegexString([string[]] $excludedPaths) {
+        
+        return ($excludedPaths.ForEach({ "^$([regex]::Escape($_))(.*)" })) -Join "|"
     }
 
     Save([IO.FileInfo] $filename) {

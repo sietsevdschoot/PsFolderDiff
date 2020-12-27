@@ -431,6 +431,13 @@ Describe "FileHashLookup" {
          $actual.GetFiles() | Select-Object -exp FullName | Should -Be @("$TestDrive\MyFolder1\resume.pdf")
     }
 
+    It "ExcludeFilePattern Adding invalid pattern throws" {
+
+        $actual = GetFileHashTable
+
+        { $actual.ExcludeFilePattern("*.txt))") } | Should -Throw 
+    }
+
     It "Will remove already added files which match excludeFilePatterns" {
 
         $actual = GetFileHashTable
