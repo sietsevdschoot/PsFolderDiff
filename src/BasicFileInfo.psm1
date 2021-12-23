@@ -4,6 +4,7 @@ class BasicFileInfo : IComparable
 {
     BasicFileInfo()
     {
+      $this.Init($null, $null)
     }
     
     BasicFileInfo([IO.FileInfo] $file)
@@ -18,30 +19,41 @@ class BasicFileInfo : IComparable
 
     hidden [void] Init([IO.FileInfo] $file, [string] $hash)
     {
-        $this.FullName = $file.FullName
-        $this.CreationTime = $file.CreationTime
-        $this.LastWriteTime = $file.LastWriteTime
-        $this.Length = $file.Length
+        $this | Add-Member -Name Hash -MemberType ScriptProperty `
+            -Value { 
+          
+                if ([string]::IsNullOrEmpty($this._hash)) {
 
-        # Null coalescing doesn't work here because passing $null as a string becomes "" for $hash :(
-        $this.Hash = ![string]::IsNullOrEmpty($hash) `
-            ? $hash `
-            : (Get-FileHash -LiteralPath $file -Algorithm MD5 -ErrorAction SilentlyContinue).Hash
+                    $this._hash = Get-FileHash -LiteralPath $this.FullName -Algorithm MD5 -ErrorAction SilentlyContinue | Select-Object -exp Hash
+                }
+                
+                return $this._hash 
+            } `
+            -SecondValue { param($value) $this._hash = $value }
 
-        $this.ValidTypes = [HashSet[string]](@([IO.FileInfo], [BasicFileInfo]) | ForEach-Object { $_.Name })
+        $this.Hash = $hash
+
+        if ($file) {
+            $this.FullName = $file.FullName
+            $this.CreationTime = $file.CreationTime
+            $this.LastWriteTime = $file.LastWriteTime
+            $this.Length = $file.Length
+        }
+
+        $this._validTypes = (@([IO.FileInfo], [BasicFileInfo]) | Select-Object -exp Name )
     }
 
     [string] $FullName
     [DateTime] $CreationTime
     [DateTime] $LastWriteTime
-    [string] $Hash
     [long] $Length
 
-    hidden [HashSet[string]] $ValidTypes
+    hidden [string[]] $_validTypes
+    hidden [string] $_hash
 
     [bool] Equals ($that) 
     {
-        if (!$this.ValidTypes.Contains($that.GetType().Name)) {
+        if (!$this._validTypes.Contains($that.GetType().Name)) {
             return $false
         }
 
@@ -57,11 +69,15 @@ class BasicFileInfo : IComparable
 
     [int] CompareTo($that)
     {
-        if (!$this.ValidTypes.Contains($that.GetType())) {
-            Throw "Can't compare"
+        if (!$this._validTypes.Contains($that.GetType().Name)) {
+            Throw "this: '$(($this | ConvertTo-Json))' That [$($that.GetType().Name)]: $(($that | ConvertTo-Json)). Can't compare"
         }
-      
-        return (($this.CreationTime - $that.CreationTime) + ($this.LastWriteTime - $that.LastWriteTime)).TotalMilliseconds
+
+        $diff = (($this.CreationTime - $that.CreationTime) + ($this.LastWriteTime - $that.LastWriteTime)).TotalMilliseconds  
+        
+        $compare = ($diff -eq 0) ? 0 : ($diff -gt 1) ? 1 : -1
+
+        return $compare
     }    
 
     static [IO.FileInfo] op_Implicit([BasicFileInfo] $instance) {

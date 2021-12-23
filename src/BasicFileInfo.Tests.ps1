@@ -65,10 +65,11 @@ Describe "BasicFileInfo" {
         $tempFile = New-TemporaryFile
 
         $basicFileInfo | Export-Clixml -Path $tempFile.FullName
-        $loadedBasicFileInfo = [BasicFileInfo](Import-Clixml -Path $tempFile.FullName)        
+        $loadedBasicFileInfo = [BasicFileInfo](Import-Clixml -Path $tempFile.FullName)
 
         Remove-Item $tempFile
 
         $basicFileInfo -eq $loadedBasicFileInfo | Should -BeTrue
-    }
+        $basicFileInfo._validTypes | Should -HaveCount $loadedBasicFileInfo._validTypes.Count
+    }  
 }

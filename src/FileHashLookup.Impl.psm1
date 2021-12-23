@@ -66,7 +66,7 @@ class FileHashLookup
         return $this.File.ContainsKey((GetAbsolutePath $file))
     }
 
-    hidden Add ([IO.FileInfo] $file) {
+    Add ([IO.FileInfo] $file) {
 
         $this.Add($file, $null)
     }
@@ -133,6 +133,7 @@ class FileHashLookup
     AddFileHashTable([FileHashLookup] $other) {
     
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
+        $durationTimer = [Diagnostics.Stopwatch]::StartNew()
 
         $files = @($other.File.Values.GetEnumerator())
 
@@ -144,7 +145,8 @@ class FileHashLookup
             {
                 Write-Progress -Activity "Adding..." `
                     -Status "($i of $($other.File.Count)) $($currentFile.FullName)" `
-                    -PercentComple ($i / $other.File.Count * 100)
+                    -PercentComple ($i / $other.File.Count * 100) `
+                    -SecondsRemaining ([int](([double]$durationTimer.Elapsed.TotalSeconds / [Math]::Max($i, 1)) * ($other.File.Count - $i)))
                 
                 $updateStatusTimer.Restart()
             }
@@ -201,6 +203,7 @@ class FileHashLookup
         $trackedFilesToRefresh = $trackedFiles.Where({!$collectedFilesLookup.Contains($_)})
 
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
+        $durationTimer = [Diagnostics.Stopwatch]::StartNew()
 
         for($i = 0; $i -lt $trackedFilesToRefresh.Count; $i++) {
 
@@ -217,7 +220,8 @@ class FileHashLookup
                 Write-Progress -Activity "Refresh: Adding or updating files" `
                     -Status "Checking deleted files..." `
                     -PercentComplete (($i / $trackedFilesToRefresh.Count) * 100) `
-                    -CurrentOperation "($i of $($trackedFilesToRefresh.Count)) $($currentFile.FullName)"
+                    -CurrentOperation "($i of $($trackedFilesToRefresh.Count)) $($currentFile.FullName)" `
+                    -SecondsRemaining ([int](([double]$durationTimer.Elapsed.TotalSeconds / [Math]::Max($i, 1)) * ($trackedFilesToRefresh.Count - $i)))
 
                 $updateStatusTimer.Restart()
             }
@@ -283,6 +287,7 @@ class FileHashLookup
     {
         $itemsToUpdate = [List[PsCustomObject]]@()
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
+        $durationTimer = [Diagnostics.Stopwatch]::StartNew()
 
         for($i = 0; $i -lt $files.Count; $i++) {
 
@@ -293,7 +298,8 @@ class FileHashLookup
                 Write-Progress -Activity "Adding or updating files" `
                     -Status "Analyzing differences..." `
                     -PercentComplete (($i / $files.Count) * 100) `
-                    -CurrentOperation "($i of $($files.Count)) $($currentFile.FullName)"
+                    -CurrentOperation "($i of $($files.Count)) $($currentFile.FullName)" `
+                    -SecondsRemaining ([int](([double]$durationTimer.Elapsed.TotalSeconds / [Math]::Max($i, 1)) * ($files.Count - $i)))
 
                 $updateStatusTimer.Restart()
             }
@@ -323,6 +329,8 @@ class FileHashLookup
     {
         $updateStatusTimer = [Diagnostics.Stopwatch]::StartNew()
         $saveProgressTimer =  [Diagnostics.Stopwatch]::StartNew()
+        $durationTimer =  [Diagnostics.Stopwatch]::StartNew()
+
 
         for($i = 0; $i -lt $itemsToUpdate.Count; $i++ ) {
         
@@ -336,7 +344,8 @@ class FileHashLookup
                 Write-Progress -Activity "Adding or updating files" `
                     -Status $status `
                     -PercentComplete (($i / $itemsToUpdate.Count) * 100) `
-                    -CurrentOperation "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)"
+                    -CurrentOperation "($i of $($itemsToUpdate.Count)) $($currentFile.FullName)" `
+                    -SecondsRemaining ([int](([double]$durationTimer.Elapsed.TotalSeconds / [Math]::Max($i, 1)) * ($itemsToUpdate.Count - $i)))
 
                 $updateStatusTimer.Restart()
             }
@@ -410,6 +419,7 @@ class FileHashLookup
         $hashItems = @($deserialized.Hash.GetEnumerator())
         
         $sw = [Diagnostics.Stopwatch]::StartNew()
+        $durationTimer = [Diagnostics.Stopwatch]::StartNew()
 
         for($i = 0; $i -lt $fileItems.Count; $i++ ) {
         
@@ -417,7 +427,11 @@ class FileHashLookup
 
             if ($sw.ElapsedMilliseconds -ge 500) 
             {
-                Write-Progress -Activity "Importing FileHashTable..." -PercentComple ($i / $fileItems.Count * 100)
+                Write-Progress `
+                    -Activity "Importing FileHashTable..." `
+                    -PercentComple ($i / $fileItems.Count * 100) `
+                    -SecondsRemaining ([int](([double]$durationTimer.Elapsed.TotalSeconds / [Math]::Max($i, 1)) * ($fileItems.Count - $i)))
+
                 $sw.Restart()
             }
 
@@ -459,6 +473,7 @@ class FileHashLookup
         $matchesLookup = [FileHashLookup]::New() 
 
         $sw = [Diagnostics.Stopwatch]::StartNew()
+        $durationTimer = [Diagnostics.Stopwatch]::StartNew()
         
         $otherFiles = @($other.File.Values.GetEnumerator()) 
         
@@ -470,7 +485,8 @@ class FileHashLookup
             {
                 Write-Progress -Activity "Comparing hashes" `
                     -Status "($i of $($otherFiles.Count)) Processing $($currentFile.FullName)" `
-                    -PercentComplete ($i / $otherFiles.Count * 100)
+                    -PercentComplete ($i / $otherFiles.Count * 100) `
+                    -SecondsRemaining ($durationTimer.Elapsed.TotalSeconds / (([Math]::Max($i, 1)) * ($otherFiles.Count - $i)))
 
                 $sw.Restart()
             }
