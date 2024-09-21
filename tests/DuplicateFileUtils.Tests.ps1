@@ -1,25 +1,54 @@
 using module '..\src\DuplicateFileUtils.psm1'
+using module '..\src\FileHashLookup.Impl.psm1'
+using module '..\src\BasicFileInfo.psm1'
 
 Describe "DuplicateFileUtils" {
 
     It "Get-Duplicates: Lists all duplicate files" {
 
-        $fileContent1 = [Guid]::NewGuid()
-        $fileContent2 = [Guid]::NewGuid()
+        $fileContents = 1..4 | ForEach-Object { [Guid]::NewGuid() } 
 
-        10..13 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder1\$_.txt" -Value ($_ % 2 -eq 0 ? $fileContent1 : $fileContent2) -Force }
-        20..23 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder2\$_.txt" -Value ($_ % 2 -eq 0 ? $fileContent1 : $fileContent2) -Force }
-        30..32 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder3\$_.txt" -Value ($_ % 2 -eq 0 ? $fileContent1 : $fileContent2) -Force }
+        10..14 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder1\$_.txt" -Value ($fileContents[($_ % 10)]) -Force }
+        20..23 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder2\$_.txt" -Value ($fileContents[($_ % 10)]) -Force }
+        30..32 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder3\$_.txt" -Value ($fileContents[($_ % 10)]) -Force }
 
         $fileHashTable = GetFileHashTable $TestDrive
 
         $actual = Get-Duplicates $fileHashTable
-        
-        $actual | Should -BeEquivalentTo @(
-            @{ Keep="$TestDrive\Folder1\10.txt"; Duplicates=@("$TestDrive\Folder2\20.txt", "$TestDrive\Folder3\30.txt") },
-            @{ Keep="$TestDrive\Folder1\11.txt"; Duplicates=@("$TestDrive\Folder2\21.txt", "$TestDrive\Folder3\31.txt") },
-            @{ Keep="$TestDrive\Folder1\12.txt"; Duplicates=@("$TestDrive\Folder2\22.txt", "$TestDrive\Folder3\32.txt") },
-            @{ Keep="$TestDrive\Folder1\13.txt"; Duplicates=@("$TestDrive\Folder2\23.txt" ) }
+
+        $simplifiedActual = $actual | Select-Object `
+            @{ Name="Keep"; Expression={$_.Keep.FullName} },
+            @{ Name="Duplicates"; Expression={ ,@($_.Duplicates | ForEach-Object { $_.FullName }) } }
+
+        $simplifiedActual | Should -BeEquivalentTo @(
+            [PsCustomObject]@{ Keep="$TestDrive\Folder1\10.txt"; Duplicates=@("$TestDrive\Folder2\20.txt", "$TestDrive\Folder3\30.txt") },
+            [PsCustomObject]@{ Keep="$TestDrive\Folder1\11.txt"; Duplicates=@("$TestDrive\Folder2\21.txt", "$TestDrive\Folder3\31.txt") },
+            [PsCustomObject]@{ Keep="$TestDrive\Folder1\12.txt"; Duplicates=@("$TestDrive\Folder2\22.txt", "$TestDrive\Folder3\32.txt") },
+            [PsCustomObject]@{ Keep="$TestDrive\Folder1\13.txt"; Duplicates=@("$TestDrive\Folder2\23.txt" ) }
+        ) 
+    }
+
+    It "Get-Duplicates: Can pass custom sort expressions" {
+
+        $fileContents = 1..4 | ForEach-Object { [Guid]::NewGuid() } 
+
+        10..14 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder1\$_.txt" -Value ($fileContents[($_ % 10)]) -Force }
+        20..23 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder2\$_.txt" -Value ($fileContents[($_ % 10)]) -Force }
+        30..32 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder3\$_.txt" -Value ($fileContents[($_ % 10)]) -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        $actual = Get-Duplicates $fileHashTable -SortBy { param([IO.FileInfo[]] $files) $files | Sort-Object -prop @{ Expression={$_.Directory.FullName}; Descending=$true } } 
+
+        $simplifiedActual = $actual | Select-Object `
+            @{ Name="Keep"; Expression={$_.Keep.FullName} },
+            @{ Name="Duplicates"; Expression={ ,@($_.Duplicates | ForEach-Object { $_.FullName }) } }
+
+        $simplifiedActual | Should -BeEquivalentTo @(
+            [PsCustomObject]@{ Keep="$TestDrive\Folder3\30.txt"; Duplicates=@("$TestDrive\Folder2\20.txt", "$TestDrive\Folder1\10.txt") },
+            [PsCustomObject]@{ Keep="$TestDrive\Folder3\31.txt"; Duplicates=@("$TestDrive\Folder2\21.txt", "$TestDrive\Folder1\11.txt") },
+            [PsCustomObject]@{ Keep="$TestDrive\Folder3\32.txt"; Duplicates=@("$TestDrive\Folder2\22.txt", "$TestDrive\Folder1\12.txt") },
+            [PsCustomObject]@{ Keep="$TestDrive\Folder2\23.txt"; Duplicates=@("$TestDrive\Folder1\13.txt" ) }
         ) 
     }
 
@@ -46,7 +75,6 @@ Describe "DuplicateFileUtils" {
     
         Add-ShouldOperator -Name BeEquivalentTo -Test $function:BeEquivalentTo -SupportsArrayInput
         Add-ShouldOperator -Name ContainEquivalentOf -Test $function:ContainEquivalentOf -SupportsArrayInput
-    
     }
 
     AfterAll {

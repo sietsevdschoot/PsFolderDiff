@@ -1,3 +1,4 @@
+using module '..\src\BasicFileInfo.psm1'
 using namespace System.Collections.Generic
 
 Describe "BasicFileInfo" {

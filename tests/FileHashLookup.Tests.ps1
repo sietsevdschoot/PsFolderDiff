@@ -1,4 +1,6 @@
-﻿using namespace System.Collections.Generic
+﻿using module '..\src\FileHashLookup.Impl.psm1'
+using module '..\src\BasicFileInfo.psm1'
+using namespace System.Collections.Generic
 
 Describe "FileHashLookup" {
 

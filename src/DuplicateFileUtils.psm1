@@ -1,11 +1,15 @@
 using module '.\FileHashLookup.Impl.psm1'
+using module '.\BasicFileInfo.psm1'
 using namespace System.Collections.Generic
 
 Function Get-Duplicates {
   [CmdletBinding()]
   param(
     [Parameter(Mandatory,ValueFromPipeline, Position=0)]
-    [FileHashLookup] $fileHashLookup
+    [FileHashLookup] $fileHashLookup,
+    [Alias("SortBy")]
+    [Parameter(Mandatory=$false)]
+    [ScriptBlock] $SortExpression
   ) 
 
   BEGIN {
@@ -15,8 +19,19 @@ Function Get-Duplicates {
 
   PROCESS {
 
+    $duplicateHashEntries = $fileHashLookup.Hash.GetEnumerator() | Where-Object{ @($_.Value).Count -gt 1 } 
 
+    foreach ($entry in $duplicateHashEntries) {
 
+      $files = $SortExpression `
+        ? ($SortExpression.Invoke((,@($entry.Value | ForEach-Object {[IO.FileInfo]$_}))) | ForEach-Object{ [BasicFileInfo] $_ })
+        : @($entry.Value | Sort-Object -prop FullName)
+      
+      [PsCustomObject] @{ 
+          Keep=($files | Select-Object -First 1);
+          Duplicates=(,@($files | Select-Object -Skip 1));
+      }
+    }
   }
 
   END {
