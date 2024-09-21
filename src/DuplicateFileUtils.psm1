@@ -38,7 +38,7 @@ Function Get-Duplicates {
 
       if ($sw.ElapsedMilliseconds -ge 500) {
   
-        $progressArgs.('Status') = "[2 / 2] Sorting duplicates and selecting items to keep. ($i of $($potentialDuplicateGroups.Count)) $($currentEntryGroup[0].FullName)"
+        $progressArgs.('Status') = "[2 / 2] Sorting duplicates and selecting items to keep. ($i of $($duplicateHashEntries.Count)) $($entry[0].FullName)"
         $progressArgs.('PercentComplete') = $i / $duplicateHashEntries.Count * 100 
         Write-Progress @progressArgs
         $sw.Restart()
