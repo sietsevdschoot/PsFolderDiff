@@ -1,5 +1,5 @@
-﻿using module '.\FileHashLookup.Impl.psm1'
-using module '.\BasicFileInfo.psm1'
+﻿using module '..\src\FileHashLookup.Impl.psm1'
+using module '..\src\BasicFileInfo.psm1'
 using namespace System.Collections.Generic
 
 [Cmdletbinding()]
@@ -23,8 +23,13 @@ if (!(Get-Module Pester)) {
 $testResults = [List[PsCustomObject]]@()
 
 if (!$testFile) {
-   
-    Get-ChildItem *.Tests.* | ForEach-Object { $testResults.Add((Invoke-Pester -Script $_.FullName -PassThru)) }
+
+    $testFiles = Get-ChildItem (Join-Path $PSScriptRoot *.Tests.*) 
+
+    foreach ($testFile in $testFiles) {
+
+        $testResults.Add((Invoke-Pester -Script $_.FullName -PassThru))
+    }
     
 } else {
 

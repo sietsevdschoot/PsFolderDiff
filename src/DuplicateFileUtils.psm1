@@ -1,21 +1,35 @@
 using module '.\FileHashLookup.Impl.psm1'
 using namespace System.Collections.Generic
 
-#1. Select potential duplicates. Input [FileHashLookup] Output [IO.FileInfo][][]
-#2. Sort potential duplicates (A-Z. 1st is SelectedItem). Input [IO.FileInfo][] Output [PsCustomObject][]
-#3. Filter potential duplicates. Input [PsCustomObject][] Output [bool]
-#4. Convert back to FileInfo. Input [PsCustomObject] Output [IO.FileInfo]
-#5. Convert to OutputFormat. Input [IO.FileInfo][] Output @{ Selected=[IO.FileInfo]; Duplicates=[IO.FileInfo][]; All=[IO.FileInfo][]; }
+Function Get-Duplicates {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory,ValueFromPipeline, Position=0)]
+    [FileHashLookup] $fileHashLookup
+  ) 
+
+  BEGIN {
+
+    if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+  }
+
+  PROCESS {
+
+
+
+  }
+
+  END {
+
+  }
+}
+
+
 Function Get-DuplicatesInternal {
   [CmdletBinding()]
   param(
     [Parameter(Mandatory,ValueFromPipeline, Position=0)]
-    [FileHashLookup] $fileHashLookup,
-    [Parameter(Position=1)]
-    [ScriptBlock] $getPotentialDuplicates,
-    [ScriptBlock] $sortPotentialDuplicatesIntermediate,
-    [ScriptBlock] $filterPotentialDuplicatesIntermediate = { param([PsCustomObject]$entry) $true },
-    [ScriptBlock] $convertIntermediateToFileInfo = { param([PsCustomObject]$entry) [IO.FileInfo]$entry.FullName }
+    [FileHashLookup] $fileHashLookup
   ) 
 
   BEGIN {
@@ -126,86 +140,4 @@ Function Get-DuplicatesInternal {
   }
 }
 
-
-Function Get-FoldersContainingDuplicates {
-  param (
-    [FileHashLookup] $fileHashLookup  
-  )
-  
-  $filename = [IO.FileInfo]$fileHashLookup.SavedAsFile 
-
-  $folders = Get-DuplicateFolders $fileHashLookup
-
-  $foldersByNrOfFiles = $folders `
-    | ForEach-Object { [PSCustomObject] @{ Path=$_.FullName; NrOfFiles=(Get-ChildItem $_.FullName -File -Recurse -Force).Length } } `
-    | Sort-Object -Property NrOfFiles -Descending
-      
-  $foldersByNrOfFiles 
-}
-
-Function Get-DuplicateFolders {
-  param (
-    [FileHashLookup] $fileHashLookup  
-  )
-  
-  $paths = @($fileHashLookup.Paths)
-
-  $folders = $fileHashLookup.GetDuplicates().GetFiles() | Select-Object -exp Directory | Select-Object -Unique
-  $allFolders = [Collections.ArrayList]$folders
-
-  foreach($folder in $folders) {
-  
-    $parent = $folder
-
-    do {
-
-      $parent = $parent.Parent
-
-      $allFolders.Add($parent) > $null
-    }
-    while (($null -eq ($paths | Where-Object{ $_ -eq $parent.FullName })) -and ($null -ne $parent)) 
-  }
-
-  $allFolders | Select-Object -Unique | Sort-Object -prop @{ Expression={$_.FullName.Split([IO.Path]::DirectorySeparatorChar)} }
-}
-
-Function ShowDuplicates {
-    [CmdletBinding()]
-    param(
-        [Parameter(ValueFromPipeline)]
-        [FileHashLookup] $fileHashLookup
-    )
-
-    $duplicates = $fileHashLookup.Hash.GetEnumerator() | Where-Object { @($_.Value).Count -gt 1 } 
-    
-    if ($duplicates) {
-    
-        $duplicates | Foreach-Object { "$($_.Name) `n$((@($_.Value) | Foreach-Object { "`t > $(([IO.FileInfo]$_).Fullname)" }) -join "`n")" }
-    }
-    else {
-        
-        "No duplicates found"
-    }
-}
-
-Function Get-DuplicatesByName {
-  [CmdletBinding()]
-  param(
-    [Parameter(ValueFromPipeline)]
-    [FileHashLookup] $fileHashLookup
-  )
-
-  $duplicates = @{}
-
-  $groupByName = $fileHashLookup.GetFiles() | Group-Object -prop Name 
-
-  $groupByName.GetEnumerator() | Where-Object { @($_.Group).Count -gt 1} | ForEach-Object { $duplicates.Add($_.Name, @($_.Group)) }
-
-  $duplicates 
-}
-
-Set-Alias displayDuplicates ShowDuplicates
-Export-ModuleMember -Function ShowDuplicates -Alias @("displayDuplicates")
-
-Export-ModuleMember -Function Get-FoldersContainingDuplicates
-Export-ModuleMember -Function Get-DuplicatesByName
+Export-ModuleMember -Function Get-Duplicates
