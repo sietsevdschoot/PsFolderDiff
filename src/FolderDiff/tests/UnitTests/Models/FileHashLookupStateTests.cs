@@ -48,18 +48,32 @@ public class FileHashLookupStateTests
         fixture.Sut.File[file.FullName].Should().Be(file);
         fixture.Sut.Hash[file.Hash].Should().BeEquivalentTo([file]);
     }
-
-
-
+    
     [Fact]
     public void Creates_a_List_for_files_which_share_the_same_hash()
     {
         // Arrange
-        
+        var fixture = new FileHashLookupStateTestsFixture();
 
         // Act
+        fixture.WithFilesAddedToState(nrOfFiles: 4, fileContents: "Identical Hash");
+
 
         // Assert
+
+
+        ////    1..4 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt - Value "Identical Hash" - Force }
+
+        ////    $myHash = (Get - FileHash - LiteralPath(gi "$TestDrive\MyFolder\IdenticalHash1.txt").FullName - Algorithm MD5).Hash
+
+        ////    $actual = GetFileHashTable "$TestDrive\MyFolder"
+
+        ////    $actual.Hash[$myHash] -is [System.Collections.Generic.List[BasicFileInfo]] | Should - BeTrue
+        ////    $actual.Hash[$myHash].Count | Should - Be 4
+
+        ////    $actual.File.Count | Should - Be 7
+
+
     }
 
     [Fact]
@@ -267,11 +281,11 @@ public class FileHashLookupStateTests
     {
         public FileHashLookupState Sut { get; } = new();
 
-        public void WithFilesAddedToState(int? nrOfFiles = null)
+        public void WithFilesAddedToState(int? nrOfFiles = null, string? fileContents = null)
         {
             for (var i = 0; i < (nrOfFiles ?? 10); i++)
             {
-                var file = WithNewBasicFile();
+                var file = WithNewBasicFile(fileContents);
 
                 Sut.Add(file);
             }

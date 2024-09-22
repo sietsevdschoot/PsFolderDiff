@@ -26,19 +26,21 @@ public abstract class FileHashTestFixture
 
     public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(BasicFileInfo.Create).ToArray();
 
-    public IFileInfo WithNewFile()
+    public IFileInfo WithNewFile(string? contents = null)
     {
         var fileName = _fileSystem.Path.Combine(_workingDirectory, $"{_i++}.txt");
 
         var file = _fileSystem.FileInfo.New(fileName);
-        _fileSystem.File.WriteAllText(file.FullName, Guid.NewGuid().ToString());
+        var fileContent = (contents ?? Guid.NewGuid().ToString());
+
+        _fileSystem.File.WriteAllText(file.FullName, fileContent);
 
         return file;
     }
 
-    public BasicFileInfo WithNewBasicFile()
+    public BasicFileInfo WithNewBasicFile(string? contents = null)
     {
-        return BasicFileInfo.Create(WithNewFile());
+        return BasicFileInfo.Create(WithNewFile(contents));
     }
 
     public IFileInfo UpdateFile(IFileInfo file)

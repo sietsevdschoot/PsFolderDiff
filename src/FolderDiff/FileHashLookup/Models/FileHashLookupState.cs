@@ -26,12 +26,13 @@ public class FileHashLookupState
     {
         ArgumentNullException.ThrowIfNull(file, nameof(file));
 
-        _fileLookup.Add(file.FullName, file);
+        _fileLookup[file.FullName] = file;
 
         var items = _hashLookup.TryGetValue(file.Hash, out var existingItems)
-            ? existingItems
+            ? existingItems.Concat([file]).ToList()
             : [file];
 
-        _hashLookup.Add(file.Hash, items);
+
+        _hashLookup[file.Hash] = items;
     }
 }
