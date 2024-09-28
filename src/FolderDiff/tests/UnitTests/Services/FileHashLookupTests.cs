@@ -6,6 +6,17 @@ public class FileHashLookupTests
 {
 
     [Fact]
+    public void Creates_a_file_containing_the_HashTable()
+    {
+        // Arrange
+
+
+        // Act
+
+        // Assert
+    }
+
+    [Fact]
     public void Refresh_Removes_folders_and_files_from_paths_which_do_no_longer_exists()
     {
         // Arrange

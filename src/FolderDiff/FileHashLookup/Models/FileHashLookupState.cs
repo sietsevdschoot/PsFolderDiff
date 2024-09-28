@@ -8,19 +8,11 @@ public class FileHashLookupState
     private readonly Dictionary<string, BasicFileInfo> _fileLookup = new();
     private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new();
 
-    public IReadOnlyDictionary<string, BasicFileInfo> File => _fileLookup;
+    public IReadOnlyDictionary<string, BasicFileInfo> File => new ReadOnlyDictionary<string, BasicFileInfo>(_fileLookup);
 
-    public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash => _hashLookup
-        .ToDictionary(k => k.Key, v => (IReadOnlyCollection<BasicFileInfo>)v.Value)
-        .AsReadOnly();
+    public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash => new ReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>>(
+        _hashLookup.ToDictionary(k => k.Key, v => (IReadOnlyCollection<BasicFileInfo>)v.Value));
 
-    public void Add(IFileInfo file, string hash)
-    {
-        ArgumentNullException.ThrowIfNull(file, nameof(file));
-        ArgumentNullException.ThrowIfNull(hash, nameof(hash));
-
-        Add(new BasicFileInfo(file, hash));
-    }
 
     public void Add(BasicFileInfo file)
     {
@@ -32,7 +24,24 @@ public class FileHashLookupState
             ? existingItems.Concat([file]).ToList()
             : [file];
 
-
         _hashLookup[file.Hash] = items;
+    }
+
+    public void Remove(BasicFileInfo file)
+    {
+        if (_fileLookup.ContainsKey(file.FullName))
+        {
+            _fileLookup.Remove(file.FullName);
+
+            var entriesWithSameHash = _hashLookup[file.Hash];
+
+            entriesWithSameHash.Remove(file);
+
+            if (!entriesWithSameHash.Any())
+            {
+                _hashLookup.Remove(file.Hash);
+
+            }
+        }
     }
 }

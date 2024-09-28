@@ -23,15 +23,6 @@ public sealed record BasicFileInfo
         Hash = hash;
     }
 
-    public static BasicFileInfo Create(IFileInfo file)
-    {
-        using var md5 = MD5.Create();
-
-        var hash = Convert.ToBase64String(md5.ComputeHash(file.ReadAllBytes()));
-
-        return new BasicFileInfo(file, hash);
-    }
-
     public string FullName { get; init; }
     public DateTime CreationTime { get; init; }
     public DateTime LastWriteTime { get; init; }
@@ -104,11 +95,13 @@ public sealed record BasicFileInfo
           && this.LastWriteTime == other.LastWriteTime
           && this.Length == other.Length;
 
+
         return isEqual;
     }
 
     public static explicit operator FileInfo(BasicFileInfo file) => new FileInfo(file.FullName);
-    public static explicit operator BasicFileInfo(FileInfoBase file) => BasicFileInfo.Create(file);
+
+    public static explicit operator BasicFileInfo(FileInfoBase file) => new BasicFileInfo(file, file.CalculateMD5Hash());
 
     public override string ToString() => this.FullName;
 }

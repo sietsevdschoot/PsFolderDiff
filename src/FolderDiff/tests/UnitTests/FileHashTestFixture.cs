@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using PsFolderDiff.FileHashLookup.Models;
+using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests;
 
@@ -24,11 +25,11 @@ public abstract class FileHashTestFixture
 
     public IDirectoryInfo WorkingDirectory => _fileSystem.DirectoryInfo.New(_workingDirectory);
 
-    public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(BasicFileInfo.Create).ToArray();
+    public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(HashingUtil.CreateBasicFileInfo).ToArray();
 
-    public IFileInfo WithNewFile(string? contents = null)
+    public IFileInfo WithNewFile(int? fileIdentifier = null, string? contents = null)
     {
-        var fileName = _fileSystem.Path.Combine(_workingDirectory, $"{_i++}.txt");
+        var fileName = _fileSystem.Path.Combine(_workingDirectory, $"{fileIdentifier ?? _i++}.txt");
 
         var file = _fileSystem.FileInfo.New(fileName);
         var fileContent = (contents ?? Guid.NewGuid().ToString());
@@ -38,9 +39,9 @@ public abstract class FileHashTestFixture
         return file;
     }
 
-    public BasicFileInfo WithNewBasicFile(string? contents = null)
+    public BasicFileInfo WithNewBasicFile(int? fileIdentifier = null, string? contents = null)
     {
-        return BasicFileInfo.Create(WithNewFile(contents));
+        return HashingUtil.CreateBasicFileInfo(WithNewFile(fileIdentifier, contents));
     }
 
     public IFileInfo UpdateFile(IFileInfo file)

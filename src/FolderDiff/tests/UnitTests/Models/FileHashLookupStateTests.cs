@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using FluentAssertions;
+using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Models;
+using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Models;
@@ -14,7 +16,7 @@ public class FileHashLookupStateTests
         var fixture = new FileHashLookupStateTestsFixture();
 
         // Act
-        fixture.WithFilesAddedToState();
+        fixture.WithAddedFiles();
 
         // Assert
         fixture.AssertFileAndHashLookupsArePopulated();
@@ -27,7 +29,7 @@ public class FileHashLookupStateTests
         var fixture = new FileHashLookupStateTestsFixture();
 
         // Act
-        fixture.WithFilesAddedToState(nrOfFiles: 3);
+        fixture.WithAddedFiles(nrOfFiles: 3);
 
         // Assert
         fixture.AssertFileAndHashLookupsContainFiles(nrOfFiles: 3);
@@ -40,7 +42,7 @@ public class FileHashLookupStateTests
         var fixture = new FileHashLookupStateTestsFixture(); 
         
         // Act
-        fixture.WithFilesAddedToState();
+        fixture.WithAddedFiles();
 
         // Assert
         var file = Random.Shared.GetItems(fixture.AllFiles, 1)[0];
@@ -56,35 +58,80 @@ public class FileHashLookupStateTests
         var fixture = new FileHashLookupStateTestsFixture();
 
         // Act
-        fixture.WithFilesAddedToState(nrOfFiles: 4, fileContents: "Identical Hash");
-
+        fixture.WithAddedFiles(nrOfFiles: 4, fileContents: "Identical Hash");
 
         // Assert
-
-
-        ////    1..4 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\IdenticalHash$_.txt - Value "Identical Hash" - Force }
-
-        ////    $myHash = (Get - FileHash - LiteralPath(gi "$TestDrive\MyFolder\IdenticalHash1.txt").FullName - Algorithm MD5).Hash
-
-        ////    $actual = GetFileHashTable "$TestDrive\MyFolder"
-
-        ////    $actual.Hash[$myHash] -is [System.Collections.Generic.List[BasicFileInfo]] | Should - BeTrue
-        ////    $actual.Hash[$myHash].Count | Should - Be 4
-
-        ////    $actual.File.Count | Should - Be 7
-
-
+        var hash = fixture.AllFiles.OrderByDescending(x => x.CreationTime).First().Hash;
+        fixture.Sut.Hash[hash].Should().HaveCount(4);
+        fixture.Sut.File.Should().HaveCount(4);
     }
 
     [Fact]
-    public void Creates_a_file_containing_the_HashTable_()
+    public void will_not_contain_duplicates_files()
     {
         // Arrange
+        var fixture = new FileHashLookupStateTestsFixture()
+            .WithAddedFiles();
+
+        // Act
+        var file = fixture.AllFiles.First();
+        fixture.Sut.Add(file);
+
+        // Assert
+        fixture.Sut.File.Should().HaveCount(fixture.AllFiles.Length);
+        fixture.Sut.Hash.Should().HaveCount(fixture.AllFiles.Length);
+    }
+
+    [Fact]
+    public void will_remove_entry_and_List_if_no_items_left()
+    {
+        // Arrange
+        var fixture = new FileHashLookupStateTestsFixture()
+            .WithAddedFiles();
+
+        // Act
+        fixture.WithAllFilesRemoved();
+
+        // Assert
+        fixture.AssertHashLookupsAreEmpty();
+    }
+
+    [Fact]
+    public void will_remove_entry_from_List_if_file_with_same_hash_exists()
+    {
+        // Arrange
+        var fixture = new FileHashLookupStateTestsFixture()
+            .WithAddedFiles(Enumerable.Range(1, 4), "Identical Hash");
+
+        var file = fixture.AllFiles.First();
         
+        // Act
+        fixture.Sut.Remove(file);
+
+        // Assert
+        fixture.Sut.File.ContainsKey(file.FullName).Should().BeFalse();
+        fixture.Sut.Hash[file.Hash].Should().HaveCount(3);
+    }
+
+
+    [Fact]
+    public void will_look_at_the_file_hash_to_determine_file_equality_or_difference()
+    {
+        // Arrange
+
 
         // Act
 
         // Assert
+
+
+        ////    1..3 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\$_.txt - Value "My Test Value" - Force  }    
+        ////    $myHash = GetFileHashTable "$TestDrive\MyFolder"
+        ////    4..5 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder2\$_.txt - Value "My Test Value" - Force  }    
+        ////    $newHash = GetFileHashTable "$TestDrive\MyFolder2"
+        ////    $actual = $myHash.GetMatchesInOther($newHash)
+        ////    $actual.GetFiles() | ForEach - Object { [int]($_.Name - replace $_.Extension) } | Should - Be @(4, 5)
+
     }
 
     [Fact]
@@ -190,61 +237,6 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void can_add_other_FileHashLookup()
-    {
-        // Arrange
-        
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void will_look_at_the_file_hash_to_determine_file_equality_or_difference()
-    {
-        // Arrange
-        
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void will_not_contain_duplicates_files()
-    {
-        // Arrange
-        
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void will_remove_entry_and_List_if_no_items_left()
-    {
-        // Arrange
-        
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void will_remove_entry_from_List_if_file_with_same_hash_exists()
-    {
-        // Arrange
-        
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
     public void Can_display_contents_by_using_ToString()
     {
         // Arrange
@@ -277,18 +269,39 @@ public class FileHashLookupStateTests
         // Assert
     }
 
+
+    [Fact]
+    public void can_add_other_FileHashLookup()
+    {
+        // Arrange
+
+
+        // Act
+
+        // Assert
+    }
+
+
     private class FileHashLookupStateTestsFixture : FileHashTestFixture
     {
         public FileHashLookupState Sut { get; } = new();
 
-        public void WithFilesAddedToState(int? nrOfFiles = null, string? fileContents = null)
+
+        public FileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles = 10, string? fileContents = null)
         {
-            for (var i = 0; i < (nrOfFiles ?? 10); i++)
+            return WithAddedFiles(Enumerable.Range(1, nrOfFiles), fileContents);
+        }
+
+        public FileHashLookupStateTestsFixture WithAddedFiles(IEnumerable<int> range, string? fileContents = null)
+        {
+            foreach (var i in range)
             {
-                var file = WithNewBasicFile(fileContents);
+                var file = WithNewBasicFile(i, fileContents);
 
                 Sut.Add(file);
             }
+
+            return this;
         }
 
         public void AssertFileAndHashLookupsArePopulated()
@@ -301,6 +314,19 @@ public class FileHashLookupStateTests
         {
             Sut.File.Should().HaveCount(nrOfFiles);
             Sut.Hash.Should().HaveCount(nrOfFiles);
+        }
+
+        public FileHashTestFixture WithAllFilesRemoved()
+        {
+            AllFiles.ForEach(Sut.Remove);
+
+            return this;
+        }
+
+        public void AssertHashLookupsAreEmpty()
+        {
+            Sut.File.Should().BeEmpty();
+            Sut.Hash.Should().BeEmpty();
         }
     }
 }
