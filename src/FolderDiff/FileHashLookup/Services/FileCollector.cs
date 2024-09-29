@@ -7,6 +7,7 @@ namespace PsFolderDiff.FileHashLookup.Services;
 public class FileCollector
 {
     private readonly IFileSystem _fileSystem;
+
     private readonly List<(string Directory, string RelativePattern)> _includePatterns;
     private readonly List<string> _excludePatterns;
 
@@ -74,8 +75,8 @@ public class FileCollector
             {
                 foreach (var filePatternMatch in result.Files)
                 {
-                    var foundFile = _fileSystem.FileInfo.New(
-                        _fileSystem.Path.Combine(includePattern.Directory, filePatternMatch.Path));
+                    var fullName = _fileSystem.Path.Combine(includePattern.Directory, filePatternMatch.Path);
+                    var foundFile = _fileSystem.FileInfo.New(fullName);
 
                     collectedFiles.Add(foundFile);
                 }

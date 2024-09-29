@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Services;
-using System.IO;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
@@ -69,7 +68,7 @@ public class FileCollectorTests
 
         // Act
         fixture.AddIncludeFolder(@"\Folder1\");
-        fixture.AddExcludePattern("\\**\\Sub\\**\\*");
+        fixture.AddExcludePattern(@"\**\Sub\**\*");
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 5]);
@@ -88,7 +87,7 @@ public class FileCollectorTests
 
         // Act
         fixture.AddIncludeFolder(@"Folder1\");
-        fixture.AddExcludePattern($"/**/*.doc");
+        fixture.AddExcludePattern(@"\**\*.doc");
 
         // Assert
         fixture.AssertContainsFileNames([1, 5]);

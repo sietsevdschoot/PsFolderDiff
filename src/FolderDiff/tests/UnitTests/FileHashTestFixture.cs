@@ -61,8 +61,18 @@ public abstract class FileHashTestFixture
 
     public IFileInfo UpdateFile(IFileInfo file)
     {
-        FileSystem.File.AppendAllText(file.FullName, "Updated");
+        return UpdateFile(file.FullName);
+    }
 
-        return FileSystem.FileInfo.New(file.FullName);
+    public BasicFileInfo UpdateFile(BasicFileInfo file)
+    {
+        return HashingUtil.CreateBasicFileInfo(UpdateFile(file.FullName));
+    }
+    
+    public IFileInfo UpdateFile(string fullName)
+    {
+        FileSystem.File.AppendAllText(fullName, "Updated");
+
+        return FileSystem.FileInfo.New(fullName);
     }
 }

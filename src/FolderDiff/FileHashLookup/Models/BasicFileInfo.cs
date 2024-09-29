@@ -1,5 +1,4 @@
 ﻿using System.IO.Abstractions;
-using System.Security.Cryptography;
 using PsFolderDiff.FileHashLookup.Extensions;
 
 namespace PsFolderDiff.FileHashLookup.Models;
@@ -60,6 +59,11 @@ public sealed record BasicFileInfo
         var compare = diff == 0 ? 0 : diff > 1 ? 1 : -1;
 
         return compare;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(FullName, CreationTime, LastWriteTime, Length, Hash);
     }
 
     public bool Equals(BasicFileInfo? other)

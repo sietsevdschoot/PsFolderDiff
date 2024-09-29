@@ -113,6 +113,27 @@ public class FileHashLookupStateTests
         fixture.Sut.Hash[file.Hash].Should().HaveCount(3);
     }
 
+    [Fact]
+    public void Add_When_adding_modified_file_will_remove_original_file_before_adding_modified_file()
+    {
+        // Arrange
+        var fixture = new FileHashLookupStateTestsFixture();
+        var file = fixture.WithNewBasicFile(fileIdentifier: 1);
+        var originalHash = file.Hash;
+
+        fixture.Sut.Add(file);
+
+        var updatedFile = fixture.UpdateFile(file);
+        
+        // Act
+        fixture.Sut.Add(updatedFile);
+
+        // Assert
+        fixture.Sut.File[file.FullName].Hash.Should().Be(updatedFile.Hash);
+
+        fixture.Sut.Hash[updatedFile.Hash].Should().HaveCount(1);
+        fixture.Sut.Hash.ContainsKey(originalHash).Should().BeFalse();
+    }
 
     [Fact]
     public void will_look_at_the_file_hash_to_determine_file_equality_or_difference()
@@ -132,17 +153,6 @@ public class FileHashLookupStateTests
         ////    $actual = $myHash.GetMatchesInOther($newHash)
         ////    $actual.GetFiles() | ForEach - Object { [int]($_.Name - replace $_.Extension) } | Should - Be @(4, 5)
 
-    }
-
-    [Fact]
-    public void ExcludeFilePattern_Adding_invalid_pattern_throws()
-    {
-        // Arrange
-        
-
-        // Act
-
-        // Assert
     }
 
     [Fact]

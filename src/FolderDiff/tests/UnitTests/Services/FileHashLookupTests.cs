@@ -6,6 +6,24 @@ public class FileHashLookupTests
 {
 
     [Fact]
+    public void AddIncludeFolder_Adds_Folder_And_Collects_Files_Recursively()
+    {
+        // Arrange 
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder1\Sub\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub\Sub\4.txt");
+        fixture.WithNewFile(@"Folder2\5.txt");
+
+        // Act
+        fixture.AddIncludeFolder(@"Folder1\");
+
+        // Assert
+        fixture.AssertContainsFileNames([1, 2, 3, 4]);
+    }
+
+    [Fact]
     public void Creates_a_file_containing_the_HashTable()
     {
         // Arrange
@@ -157,6 +175,23 @@ public class FileHashLookupTests
         // Act
 
         // Assert
+    }
+
+    private class FileHashLookupTestFixture : FileHashTestFixture
+    {
+        public FileHashLookupTestFixture()
+        {
+            
+        }
+
+        public FileHashLookupTestFixture AddIncludeFolder(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AssertContainsFileNames(params int[] expected)
+        {
+        }
     }
 
 

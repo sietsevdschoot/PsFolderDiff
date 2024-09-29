@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.IO.Abstractions;
 
 namespace PsFolderDiff.FileHashLookup.Models;
 
@@ -17,6 +16,11 @@ public class FileHashLookupState
     public void Add(BasicFileInfo file)
     {
         ArgumentNullException.ThrowIfNull(file, nameof(file));
+
+        if (_fileLookup.TryGetValue(file.FullName, out var existingFile))
+        {
+            Remove(existingFile);
+        }
 
         _fileLookup[file.FullName] = file;
 
@@ -40,7 +44,6 @@ public class FileHashLookupState
             if (!entriesWithSameHash.Any())
             {
                 _hashLookup.Remove(file.Hash);
-
             }
         }
     }
