@@ -6,35 +6,50 @@ namespace PsFolderDiff.FileHashLookup.UnitTests;
 
 public abstract class FileHashTestFixture
 {
-    private readonly FileSystem _fileSystem;
+    protected readonly FileSystem FileSystem;
     private readonly string _workingDirectory;
     private int _i;
 
     protected FileHashTestFixture()
     {
-        _fileSystem = new FileSystem();
+        FileSystem = new FileSystem();
 
-        _workingDirectory = _fileSystem.Path
-            .Combine(_fileSystem.Path.GetTempPath(), "FolderDiff", $"{DateTime.Now:yyyy-MM-dd}-{Guid.NewGuid()}");
+        _workingDirectory = FileSystem.Path
+            .Combine(FileSystem.Path.GetTempPath(), "FolderDiff", $"{DateTime.Now:yyyy-MM-dd}-{Guid.NewGuid()}");
 
-        _fileSystem.Directory.CreateDirectory(_workingDirectory);
-        _fileSystem.Directory.SetCurrentDirectory(_workingDirectory);
+        FileSystem.Directory.CreateDirectory(_workingDirectory);
+        FileSystem.Directory.SetCurrentDirectory(_workingDirectory);
 
         _i = 1;
     }
 
-    public IDirectoryInfo WorkingDirectory => _fileSystem.DirectoryInfo.New(_workingDirectory);
+    public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
 
     public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(HashingUtil.CreateBasicFileInfo).ToArray();
 
     public IFileInfo WithNewFile(int? fileIdentifier = null, string? contents = null)
     {
-        var fileName = _fileSystem.Path.Combine(_workingDirectory, $"{fileIdentifier ?? _i++}.txt");
+        return WithNewFile($"{fileIdentifier ?? _i++}.txt", contents);
+    }
 
-        var file = _fileSystem.FileInfo.New(fileName);
+    public IFileInfo WithNewFile(string relativePath, string? contents = null)
+    {
+        var fullName = FileSystem.Path.Combine(_workingDirectory, relativePath);
+
+        if (!FileSystem.Path.HasExtension(fullName))
+        {
+            throw new ArgumentException($"Expected relative path to a file. Found: '{relativePath}'", nameof(relativePath));
+        }
+
+        var file = FileSystem.FileInfo.New(fullName);
         var fileContent = (contents ?? Guid.NewGuid().ToString());
 
-        _fileSystem.File.WriteAllText(file.FullName, fileContent);
+        if (!file.Directory!.Exists)
+        {
+            FileSystem.Directory.CreateDirectory(file.Directory.FullName);
+        } 
+
+        FileSystem.File.WriteAllText(file.FullName, fileContent);
 
         return file;
     }
@@ -46,8 +61,8 @@ public abstract class FileHashTestFixture
 
     public IFileInfo UpdateFile(IFileInfo file)
     {
-        _fileSystem.File.AppendAllText(file.FullName, "Updated");
+        FileSystem.File.AppendAllText(file.FullName, "Updated");
 
-        return _fileSystem.FileInfo.New(file.FullName);
+        return FileSystem.FileInfo.New(file.FullName);
     }
 }
