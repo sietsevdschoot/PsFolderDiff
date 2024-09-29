@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using FluentAssertions;
+using Xunit;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
 
@@ -6,7 +7,7 @@ public class FileHashLookupTests
 {
 
     [Fact]
-    public void AddIncludeFolder_Adds_Folder_And_Collects_Files_Recursively()
+    public async Task AddIncludeFolder_Adds_Folder_And_Collects_Files_Recursively()
     {
         // Arrange 
         var fixture = new FileHashLookupTestFixture();
@@ -17,7 +18,7 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder2\5.txt");
 
         // Act
-        fixture.AddIncludeFolder(@"Folder1\");
+        await fixture.AddFolder(@"Folder1\");
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4]);
@@ -179,18 +180,28 @@ public class FileHashLookupTests
 
     private class FileHashLookupTestFixture : FileHashTestFixture
     {
+        private readonly FileHashLookup.Services.FileHashLookup _sut;
+
         public FileHashLookupTestFixture()
         {
-            
+            _sut = FileHashLookup.Services.FileHashLookup.Create();
         }
 
-        public FileHashLookupTestFixture AddIncludeFolder(string path)
+        public async Task AddFolder(string path)
         {
-            throw new NotImplementedException();
+            await _sut.AddFolder(path);
         }
 
         public void AssertContainsFileNames(params int[] expected)
         {
+            var files = _sut.GetFiles();
+
+            var actual = files
+                .Select(x => Convert.ToInt32(Path.GetFileNameWithoutExtension(x.FullName)))
+                .OrderBy(x => x)
+                .ToList();
+
+            actual.Should().BeEquivalentTo(expected);
         }
     }
 

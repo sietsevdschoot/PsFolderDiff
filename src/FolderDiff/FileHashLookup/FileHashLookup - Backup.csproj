@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Models\" />
-	  <Folder Include="Handlers\" />
+	  <Folder Include="NewFolder\" />
 	</ItemGroup>
 
 </Project>

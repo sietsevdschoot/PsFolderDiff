@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.IO.Abstractions;
+using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Services;
 using Xunit;
 
@@ -26,8 +27,8 @@ public class FileCollectorTests
         var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
-        fixture.WithNewFile(@"Folder1\Sub\3.txt");
-        fixture.WithNewFile(@"Folder1\Sub\Sub\4.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
         fixture.WithNewFile(@"Folder2\5.txt");
 
         // Act
@@ -37,6 +38,24 @@ public class FileCollectorTests
         fixture.AssertContainsFileNames([ 1, 2, 3, 4]);
     }
 
+    [Fact]
+    public void AddIncludeFolder_Returns_Collected_Files_For_This_Include_Pattern()
+    {
+        // Arrange 
+        var fixture = new FileCollectorTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder2\3.txt");
+        fixture.WithNewFile(@"Folder2\4.txt");
+
+        // Act
+        fixture.AddIncludeFolder(@"Folder1\");
+        var actual = fixture.AddIncludeFolder(@"Folder2\");
+
+        // Assert
+        fixture.AssertContainsFileNames(actual, [3, 4]);
+    }
+
     [Fact] 
     public void AddIncludePattern_Can_use_file_glob()
     {
@@ -44,8 +63,8 @@ public class FileCollectorTests
         var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.exe");
-        fixture.WithNewFile(@"Folder1\Sub\3.exe");
-        fixture.WithNewFile(@"Folder1\Sub\Sub\4.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.exe");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
 
         // Act
         fixture.AddIncludePattern(fixture.WorkingDirectory, @"Folder1\**\*.txt");
@@ -61,14 +80,14 @@ public class FileCollectorTests
         var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
-        fixture.WithNewFile(@"Folder1\Sub\3.txt");
-        fixture.WithNewFile(@"Folder1\Sub\Sub\4.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
         fixture.WithNewFile(@"Folder1\5.txt");
         fixture.WithNewFile(@"Folder2\6.txt");
 
         // Act
         fixture.AddIncludeFolder(@"\Folder1\");
-        fixture.AddExcludePattern(@"\**\Sub\**\*");
+        fixture.AddExcludePattern(@"\**\Sub1\**\*");
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 5]);
@@ -81,8 +100,8 @@ public class FileCollectorTests
         var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.doc");
-        fixture.WithNewFile(@"Folder1\Sub\3.doc");
-        fixture.WithNewFile(@"Folder1\Sub\Sub\4.doc");
+        fixture.WithNewFile(@"Folder1\Sub1\3.doc");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.doc");
         fixture.WithNewFile(@"Folder1\5.txt");
 
         // Act
@@ -91,6 +110,27 @@ public class FileCollectorTests
 
         // Assert
         fixture.AssertContainsFileNames([1, 5]);
+    }
+
+    [Fact]
+    public void GetFiles_Returns_All_Collected_Files()
+    {
+        // Arrange 
+        var fixture = new FileCollectorTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\2.txt");
+        fixture.WithNewFile(@"Folder2\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder2\4.txt");
+
+        fixture.AddIncludeFolder(@"Folder1\");
+        fixture.AddIncludeFolder(@"Folder2\");
+        fixture.AddExcludePattern(@"**\Sub1\**\*");
+        
+        // Act
+        var actual = fixture.GetFiles();
+        
+        // Assert
+        fixture.AssertContainsFileNames(actual, [1, 4]);
     }
 
     private class FileCollectorTestFixture : FileHashTestFixture
@@ -104,22 +144,18 @@ public class FileCollectorTests
 
         public new string WorkingDirectory => base.WorkingDirectory.FullName;
 
-        public FileCollectorTestFixture AddIncludeFolder(string path)
+        public List<IFileInfo> AddIncludeFolder(string path)
         {
             var fullName = base.FileSystem.Path.Combine(WorkingDirectory, path);
 
-            _sut.AddIncludeFolder(fullName);
-
-            return this;
+            return _sut.AddIncludeFolder(fullName);
         }
 
-        public FileCollectorTestFixture AddIncludePattern(string workingDirectory, string includePattern)
+        public List<IFileInfo> AddIncludePattern(string workingDirectory, string includePattern)
         {
             var path = base.FileSystem.Path.Combine(workingDirectory, includePattern);
 
-            _sut.AddIncludePattern(path);
-
-            return this;
+            return _sut.AddIncludePattern(path);
         }
 
         public FileCollectorTestFixture AddExcludePattern(string pattern)
@@ -129,16 +165,24 @@ public class FileCollectorTests
             return this;
         }
 
-        public void AssertContainsFileNames(params int[] expected)
+        public List<IFileInfo> GetFiles()
         {
-            var files = _sut.GetFiles();
+            return _sut.GetFiles();
+        }
 
+        public void AssertContainsFileNames(List<IFileInfo> files, int[] expected)
+        {
             var actual = files
                 .Select(x => Convert.ToInt32(Path.GetFileNameWithoutExtension(x.FullName)))
                 .OrderBy(x => x)
                 .ToList();
 
             actual.Should().BeEquivalentTo(expected);
+        }
+
+        public void AssertContainsFileNames(params int[] expected)
+        {
+            AssertContainsFileNames(_sut.GetFiles(), expected);
         }
     }
 }

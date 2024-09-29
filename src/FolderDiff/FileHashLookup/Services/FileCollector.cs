@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.FileSystemGlobbing;
+using PsFolderDiff.FileHashLookup.Models;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookup.Services;
@@ -19,20 +20,22 @@ public class FileCollector
         _excludePatterns = new List<string>();
     }
 
-    public FileCollector AddIncludeFolder(string path)
+    public List<IFileInfo> AddIncludeFolder(string path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path, nameof(path));
 
         return AddIncludePattern($@"{path.Trim('\\')}\**\");
     }
 
-    public FileCollector AddIncludePattern(string includePattern)
+    public List<IFileInfo> AddIncludePattern(string includePattern)
     {
         EnsurePatternIsValid(includePattern);
 
-        _includePatterns.Add(ParsePattern(includePattern));
+        var parsedIncludePattern = ParsePattern(includePattern);
 
-        return this;
+        _includePatterns.Add(parsedIncludePattern);
+
+        return GetFilesInternal(parsedIncludePattern);
     }
 
     public FileCollector AddExcludePattern(string excludePattern)
@@ -42,6 +45,11 @@ public class FileCollector
         _excludePatterns.Add(excludePattern);
 
         return this;
+    }
+
+    public List<IFileInfo> GetFiles()
+    {
+        return GetFilesInternal();
     }
 
     private void EnsurePatternIsValid(string pattern)
@@ -56,26 +64,31 @@ public class FileCollector
         }
     }
 
-    public List<IFileInfo> GetFiles()
+    private List<IFileInfo> GetFilesInternal((string Directory, string RelativePattern) includePattern = default)
     {
         var collectedFiles = new List<IFileInfo>();
 
-        foreach (var includePattern in _includePatterns)
+        var patternsToRetrieve = !includePattern.Equals(default)
+            ? [includePattern]
+            : _includePatterns;
+
+        foreach (var pattern in patternsToRetrieve)
         {
-            var matcher = new Matcher(StringComparison.OrdinalIgnoreCase).AddInclude(includePattern.RelativePattern);
+            var matcher = new Matcher(StringComparison.OrdinalIgnoreCase)
+                .AddInclude(pattern.RelativePattern);
 
             foreach (var excludePattern in _excludePatterns)
             {
                 matcher.AddExclude(excludePattern);
             }
 
-            var result = matcher.Execute(_fileSystem, includePattern.Directory);
+            var result = matcher.Execute(_fileSystem, pattern.Directory);
 
             if (result.HasMatches)
             {
                 foreach (var filePatternMatch in result.Files)
                 {
-                    var fullName = _fileSystem.Path.Combine(includePattern.Directory, filePatternMatch.Path);
+                    var fullName = _fileSystem.Path.Combine(pattern.Directory, filePatternMatch.Path);
                     var foundFile = _fileSystem.FileInfo.New(fullName);
 
                     collectedFiles.Add(foundFile);
@@ -85,6 +98,8 @@ public class FileCollector
 
         return collectedFiles;
     }
+
+    
 
     private (string Directory, string RelativePattern) ParsePattern(string pattern)
     {

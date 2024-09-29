@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Models;
+using PsFolderDiff.FileHashLookup.Requests;
 
 namespace PsFolderDiff.FileHashLookup.Services;
 
 public class FileHashLookup
 {
-    private FileHashLookupState _state;
+    private readonly FileHashLookupState _fileHashLookupState;
+    private readonly IMediator _mediator;
 
     public static FileHashLookup Create()
     {
@@ -19,10 +22,25 @@ public class FileHashLookup
         return fileHashLookup;
     }
 
-    private FileHashLookup(FileHashLookupState state)
+    public FileHashLookup(
+        FileHashLookupState fileHashLookupState,
+        IMediator mediator)
     {
-        _state = state;
+        _mediator = mediator;
+        _fileHashLookupState = fileHashLookupState;
     }
 
+    public async Task AddFolder(string path, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(new AddIncludePatternRequest
+        {
+            IncludePattern = path
+        }, 
+        cancellationToken);
+    }
 
+    public List<BasicFileInfo> GetFiles()
+    {
+        return _fileHashLookupState.File.Values.ToList();
+    }
 }
