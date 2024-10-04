@@ -24,7 +24,9 @@ public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest
 
     public Task Handle(AddIncludePatternRequest request, CancellationToken cancellationToken)
     {
-        var collectedFiles = _fileCollector.AddIncludeFolder(request.IncludePattern);
+        var collectedFiles = !string.IsNullOrEmpty(request.IncludePath)
+            ? _fileCollector.AddIncludeFolder(request.IncludePath)
+            : _fileCollector.AddIncludePattern(request.IncludePattern);
 
         var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles);
 

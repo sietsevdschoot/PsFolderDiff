@@ -73,6 +73,24 @@ public class FileCollectorTests
         fixture.AssertContainsFileNames([1, 4]);
     }
 
+
+    [Fact] 
+    public void AddIncludePattern_Can_Include_SubFolder()
+    {
+        // Arrange 
+        var fixture = new FileCollectorTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.exe");
+        fixture.WithNewFile(@"Folder1\Sub1\3.exe");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
+
+        // Act
+        fixture.AddIncludePattern(fixture.WorkingDirectory, @"**\Sub1\**\*");
+
+        // Assert
+        fixture.AssertContainsFileNames([3, 4]);
+    }
+
     [Fact]
     public void AddExcludePattern_ExcludesFolderInCollectedFileResults()
     {

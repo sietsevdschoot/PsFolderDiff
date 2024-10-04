@@ -10,14 +10,14 @@ public class FileHashLookupTests
 {
 
     [Fact]
-    public async Task AddIncludeFolder_Adds_Folder_And_Collects_Files_Recursively()
+    public async Task AddFolder_Adds_Folder_And_Collects_Files_Recursively()
     {
         // Arrange 
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
-        fixture.WithNewFile(@"Folder1\Sub\3.txt");
-        fixture.WithNewFile(@"Folder1\Sub\Sub\4.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
         fixture.WithNewFile(@"Folder2\5.txt");
 
         // Act
@@ -26,8 +26,27 @@ public class FileHashLookupTests
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4]); 
-        fixture.AssertContainsIncludePattern(includeFolder);
+        fixture.AssertContainsIncludePath(includeFolder);
+    }
 
+    [Fact]
+    public async Task AddIncludePattern_Adds_Folder_And_Collects_Files_Recursively()
+    {
+        // Arrange 
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
+        fixture.WithNewFile(@"Folder2\5.txt");
+
+        // Act
+        var includePattern = @"Folder1\**\Sub1\**\*";
+        await fixture.AddIncludePattern(includePattern);
+
+        // Assert
+        fixture.AssertContainsFileNames([3, 4]); 
+        fixture.AssertContainsIncludePattern(includePattern);
     }
 
     [Fact]
@@ -223,7 +242,12 @@ public class FileHashLookupTests
 
         public async Task AddFolder(string path)
         {
-            await _sut.AddFolderAsync(path);
+            await _sut.AddFolder(path);
+        }
+
+        public async Task AddIncludePattern(string includePattern)
+        {
+            await _sut.AddIncludePattern(includePattern);
         }
 
         public async Task AddExcludePattern(string excludePattern)
@@ -248,9 +272,18 @@ public class FileHashLookupTests
             _fileCollector.ExcludePatterns.Contains(excludePattern).Should().BeTrue();
         }
 
-        public void AssertContainsIncludePattern(string includeFolder)
+        public void AssertContainsIncludePath(string includeFolder)
         {
-            var parsedPattern = FileCollector.ParseFileGlobbingPattern(includeFolder);
+            var expected = $@"{includeFolder.Trim(Path.DirectorySeparatorChar)}\**\";
+
+            var parsedPattern = FileCollector.ParseFileGlobbingPattern(expected);
+
+            _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
+        }
+
+        public void AssertContainsIncludePattern(string includePattern)
+        {
+            var parsedPattern = FileCollector.ParseFileGlobbingPattern(includePattern);
 
             _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
         }
