@@ -1,6 +1,6 @@
-﻿using System.IO.Abstractions;
+﻿using System.Collections.ObjectModel;
+using System.IO.Abstractions;
 using Microsoft.Extensions.FileSystemGlobbing;
-using PsFolderDiff.FileHashLookup.Models;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookup.Services;
@@ -20,6 +20,13 @@ public class FileCollector
         _excludePatterns = new List<string>();
     }
 
+    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns =>
+        new ReadOnlyCollection<(string Directory, string RelativePattern)>(_includePatterns);
+
+    public IReadOnlyCollection<string> ExcludePatterns =>
+        new ReadOnlyCollection<string>(_excludePatterns);
+
+
     public List<IFileInfo> AddIncludeFolder(string path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path, nameof(path));
@@ -31,7 +38,7 @@ public class FileCollector
     {
         EnsurePatternIsValid(includePattern);
 
-        var parsedIncludePattern = ParsePattern(includePattern);
+        var parsedIncludePattern = ParseFileGlobbingPattern(includePattern);
 
         _includePatterns.Add(parsedIncludePattern);
 
@@ -56,7 +63,7 @@ public class FileCollector
     {
         ArgumentException.ThrowIfNullOrEmpty(pattern, nameof(pattern));
 
-        var parsedPattern = ParsePattern(pattern);
+        var parsedPattern = ParseFileGlobbingPattern(pattern);
 
         if (!_fileSystem.Directory.Exists(parsedPattern.Directory))
         {
@@ -99,9 +106,7 @@ public class FileCollector
         return collectedFiles;
     }
 
-    
-
-    private (string Directory, string RelativePattern) ParsePattern(string pattern)
+    internal static (string Directory, string RelativePattern) ParseFileGlobbingPattern(string pattern)
     {
         var directory = pattern.Split("*", StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
 

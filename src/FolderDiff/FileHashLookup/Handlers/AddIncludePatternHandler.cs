@@ -1,11 +1,12 @@
 ﻿using System.IO.Abstractions;
+using MediatR;
 using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
-public class AddIncludePatternHandler : MediatR.IRequestHandler<AddIncludePatternRequest>
+public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest>
 {
     private readonly FileCollector _fileCollector;
     private readonly IFileHashCalculationService _fileHashCalculationService;

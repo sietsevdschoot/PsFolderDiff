@@ -30,12 +30,21 @@ public class FileHashLookup
         _fileHashLookupState = fileHashLookupState;
     }
 
-    public async Task AddFolder(string path, CancellationToken cancellationToken = default)
+    public async Task AddFolderAsync(string path, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(new AddIncludePatternRequest
         {
             IncludePattern = path
         }, 
+        cancellationToken);
+    }
+
+    public async Task AddExcludePattern(string excludePattern, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(new AddExcludePatternRequest
+        {
+            ExcludePattern = excludePattern
+        },
         cancellationToken);
     }
 

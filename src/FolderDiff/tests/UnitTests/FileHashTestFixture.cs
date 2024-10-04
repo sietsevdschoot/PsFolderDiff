@@ -1,11 +1,29 @@
 ﻿using System.IO.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.UnitTests.Utils;
+using FileSystem = System.IO.Abstractions.FileSystem;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests;
 
 public abstract class FileHashTestFixture
 {
+    private static readonly PollingUtil PollingUtil;
+
+    static FileHashTestFixture()
+    {
+        var sp = new ServiceCollection()
+            .AddLogging(builder => builder
+                .AddConsole()
+                .SetMinimumLevel(LogLevel.Warning))
+            .AddSingleton<PollingUtil>()
+            .BuildServiceProvider();
+
+        PollingUtil = sp.GetRequiredService<PollingUtil>();
+    }
+
     protected readonly FileSystem FileSystem;
     private readonly string _workingDirectory;
     private int _i;
@@ -50,6 +68,13 @@ public abstract class FileHashTestFixture
         } 
 
         FileSystem.File.WriteAllText(file.FullName, fileContent);
+
+        PollingUtil.PollForExpectedResultInternalAsync(
+            checkExpectation: () => Task.FromResult(FileSystem.Directory.Exists(file.Directory.FullName)),
+            retrieveMessage: () => Task.FromResult($"{file.FullName} does not exist"),
+            timeout: TimeSpan.FromSeconds(1),
+            interval: TimeSpan.FromMilliseconds(20))
+            .GetAwaiter().GetResult();
 
         return file;
     }

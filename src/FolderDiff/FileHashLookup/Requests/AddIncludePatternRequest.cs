@@ -1,6 +1,8 @@
-﻿namespace PsFolderDiff.FileHashLookup.Requests;
+﻿using MediatR;
 
-public class AddIncludePatternRequest : MediatR.IRequest
+namespace PsFolderDiff.FileHashLookup.Requests;
+
+public class AddIncludePatternRequest : IRequest
 {
     public string IncludePattern { get; set; } = default!;
 }

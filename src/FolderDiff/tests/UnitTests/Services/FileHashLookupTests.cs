@@ -1,4 +1,7 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookup.Extensions;
+using PsFolderDiff.FileHashLookup.Services;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
@@ -18,10 +21,35 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder2\5.txt");
 
         // Act
-        await fixture.AddFolder(@"Folder1\");
+        var includeFolder = @"Folder1\";
+        await fixture.AddFolder(includeFolder);
 
         // Assert
-        fixture.AssertContainsFileNames([1, 2, 3, 4]);
+        fixture.AssertContainsFileNames([1, 2, 3, 4]); 
+        fixture.AssertContainsIncludePattern(includeFolder);
+
+    }
+
+    [Fact]
+    public async Task AddExcludePattern_ExcludesPatternFromAlreadyCollectedFiles()
+    {
+        // Arrange 
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
+        fixture.WithNewFile(@"Folder2\5.txt");
+
+        var excludePattern = @"\**\Sub1\**\*";
+
+        // Act
+        await fixture.AddFolder(@"Folder1\");
+        await fixture.AddExcludePattern(excludePattern);
+
+        // Assert
+        fixture.AssertContainsFileNames([1, 2]);
+        fixture.AssertContainsExcludesPattern(excludePattern);
     }
 
     [Fact]
@@ -181,15 +209,26 @@ public class FileHashLookupTests
     private class FileHashLookupTestFixture : FileHashTestFixture
     {
         private readonly FileHashLookup.Services.FileHashLookup _sut;
+        private readonly FileCollector _fileCollector;
 
         public FileHashLookupTestFixture()
         {
-            _sut = FileHashLookup.Services.FileHashLookup.Create();
+            var sp = new ServiceCollection()
+                .AddFileHashLookup()
+                .BuildServiceProvider();
+
+            _fileCollector = sp.GetRequiredService<FileCollector>();
+            _sut = sp.GetRequiredService<FileHashLookup.Services.FileHashLookup>();
         }
 
         public async Task AddFolder(string path)
         {
-            await _sut.AddFolder(path);
+            await _sut.AddFolderAsync(path);
+        }
+
+        public async Task AddExcludePattern(string excludePattern)
+        {
+            await _sut.AddExcludePattern(excludePattern);
         }
 
         public void AssertContainsFileNames(params int[] expected)
@@ -203,7 +242,17 @@ public class FileHashLookupTests
 
             actual.Should().BeEquivalentTo(expected);
         }
+
+        public void AssertContainsExcludesPattern(string excludePattern)
+        {
+            _fileCollector.ExcludePatterns.Contains(excludePattern).Should().BeTrue();
+        }
+
+        public void AssertContainsIncludePattern(string includeFolder)
+        {
+            var parsedPattern = FileCollector.ParseFileGlobbingPattern(includeFolder);
+
+            _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
+        }
     }
-
-
 }
