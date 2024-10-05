@@ -45,6 +45,11 @@ public abstract class FileHashTestFixture
 
     public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(HashingUtil.CreateBasicFileInfo).ToArray();
 
+    public IFileInfo AsFileInfo(BasicFileInfo file)
+    {
+        return FileSystem.FileInfo.New(file.FullName);
+    }
+
     public IFileInfo WithNewFile(int? fileIdentifier = null, string? contents = null)
     {
         return WithNewFile($"{fileIdentifier ?? _i++}.txt", contents);

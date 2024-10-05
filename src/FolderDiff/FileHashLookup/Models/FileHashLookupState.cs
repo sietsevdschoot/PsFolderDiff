@@ -34,6 +34,18 @@ public class FileHashLookupState
         _hashLookup[file.Hash] = items;
     }
 
+    public void AddFileHashLookup(Services.FileHashLookup other)
+    {
+        var allOtherFiles = other.GetFiles();
+
+        for (var i = 0; i < allOtherFiles.Count; i++)
+        {
+            var file = allOtherFiles[i];
+            Add(file);
+        }
+    }
+
+
     public void Remove(IFileInfo file)
     {
         if (_fileLookup.TryGetValue(file.FullName, out var basicFileInfo))

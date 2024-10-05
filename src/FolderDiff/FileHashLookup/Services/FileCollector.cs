@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using Microsoft.Extensions.FileSystemGlobbing;
+using PsFolderDiff.FileHashLookup.Extensions;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookup.Services;
@@ -44,6 +45,12 @@ public class FileCollector
 
         return GetFilesInternal(parsedIncludePattern);
     }
+
+    public void AddFileHashLookup(FileHashLookup other)
+    {
+        _includePatterns.InsertNewItems(other.IncludePatterns.ToList());
+        _excludePatterns.InsertNewItems(other.ExcludePatterns.ToList());
+     }
 
     public FileCollector AddExcludePattern(string excludePattern)
     {
