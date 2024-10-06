@@ -3,7 +3,7 @@ using PsFolderDiff.FileHashLookup.Services;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 
-public static class FileHashLookupExtensions
+public static class FileHashLookupAssertExtensions
 {
     public static void AssertContainsFileNames(this FileHashLookup.Services.FileHashLookup fileHashLookup, params int[] expected)
     {
