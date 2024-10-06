@@ -19,13 +19,12 @@ public static class FileInfoExtensions
     }
 
     // ReSharper disable once InconsistentNaming
+    
     /// <summary>
     /// TODO: Measure buffer optimum for hashing (large) files.
-    /// https://github.com/dotnet/BenchmarkDotNet
-    /// https://stackoverflow.com/a/1177744
+    /// https://github.com/dotnet/BenchmarkDotNet.
+    /// https://stackoverflow.com/a/1177744.
     /// </summary>
-    /// <param name="file"></param>
-    /// <returns></returns>
     public static string CalculateMD5Hash(this IFileInfo file)
     {
         // Not sure if BufferedStream should be wrapped in using block

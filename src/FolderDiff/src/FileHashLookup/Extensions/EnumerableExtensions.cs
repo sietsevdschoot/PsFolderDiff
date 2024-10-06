@@ -13,7 +13,7 @@ public static class EnumerableExtensions
     public static void ForEach<T>(this IEnumerable<T> items, Action<T, int> action)
     {
         var i = 0;
-        
+
         foreach (var item in items)
         {
             action(item, i);

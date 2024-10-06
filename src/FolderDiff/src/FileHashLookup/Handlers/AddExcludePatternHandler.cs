@@ -6,7 +6,6 @@ using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
-
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
 public class AddExcludePatternHandler : IRequestHandler<AddExcludePatternRequest>

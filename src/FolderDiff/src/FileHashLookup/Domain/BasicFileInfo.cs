@@ -23,14 +23,25 @@ public sealed record BasicFileInfo
     }
 
     public string FullName { get; init; }
+
     public DateTime CreationTime { get; init; }
+
     public DateTime LastWriteTime { get; init; }
+
     public long Length { get; init; }
+
     public string Hash { get; init; }
+
+    public static explicit operator FileInfo(BasicFileInfo file) => new FileInfo(file.FullName);
+
+    public static explicit operator BasicFileInfo(FileInfoBase file) => new BasicFileInfo(file, file.CalculateMD5Hash());
 
     public int CompareTo(BasicFileInfo? other)
     {
-        if (ReferenceEquals(null, other)) return 1;
+        if (ReferenceEquals(null, other))
+        {
+            return 1;
+        }
 
         var diff = (CreationTime - other.CreationTime + (LastWriteTime - other.LastWriteTime)).TotalMilliseconds;
 
@@ -41,7 +52,10 @@ public sealed record BasicFileInfo
 
     public int CompareTo(IFileInfo? other)
     {
-        if (ReferenceEquals(null, other)) return 1;
+        if (ReferenceEquals(null, other))
+        {
+            return 1;
+        }
 
         var diff = (CreationTime - other.CreationTime + (LastWriteTime - other.LastWriteTime)).TotalMilliseconds;
 
@@ -52,7 +66,10 @@ public sealed record BasicFileInfo
 
     public int CompareTo(FileInfo? other)
     {
-        if (ReferenceEquals(null, other)) return 1;
+        if (ReferenceEquals(null, other))
+        {
+            return 1;
+        }
 
         var diff = (CreationTime - other.CreationTime + (LastWriteTime - other.LastWriteTime)).TotalMilliseconds;
 
@@ -68,7 +85,10 @@ public sealed record BasicFileInfo
 
     public bool Equals(BasicFileInfo? other)
     {
-        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
 
         var isEqual = string.Equals(FullName, other.FullName, StringComparison.Ordinal)
           && CreationTime == other.CreationTime
@@ -80,7 +100,10 @@ public sealed record BasicFileInfo
 
     public bool Equals(FileInfo? other)
     {
-        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
 
         var isEqual = string.Equals(FullName, other.FullName, StringComparison.Ordinal)
           && CreationTime == other.CreationTime
@@ -92,20 +115,18 @@ public sealed record BasicFileInfo
 
     public bool Equals(IFileInfo? other)
     {
-        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
 
         var isEqual = string.Equals(FullName, other.FullName, StringComparison.Ordinal)
           && CreationTime == other.CreationTime
           && LastWriteTime == other.LastWriteTime
           && Length == other.Length;
 
-
         return isEqual;
     }
-
-    public static explicit operator FileInfo(BasicFileInfo file) => new FileInfo(file.FullName);
-
-    public static explicit operator BasicFileInfo(FileInfoBase file) => new BasicFileInfo(file, file.CalculateMD5Hash());
 
     public override string ToString() => FullName;
 }

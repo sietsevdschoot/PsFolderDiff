@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.IO.Abstractions;
+using FluentAssertions;
 using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 using Xunit;
 
@@ -15,7 +16,7 @@ public class BasicFileInfoTests
 
         // Act
         var basicFile = HashingUtil.CreateBasicFileInfo(file);
-        
+
         // Assert
         basicFile.Equals(file).Should().BeTrue();
     }
@@ -30,7 +31,7 @@ public class BasicFileInfoTests
         // Act
         var basicFile1 = HashingUtil.CreateBasicFileInfo(file);
         var basicFile2 = HashingUtil.CreateBasicFileInfo(file);
-        
+
         // Assert
         basicFile1.Equals(basicFile2).Should().BeTrue();
     }
@@ -76,7 +77,7 @@ public class BasicFileInfoTests
 
     ////    var file = fixture.WithNewBasicFile();
     ////    fixture.RemoveFile(file.FullName);
-        
+
     ////    // Act
     ////    var exists = file.Exists;
 
@@ -92,6 +93,5 @@ public class BasicFileInfoTests
 
             return this;
         }
-
     }
 }

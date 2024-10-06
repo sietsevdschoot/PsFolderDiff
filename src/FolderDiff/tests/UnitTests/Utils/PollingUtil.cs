@@ -52,5 +52,4 @@ public class PollingUtil
         throw new TimeoutException(
             $"{message}\n(Polled for {timeout.TotalSeconds} second(s) with {interval.TotalMilliseconds} ms intervals.)");
     }
-
 }

@@ -15,7 +15,7 @@ public class FileHashLookupTests
     [Fact]
     public async Task AddFolder_Adds_Folder_And_Collects_Files_Recursively()
     {
-        // Arrange 
+        // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
@@ -28,14 +28,14 @@ public class FileHashLookupTests
         await fixture.AddFolder(includeFolder);
 
         // Assert
-        fixture.AssertContainsFileNames([1, 2, 3, 4]); 
+        fixture.AssertContainsFileNames([1, 2, 3, 4]);
         fixture.AssertContainsIncludePath(includeFolder);
     }
 
     [Fact]
     public async Task AddIncludePattern_Adds_Folder_And_Collects_Files_Recursively()
     {
-        // Arrange 
+        // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
@@ -48,14 +48,14 @@ public class FileHashLookupTests
         await fixture.AddIncludePattern(includePattern);
 
         // Assert
-        fixture.AssertContainsFileNames([3, 4]); 
+        fixture.AssertContainsFileNames([3, 4]);
         fixture.AssertContainsIncludePattern(includePattern);
     }
 
     [Fact]
     public async Task AddExcludePattern_ExcludesPatternFromAlreadyCollectedFiles()
     {
-        // Arrange 
+        // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
@@ -77,7 +77,7 @@ public class FileHashLookupTests
     [Fact]
     public async Task AddFiles_AddsFilesAndCalculatesHash()
     {
-        // Arrange 
+        // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
@@ -101,7 +101,7 @@ public class FileHashLookupTests
     [Fact]
     public async Task AddFileHashLookup_CopiesFileAndPathPatternsFromOther()
     {
-        // Arrange 
+        // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
@@ -128,12 +128,11 @@ public class FileHashLookupTests
             "Folder2\\",
         });
     }
-    
+
     [Fact]
     public void Creates_a_file_containing_the_HashTable()
     {
         // Arrange
-
 
         // Act
 
@@ -145,7 +144,6 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
@@ -155,7 +153,6 @@ public class FileHashLookupTests
     public void Refresh_updated_the_LastUpdated_date()
     {
         // Arrange
-
 
         // Act
 
@@ -167,7 +164,6 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
@@ -177,7 +173,6 @@ public class FileHashLookupTests
     public void Returns_unique_items_from_other_object_it_is_compared_to()
     {
         // Arrange
-
 
         // Act
 
@@ -189,7 +184,6 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
@@ -199,7 +193,6 @@ public class FileHashLookupTests
     public void Sets_the_LastUpdated_time_when_FileHashTable_on_instantiation()
     {
         // Arrange
-
 
         // Act
 
@@ -211,7 +204,6 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
@@ -222,36 +214,33 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
     }
 
     [Fact]
-    public void can_load_new_instance_from_filename()
+    public void Can_load_new_instance_from_filename()
     {
         // Arrange
 
-
         // Act
 
         // Assert
     }
 
     [Fact]
-    public void can_refresh_itself_By_adding_new_files_and_removing_no_longer_existing_files()
+    public void Can_refresh_itself_By_adding_new_files_and_removing_no_longer_existing_files()
     {
         // Arrange
 
-
         // Act
 
         // Assert
     }
 
     [Fact]
-    public void returns_matching_items_from_other_object_it_is_compared_to()
+    public void Returns_matching_items_from_other_object_it_is_compared_to()
     {
         // Arrange
 
@@ -266,7 +255,6 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
@@ -276,7 +264,6 @@ public class FileHashLookupTests
     public void Can_add_relative_folders()
     {
         // Arrange
-
 
         // Act
 

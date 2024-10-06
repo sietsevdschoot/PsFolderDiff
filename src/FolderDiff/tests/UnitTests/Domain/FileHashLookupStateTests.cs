@@ -19,7 +19,7 @@ public class FileHashLookupStateTests
         // Assert
         fixture.AssertFileAndHashLookupsArePopulated();
     }
-    
+
     [Fact]
     public void Creates_a_lookup_of_all_files()
     {
@@ -37,8 +37,8 @@ public class FileHashLookupStateTests
     public void Creates_a_hash_and_file_lookup()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture(); 
-        
+        var fixture = new FileHashLookupStateTestsFixture();
+
         // Act
         fixture.WithAddedFiles();
 
@@ -48,7 +48,7 @@ public class FileHashLookupStateTests
         fixture.Sut.File[file.FullName].Should().Be(file);
         fixture.Sut.Hash[file.Hash].Should().BeEquivalentTo([file]);
     }
-    
+
     [Fact]
     public void Creates_a_List_for_files_which_share_the_same_hash()
     {
@@ -65,7 +65,7 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void will_not_contain_duplicates_files()
+    public void Will_not_contain_duplicates_files()
     {
         // Arrange
         var fixture = new FileHashLookupStateTestsFixture()
@@ -81,7 +81,7 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void will_remove_entry_and_List_if_no_items_left()
+    public void Will_remove_entry_and_List_if_no_items_left()
     {
         // Arrange
         var fixture = new FileHashLookupStateTestsFixture()
@@ -95,14 +95,14 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void will_remove_entry_from_List_if_file_with_same_hash_exists()
+    public void Will_remove_entry_from_List_if_file_with_same_hash_exists()
     {
         // Arrange
         var fixture = new FileHashLookupStateTestsFixture()
             .WithAddedFiles(Enumerable.Range(1, 4), "Identical Hash");
 
         var file = fixture.AllFiles.First();
-        
+
         // Act
         fixture.Sut.Remove(file);
 
@@ -122,7 +122,7 @@ public class FileHashLookupStateTests
         fixture.Sut.Add(file);
 
         var updatedFile = fixture.UpdateFile(file);
-        
+
         // Act
         fixture.Sut.Add(updatedFile);
 
@@ -134,42 +134,36 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void will_look_at_the_file_hash_to_determine_file_equality_or_difference()
+    public void Will_look_at_the_file_hash_to_determine_file_equality_or_difference()
     {
         // Arrange
-
 
         // Act
 
         // Assert
 
-
-        ////    1..3 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\$_.txt - Value "My Test Value" - Force  }    
+        ////    1..3 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\$_.txt - Value "My Test Value" - Force  }
         ////    $myHash = GetFileHashTable "$TestDrive\MyFolder"
-        ////    4..5 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder2\$_.txt - Value "My Test Value" - Force  }    
+        ////    4..5 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder2\$_.txt - Value "My Test Value" - Force  }
         ////    $newHash = GetFileHashTable "$TestDrive\MyFolder2"
         ////    $actual = $myHash.GetMatchesInOther($newHash)
         ////    $actual.GetFiles() | ForEach - Object { [int]($_.Name - replace $_.Extension) } | Should - Be @(4, 5)
-
     }
 
     [Fact]
     public void Exposes_the_paths_which_were_used()
     {
         // Arrange
-        
 
         // Act
 
         // Assert
     }
 
-
     [Fact]
     public void Can_exclude_file_patterns()
     {
         // Arrange
-
 
         // Act
 
@@ -181,7 +175,6 @@ public class FileHashLookupStateTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
@@ -192,18 +185,15 @@ public class FileHashLookupStateTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
     }
 
-
     [Fact]
     public void Will_remove_already_added_files_which_match_excludeFilePatterns()
     {
         // Arrange
-
 
         // Act
 
@@ -215,18 +205,15 @@ public class FileHashLookupStateTests
     {
         // Arrange
 
-
         // Act
 
         // Assert
     }
 
-
     [Fact]
     public void GetFiles_returns_all_files()
     {
         // Arrange
-        
 
         // Act
 
@@ -237,7 +224,6 @@ public class FileHashLookupStateTests
     public void GetFilesByHash_returns_all_files_matching_the_hash()
     {
         // Arrange
-        
 
         // Act
 
@@ -248,7 +234,6 @@ public class FileHashLookupStateTests
     public void Can_display_contents_by_using_ToString()
     {
         // Arrange
-        
 
         // Act
 
@@ -259,7 +244,6 @@ public class FileHashLookupStateTests
     public void Can_save_with_correct_filename_when_relative_path_for_folder_is_used()
     {
         // Arrange
-        
 
         // Act
 
@@ -270,30 +254,25 @@ public class FileHashLookupStateTests
     public void Contains_returns_if_fileHashTable_contains_file()
     {
         // Arrange
-        
 
         // Act
 
         // Assert
     }
 
-
     [Fact]
-    public void can_add_other_FileHashLookup()
+    public void Can_add_other_FileHashLookup()
     {
         // Arrange
 
-
         // Act
 
         // Assert
     }
-
 
     private class FileHashLookupStateTestsFixture : FileHashTestFixture
     {
         public FileHashLookupState Sut { get; } = new();
-
 
         public FileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles = 10, string? fileContents = null)
         {

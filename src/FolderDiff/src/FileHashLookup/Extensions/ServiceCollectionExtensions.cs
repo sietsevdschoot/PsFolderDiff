@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
             builder.AddConsole();
         });
 
-        services.AddMediatR(cfg => 
+        services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(Services.FileHashLookup).Assembly);
         });

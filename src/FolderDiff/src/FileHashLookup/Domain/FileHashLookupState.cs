@@ -13,8 +13,9 @@ public class FileHashLookupState
 
     public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash =>
         new ReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>>(
-            _hashLookup.ToDictionary(k => k.Key, v => (IReadOnlyCollection<BasicFileInfo>)
-                new ReadOnlyCollection<BasicFileInfo>(v.Value)));
+            _hashLookup.ToDictionary(
+                k => k.Key,
+                v => (IReadOnlyCollection<BasicFileInfo>)new ReadOnlyCollection<BasicFileInfo>(v.Value)));
 
     public void Add(BasicFileInfo file)
     {
@@ -44,7 +45,6 @@ public class FileHashLookupState
             Add(file);
         }
     }
-
 
     public void Remove(IFileInfo file)
     {

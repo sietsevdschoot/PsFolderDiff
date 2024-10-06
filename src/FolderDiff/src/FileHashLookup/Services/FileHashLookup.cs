@@ -13,17 +13,6 @@ public class FileHashLookup
     private readonly IMediator _mediator;
     private readonly FileCollector _fileCollector;
 
-    public static FileHashLookup Create()
-    {
-        var sp = new ServiceCollection()
-            .AddFileHashLookup()
-            .BuildServiceProvider();
-
-        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
-
-        return fileHashLookup;
-    }
-
     public FileHashLookup(
         FileHashLookupState fileHashLookupState,
         FileCollector fileCollector,
@@ -35,6 +24,7 @@ public class FileHashLookup
     }
 
     public IReadOnlyDictionary<string, BasicFileInfo> File => _fileHashLookupState.File;
+
     public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash => _fileHashLookupState.Hash;
 
     public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns =>
@@ -42,31 +32,45 @@ public class FileHashLookup
 
     public IReadOnlyCollection<string> ExcludePatterns => _fileCollector.ExcludePatterns;
 
+    public static FileHashLookup Create()
+    {
+        var sp = new ServiceCollection()
+            .AddFileHashLookup()
+            .BuildServiceProvider();
+
+        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
+
+        return fileHashLookup;
+    }
+
     public async Task AddFolder(string path, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new AddIncludePatternRequest
-        {
-            IncludePath = path
-        }, 
-        cancellationToken);
+        await _mediator.Send(
+            new AddIncludePatternRequest
+            {
+                IncludePath = path,
+            },
+            cancellationToken);
     }
 
     public async Task AddIncludePattern(string includePattern, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new AddIncludePatternRequest
-        {
-            IncludePattern = includePattern
-        }, 
-        cancellationToken);
+        await _mediator.Send(
+            new AddIncludePatternRequest
+            {
+                IncludePattern = includePattern,
+            },
+            cancellationToken);
     }
 
     public async Task AddExcludePattern(string excludePattern, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new AddExcludePatternRequest
-        {
-            ExcludePattern = excludePattern
-        },
-        cancellationToken);
+        await _mediator.Send(
+            new AddExcludePatternRequest
+            {
+                ExcludePattern = excludePattern,
+            },
+            cancellationToken);
     }
 
     public List<BasicFileInfo> GetFiles()
@@ -76,19 +80,21 @@ public class FileHashLookup
 
     public async Task AddFiles(IFileInfo[] files, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new AddFilesRequest
-        {
-            Files = files
-        },
-        cancellationToken);
+        await _mediator.Send(
+            new AddFilesRequest
+            {
+                Files = files,
+            },
+            cancellationToken);
     }
 
     public async Task AddFileHashLookup(FileHashLookup other, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(new AddFileHashLookupRequest
-        {
-            FileHashLookup = other
-        },
-        cancellationToken);
+        await _mediator.Send(
+            new AddFileHashLookupRequest
+            {
+                FileHashLookup = other,
+            },
+            cancellationToken);
     }
 }

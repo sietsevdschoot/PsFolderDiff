@@ -27,7 +27,6 @@ public class FileCollector
     public IReadOnlyCollection<string> ExcludePatterns =>
         new ReadOnlyCollection<string>(_excludePatterns);
 
-
     public List<IFileInfo> AddIncludeFolder(string path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path, nameof(path));
@@ -64,6 +63,15 @@ public class FileCollector
     public List<IFileInfo> GetFiles()
     {
         return GetFilesInternal();
+    }
+
+    internal static (string Directory, string RelativePattern) ParseFileGlobbingPattern(string pattern)
+    {
+        var directory = pattern.Split("*", StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
+
+        var relativePattern = pattern.Replace(directory, null);
+
+        return (Directory: directory, RelativePattern: relativePattern);
     }
 
     private void EnsurePatternIsValid(string pattern)
@@ -111,14 +119,5 @@ public class FileCollector
         }
 
         return collectedFiles;
-    }
-
-    internal static (string Directory, string RelativePattern) ParseFileGlobbingPattern(string pattern)
-    {
-        var directory = pattern.Split("*", StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
-
-        var relativePattern = pattern.Replace(directory, null);
-
-        return (Directory: directory, RelativePattern: relativePattern);
     }
 }

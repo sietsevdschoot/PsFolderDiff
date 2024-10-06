@@ -7,7 +7,8 @@ namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions.FileInfoExtensionTest
 
 public class FileInfoExtensionTests
 {
-    [Fact] public void CalculateMD5Hash_CalculatesIdenticalHash_as_Powershell_GetFileHash_Cmdlet()
+    [Fact]
+    public void CalculateMD5Hash_CalculatesIdenticalHash_as_Powershell_GetFileHash_Cmdlet()
     {
         // Arrange
         var fileSystem = new FileSystem();

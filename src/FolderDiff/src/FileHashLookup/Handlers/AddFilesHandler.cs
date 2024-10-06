@@ -1,8 +1,8 @@
-﻿using MediatR;
+﻿using System.IO.Abstractions;
+using MediatR;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services;
-using System.IO.Abstractions;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
@@ -18,6 +18,7 @@ public class AddFilesHandler : IRequestHandler<AddFilesRequest>
         _fileHashLookupState = fileHashLookupState;
         _fileHashCalculationService = fileHashCalculationService;
     }
+
     public Task Handle(AddFilesRequest request, CancellationToken cancellationToken)
     {
         var filesWithHash = _fileHashCalculationService.CalculateHash(request.Files.ToList());

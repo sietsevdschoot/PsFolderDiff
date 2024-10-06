@@ -12,6 +12,10 @@ public abstract class FileHashTestFixture
 {
     private static readonly PollingUtil PollingUtil;
 
+    protected readonly FileSystem FileSystem;
+    private readonly string _workingDirectory;
+    private int _i;
+
     static FileHashTestFixture()
     {
         var sp = new ServiceCollection()
@@ -23,10 +27,6 @@ public abstract class FileHashTestFixture
 
         PollingUtil = sp.GetRequiredService<PollingUtil>();
     }
-
-    protected readonly FileSystem FileSystem;
-    private readonly string _workingDirectory;
-    private int _i;
 
     protected FileHashTestFixture()
     {
@@ -65,12 +65,12 @@ public abstract class FileHashTestFixture
         }
 
         var file = FileSystem.FileInfo.New(fullName);
-        var fileContent = (contents ?? Guid.NewGuid().ToString());
+        var fileContent = contents ?? Guid.NewGuid().ToString();
 
         if (!file.Directory!.Exists)
         {
             FileSystem.Directory.CreateDirectory(file.Directory.FullName);
-        } 
+        }
 
         FileSystem.File.WriteAllText(file.FullName, fileContent);
 
@@ -98,7 +98,7 @@ public abstract class FileHashTestFixture
     {
         return HashingUtil.CreateBasicFileInfo(UpdateFile(file.FullName));
     }
-    
+
     public IFileInfo UpdateFile(string fullName)
     {
         FileSystem.File.AppendAllText(fullName, "Updated");
