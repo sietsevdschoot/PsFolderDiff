@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
-using System.IO.Abstractions;
+﻿using System.IO.Abstractions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookup.Extensions;
