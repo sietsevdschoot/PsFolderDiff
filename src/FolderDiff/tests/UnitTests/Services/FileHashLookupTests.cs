@@ -244,7 +244,6 @@ public class FileHashLookupTests
     {
         // Arrange
 
-
         // Act
 
         // Assert

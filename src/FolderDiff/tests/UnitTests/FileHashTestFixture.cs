@@ -10,9 +10,10 @@ namespace PsFolderDiff.FileHashLookup.UnitTests;
 
 public abstract class FileHashTestFixture
 {
-    private static readonly PollingUtil PollingUtil;
-
+    #pragma warning disable SA1401 // Field is used by other private fixtures.
     protected readonly FileSystem FileSystem;
+
+    private static readonly PollingUtil PollingUtil;
     private readonly string _workingDirectory;
     private int _i;
 

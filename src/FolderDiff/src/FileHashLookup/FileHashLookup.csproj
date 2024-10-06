@@ -6,7 +6,7 @@
 		<RootNamespace>PsFolderDiff.FileHashLookup</RootNamespace>
 		<AssemblyName>PsFolderDiff.FileHashLookup</AssemblyName>
 		<Nullable>enable</Nullable>
-		<CodeAnalysisRuleSet>../../StyleCop.ruleset</CodeAnalysisRuleSet>
+		<CodeAnalysisRuleSet>..\..\StyleCop.ruleset</CodeAnalysisRuleSet>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 

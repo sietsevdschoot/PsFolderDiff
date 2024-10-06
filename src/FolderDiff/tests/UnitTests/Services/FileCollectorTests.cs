@@ -156,7 +156,7 @@ public class FileCollectorTests
 
         public FileCollectorTestFixture()
         {
-            _sut = new FileCollector(base.FileSystem);
+            _sut = new FileCollector(FileSystem);
         }
 
         public new string WorkingDirectory => base.WorkingDirectory.FullName;
