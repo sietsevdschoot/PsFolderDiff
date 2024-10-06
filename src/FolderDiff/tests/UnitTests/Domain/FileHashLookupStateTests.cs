@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-using FluentAssertions;
+﻿using FluentAssertions;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
-using PsFolderDiff.FileHashLookup.Models;
-using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Models;
+namespace PsFolderDiff.FileHashLookup.UnitTests.Domain;
 
 public class FileHashLookupStateTests
 {

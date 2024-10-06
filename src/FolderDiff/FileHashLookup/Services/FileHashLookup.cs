@@ -1,8 +1,8 @@
 ﻿using System.IO.Abstractions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
-using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Requests;
 
 namespace PsFolderDiff.FileHashLookup.Services;

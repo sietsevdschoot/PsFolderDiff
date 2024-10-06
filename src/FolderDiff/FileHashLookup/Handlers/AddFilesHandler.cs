@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using PsFolderDiff.FileHashLookup.Models;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services;
 using System.IO.Abstractions;

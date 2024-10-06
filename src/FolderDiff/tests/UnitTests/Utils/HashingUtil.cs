@@ -1,7 +1,7 @@
 ﻿using System.IO.Abstractions;
 using System.Security.Cryptography;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
-using PsFolderDiff.FileHashLookup.Models;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Utils;
 

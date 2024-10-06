@@ -2,7 +2,7 @@
 using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Models;
+namespace PsFolderDiff.FileHashLookup.UnitTests.Domain;
 
 public class BasicFileInfoTests
 {

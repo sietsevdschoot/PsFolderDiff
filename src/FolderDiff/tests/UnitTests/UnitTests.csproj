@@ -33,6 +33,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Extensions\FileInfoExtensionTests\" />
+	  <Folder Include="Models\" />
 	</ItemGroup>
 
 </Project>

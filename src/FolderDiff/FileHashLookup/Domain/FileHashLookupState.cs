@@ -1,17 +1,17 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 
-namespace PsFolderDiff.FileHashLookup.Models;
+namespace PsFolderDiff.FileHashLookup.Domain;
 
 public class FileHashLookupState
 {
     private readonly Dictionary<string, BasicFileInfo> _fileLookup = new();
     private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new();
 
-    public IReadOnlyDictionary<string, BasicFileInfo> File => 
+    public IReadOnlyDictionary<string, BasicFileInfo> File =>
         new ReadOnlyDictionary<string, BasicFileInfo>(_fileLookup);
 
-    public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash => 
+    public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash =>
         new ReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>>(
             _hashLookup.ToDictionary(k => k.Key, v => (IReadOnlyCollection<BasicFileInfo>)
                 new ReadOnlyCollection<BasicFileInfo>(v.Value)));
