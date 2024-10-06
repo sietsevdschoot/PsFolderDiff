@@ -127,6 +127,96 @@ public class FileHashLookupTests
         });
     }
 
+
+    ////   It "Returns unique items from other object it is compared to" {
+    ////       
+    ////       $myHash = GetFileHashTable "$TestDrive\MyFolder"
+    ////       
+    ////       4..8 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
+    ////
+    ////       $newHash = GetFileHashTable "$TestDrive\MyFolder"
+    ////
+    ////       $actual = $myHash.GetDiffInOther($newHash)
+    ////
+    ////       $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(4,5,6,7,8)
+    ////   }
+    ////  
+    ////   It "returns matching items from other object it is compared to" {
+    ////       
+    ////       $myHash = GetFileHashTable "$TestDrive\MyFolder"
+    ////       
+    ////       4..8 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
+    ////
+    ////       $newHash = GetFileHashTable "$TestDrive\MyFolder"
+    ////
+    ////       $actual = $myHash.GetMatchesInOther($newHash)
+    ////
+    ////       $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(1, 2, 3)
+    ////   }
+
+    [Fact]
+    public async Task GetMatchesInOther_Returns_file_only_found_in_other()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+
+        var fileHashLookup1 = FileHashLookup.Services.FileHashLookup.Create();
+        await fileHashLookup1.AddFolder("Folder1");
+
+        // Update
+        fixture.WithNewFile(@"Folder1\3.txt");
+        fixture.WithNewFile(@"Folder1\4.txt");
+        var fileHashLookup2 = FileHashLookup.Services.FileHashLookup.Create();
+        await fileHashLookup2.AddFolder("Folder1");
+
+        // Act
+        var diffInOther = await fileHashLookup1.GetMatchesInOther(fileHashLookup2);
+
+        // Assert
+        diffInOther.AssertContainsFileNames([1, 2]);
+        diffInOther.AssertIncludePatternsAreEmpty();
+        diffInOther.AssertExcludePatternsAreEmpty();
+    }
+
+    [Fact]
+    public async Task GetDifferencesInOther_Returns_file_only_found_in_other()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+
+        var fileHashLookup1 = FileHashLookup.Services.FileHashLookup.Create();
+        await fileHashLookup1.AddFolder("Folder1");
+
+        // Update
+        fixture.WithNewFile(@"Folder1\3.txt");
+        fixture.WithNewFile(@"Folder1\4.txt");
+        var fileHashLookup2 = FileHashLookup.Services.FileHashLookup.Create();
+        await fileHashLookup2.AddFolder("Folder1");
+
+        // Act
+        var diffInOther = await fileHashLookup1.GetDifferencesInOther(fileHashLookup2);
+
+        // Assert
+        diffInOther.AssertContainsFileNames([3, 4]);
+        diffInOther.AssertIncludePatternsAreEmpty();
+        diffInOther.AssertExcludePatternsAreEmpty();
+    }
+
+    [Fact]
+    public void GetDifferencesInOther_Doesnt_copy_include_and_exclude_paths()
+    {
+        // Arrange
+
+        // Act
+
+        // Assert
+    }
+
+
     [Fact]
     public void Creates_a_file_containing_the_HashTable()
     {
@@ -138,6 +228,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
+
     public void Refresh_Removes_folders_and_files_from_paths_which_do_no_longer_exists()
     {
         // Arrange
@@ -322,11 +413,6 @@ public class FileHashLookupTests
             var parsedPattern = FileCollector.ParseFileGlobbingPattern(includePattern);
 
             _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
-        }
-
-        public void AssertIncludePatternsAreEmpty()
-        {
-            _fileCollector.IncludePatterns.Should().BeEmpty();
         }
     }
 }

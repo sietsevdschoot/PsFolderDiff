@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using Microsoft.Extensions.FileSystemGlobbing;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 

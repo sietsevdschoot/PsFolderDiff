@@ -46,6 +46,20 @@ public class FileHashLookupState
         }
     }
 
+    public bool Contains(BasicFileInfo file)
+    {
+        return _fileLookup.TryGetValue(file.FullName, out var foundFile)
+               && foundFile.CreationTime == file.CreationTime
+               && foundFile.Hash == file.Hash;
+    }
+
+    public bool Contains(IFileInfo file)
+    {
+        return _fileLookup.TryGetValue(file.FullName, out var foundFile)
+               && foundFile.CreationTime == file.CreationTime
+               && foundFile.LastWriteTime == file.LastWriteTime;
+    }
+
     public void Remove(IFileInfo file)
     {
         if (_fileLookup.TryGetValue(file.FullName, out var basicFileInfo))

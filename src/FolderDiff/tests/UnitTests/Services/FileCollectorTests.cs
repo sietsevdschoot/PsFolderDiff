@@ -1,7 +1,6 @@
 ﻿using System.IO.Abstractions;
 using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Services;
-using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
@@ -161,6 +160,8 @@ public class FileCollectorTests
         }
 
         public new string WorkingDirectory => base.WorkingDirectory.FullName;
+
+        public FileCollector Sut => _sut;
 
         public List<IFileInfo> AddIncludeFolder(string path)
         {

@@ -25,4 +25,15 @@ public static class FileHashLookupAssertExtensions
 
         fileHashLookup.IncludePatterns.Should().Contain(parsedPattern);
     }
+
+    public static void AssertIncludePatternsAreEmpty(this FileHashLookup.Services.FileHashLookup fileHashLookup)
+    {
+        fileHashLookup.IncludePatterns.Should().BeEmpty();
+    }
+
+    public static void AssertExcludePatternsAreEmpty(this FileHashLookup.Services.FileHashLookup fileHashLookup)
+    {
+        fileHashLookup.ExcludePatterns.Should().BeEmpty();
+    }
+
 }

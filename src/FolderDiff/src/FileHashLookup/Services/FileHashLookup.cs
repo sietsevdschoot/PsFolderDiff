@@ -78,6 +78,26 @@ public class FileHashLookup
         return _fileHashLookupState.File.Values.ToList();
     }
 
+    public async Task AddFile(IFileInfo file, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(
+            new AddFilesRequest
+            {
+                Files = [file],
+            },
+            cancellationToken);
+    }
+
+    public async Task AddFile(BasicFileInfo file, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(
+            new AddFilesRequest
+            {
+                BasicFiles = [file]
+            },
+            cancellationToken);
+    }
+
     public async Task AddFiles(IFileInfo[] files, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
@@ -96,5 +116,29 @@ public class FileHashLookup
                 FileHashLookup = other,
             },
             cancellationToken);
+    }
+
+    public async Task<FileHashLookup> GetDifferencesInOther(FileHashLookup other, CancellationToken cancellationToken = default)
+    {
+        var compareResult = await _mediator.Send(
+            new CompareFileHashLookupRequest
+            {
+                FileHashLookup = other,
+            },
+            cancellationToken);
+
+        return compareResult.DifferencesInOther;
+    }
+
+    public async Task<FileHashLookup> GetMatchesInOther(FileHashLookup other, CancellationToken cancellationToken = default)
+    {
+        var compareResult = await _mediator.Send(
+            new CompareFileHashLookupRequest
+            {
+                FileHashLookup = other,
+            },
+            cancellationToken);
+
+        return compareResult.MatchesInOther;
     }
 }
