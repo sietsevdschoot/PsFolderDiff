@@ -7,7 +7,7 @@
 *.sln.docstates
 
 *NCrunch*
-*.*ncrunch*
+*.ncrunch*
 
 # Build results
 [Dd]ebug/
