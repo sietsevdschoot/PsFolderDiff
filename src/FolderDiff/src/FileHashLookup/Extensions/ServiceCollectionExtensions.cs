@@ -12,12 +12,15 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
+
         services.AddSingleton<FileCollector>();
         services.AddSingleton<IFileCollector, IFileCollector>(sp => sp.GetRequiredService<FileCollector>());
         services.AddSingleton<IHasReadOnlyFilePatterns, FileCollector>(sp => sp.GetRequiredService<FileCollector>());
+
         services.AddSingleton<FileHashLookupState>();
         services.AddSingleton<IFileHashLookupState, IFileHashLookupState>(sp => sp.GetRequiredService<FileHashLookupState>());
         services.AddSingleton<IHasReadonlyLookups, FileHashLookupState>(sp => sp.GetRequiredService<FileHashLookupState>());
+
         services.AddSingleton<Services.FileHashLookup>();
 
         services.AddLogging(builder =>

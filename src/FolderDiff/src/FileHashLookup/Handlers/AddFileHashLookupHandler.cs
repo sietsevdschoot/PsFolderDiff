@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using PsFolderDiff.FileHashLookup.Requests;
-using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
