@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
-using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
+using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Domain;
+namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
 
 public class FileHashLookupStateTests
 {

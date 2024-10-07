@@ -1,8 +1,8 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Services;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Extensions;
 
@@ -12,9 +12,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
-        services.AddSingleton<FileHashLookupState>();
         services.AddSingleton<FileCollector>();
         services.AddSingleton<FileHashLookupState>();
+        services.AddSingleton<IHasReadOnlyFilePatterns, FileCollector>(sp => sp.GetRequiredService<FileCollector>());
+        services.AddSingleton<IHasReadonlyLookups, FileHashLookupState>(sp => sp.GetRequiredService<FileHashLookupState>());
         services.AddSingleton<Services.FileHashLookup>();
 
         services.AddLogging(builder =>

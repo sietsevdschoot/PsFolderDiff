@@ -1,36 +1,38 @@
-﻿using System.IO.Abstractions;
+﻿using System.Collections.ObjectModel;
+using System.IO.Abstractions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Requests;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Services;
 
 public class FileHashLookup
 {
-    private readonly FileHashLookupState _fileHashLookupState;
     private readonly IMediator _mediator;
-    private readonly FileCollector _fileCollector;
+    private readonly IHasReadOnlyFilePatterns _filePatterns;
+    private readonly IHasReadonlyLookups _fileHashLookups;
 
     public FileHashLookup(
-        FileHashLookupState fileHashLookupState,
-        FileCollector fileCollector,
+        IHasReadOnlyFilePatterns filePatterns,
+        IHasReadonlyLookups fileHashLookups,
         IMediator mediator)
     {
-        _fileCollector = fileCollector;
+        _fileHashLookups = fileHashLookups;
+        _filePatterns = filePatterns;
         _mediator = mediator;
-        _fileHashLookupState = fileHashLookupState;
     }
 
-    public IReadOnlyDictionary<string, BasicFileInfo> File => _fileHashLookupState.File;
+    public IReadOnlyDictionary<string, BasicFileInfo> File => _fileHashLookups.File;
 
-    public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash => _fileHashLookupState.Hash;
+    public ReadOnlyDictionary<string, ReadOnlyCollection<BasicFileInfo>> Hash => _fileHashLookups.Hash;
 
     public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns =>
-        _fileCollector.IncludePatterns;
+        _filePatterns.IncludePatterns;
 
-    public IReadOnlyCollection<string> ExcludePatterns => _fileCollector.ExcludePatterns;
+    public IReadOnlyCollection<string> ExcludePatterns => _filePatterns.ExcludePatterns;
 
     public static FileHashLookup Create()
     {
@@ -75,7 +77,7 @@ public class FileHashLookup
 
     public List<BasicFileInfo> GetFiles()
     {
-        return _fileHashLookupState.File.Values.ToList();
+        return _fileHashLookups.File.Values.ToList();
     }
 
     public async Task AddFile(IFileInfo file, CancellationToken cancellationToken = default)

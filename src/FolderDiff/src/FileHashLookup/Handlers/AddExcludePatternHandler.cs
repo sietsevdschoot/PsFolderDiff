@@ -1,7 +1,6 @@
 ﻿using System.IO.Abstractions.TestingHelpers;
 using MediatR;
 using Microsoft.Extensions.FileSystemGlobbing;
-using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;

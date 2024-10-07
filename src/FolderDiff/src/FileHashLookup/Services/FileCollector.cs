@@ -1,13 +1,12 @@
-﻿using System.Collections.ObjectModel;
-using System.IO.Abstractions;
+﻿using System.IO.Abstractions;
 using Microsoft.Extensions.FileSystemGlobbing;
-using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookup.Services;
 
-public class FileCollector
+public class FileCollector : IHasReadOnlyFilePatterns
 {
     private readonly IFileSystem _fileSystem;
 
@@ -22,11 +21,9 @@ public class FileCollector
         _excludePatterns = new List<string>();
     }
 
-    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns =>
-        new ReadOnlyCollection<(string Directory, string RelativePattern)>(_includePatterns);
+    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns => _includePatterns.AsReadOnly();
 
-    public IReadOnlyCollection<string> ExcludePatterns =>
-        new ReadOnlyCollection<string>(_excludePatterns);
+    public IReadOnlyCollection<string> ExcludePatterns => _excludePatterns.AsReadOnly();
 
     public List<IFileInfo> AddIncludeFolder(string path)
     {

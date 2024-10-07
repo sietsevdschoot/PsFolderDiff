@@ -1,21 +1,19 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
+using PsFolderDiff.FileHashLookup.Domain;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
-namespace PsFolderDiff.FileHashLookup.Domain;
+namespace PsFolderDiff.FileHashLookup.Services;
 
-public class FileHashLookupState
+public class FileHashLookupState : IHasReadonlyLookups
 {
     private readonly Dictionary<string, BasicFileInfo> _fileLookup = new();
     private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new();
 
-    public IReadOnlyDictionary<string, BasicFileInfo> File =>
-        new ReadOnlyDictionary<string, BasicFileInfo>(_fileLookup);
+    public IReadOnlyDictionary<string, BasicFileInfo> File => _fileLookup.AsReadOnly();
 
-    public IReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>> Hash =>
-        new ReadOnlyDictionary<string, IReadOnlyCollection<BasicFileInfo>>(
-            _hashLookup.ToDictionary(
-                k => k.Key,
-                v => (IReadOnlyCollection<BasicFileInfo>)new ReadOnlyCollection<BasicFileInfo>(v.Value)));
+    public ReadOnlyDictionary<string, ReadOnlyCollection<BasicFileInfo>> Hash => _hashLookup.AsReadOnly()
+        .ToDictionary(k => k.Key, v => v.Value.AsReadOnly()).AsReadOnly();
 
     public void Add(BasicFileInfo file)
     {
@@ -35,7 +33,7 @@ public class FileHashLookupState
         _hashLookup[file.Hash] = items;
     }
 
-    public void AddFileHashLookup(Services.FileHashLookup other)
+    public void AddFileHashLookup(FileHashLookup other)
     {
         var allOtherFiles = other.GetFiles();
 

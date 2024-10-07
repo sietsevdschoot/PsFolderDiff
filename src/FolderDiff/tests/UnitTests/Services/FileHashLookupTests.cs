@@ -1,8 +1,8 @@
-﻿using System.IO.Abstractions;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using Xunit;
 
@@ -23,7 +23,7 @@ public class FileHashLookupTests
 
         // Act
         var includeFolder = @"Folder1\";
-        await fixture.AddFolder(includeFolder);
+        await fixture.Sut.AddFolder(includeFolder);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4]);
@@ -43,7 +43,7 @@ public class FileHashLookupTests
 
         // Act
         var includePattern = @"Folder1\**\Sub1\**\*";
-        await fixture.AddIncludePattern(includePattern);
+        await fixture.Sut.AddIncludePattern(includePattern);
 
         // Assert
         fixture.AssertContainsFileNames([3, 4]);
@@ -64,8 +64,8 @@ public class FileHashLookupTests
         var excludePattern = @"\**\Sub1\**\*";
 
         // Act
-        await fixture.AddFolder(@"Folder1\");
-        await fixture.AddExcludePattern(excludePattern);
+        await fixture.Sut.AddFolder(@"Folder1\");
+        await fixture.Sut.AddExcludePattern(excludePattern);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2]);
@@ -86,13 +86,33 @@ public class FileHashLookupTests
         var files = fixture.AllFiles
             .Select(fixture.AsFileInfo)
             .OrderBy(x => x.Name)
-            .ToList();
+            .ToArray();
 
         // Act
-        await fixture.AddFiles(files);
+        await fixture.Sut.AddFiles(files);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4, 5]);
+        fixture.AssertIncludePatternsAreEmpty();
+    }
+
+    [Fact]
+    public async Task AddFile_AddsFileAndCalculatesHash()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+
+        var file = fixture.AllFiles
+            .Select(fixture.AsFileInfo)
+            .OrderBy(x => x.Name)
+            .Single();
+
+        // Act
+        await fixture.Sut.AddFile(file);
+
+        // Assert
+        fixture.AssertContainsFileNames([1]);
         fixture.AssertIncludePatternsAreEmpty();
     }
 
@@ -332,8 +352,7 @@ public class FileHashLookupTests
 
     private class FileHashLookupTestFixture : FileHashTestFixture
     {
-        private readonly FileHashLookup.Services.FileHashLookup _sut;
-        private readonly FileCollector _fileCollector;
+        private readonly IHasReadOnlyFilePatterns _fileCollector;
 
         public FileHashLookupTestFixture()
         {
@@ -341,28 +360,15 @@ public class FileHashLookupTests
                 .AddFileHashLookup()
                 .BuildServiceProvider();
 
-            _fileCollector = sp.GetRequiredService<FileCollector>();
-            _sut = sp.GetRequiredService<FileHashLookup.Services.FileHashLookup>();
+            _fileCollector = sp.GetRequiredService<IHasReadOnlyFilePatterns>();
+            Sut = sp.GetRequiredService<FileHashLookup.Services.FileHashLookup>();
         }
 
-        public async Task AddFolder(string path)
-        {
-            await _sut.AddFolder(path);
-        }
-
-        public async Task AddIncludePattern(string includePattern)
-        {
-            await _sut.AddIncludePattern(includePattern);
-        }
-
-        public async Task AddExcludePattern(string excludePattern)
-        {
-            await _sut.AddExcludePattern(excludePattern);
-        }
+        public FileHashLookup.Services.FileHashLookup Sut { get; }
 
         public void AssertContainsFileNames(params int[] expected)
         {
-            _sut.AssertContainsFileNames(expected);
+            Sut.AssertContainsFileNames(expected);
         }
 
         public void AssertContainsExcludesPattern(string excludePattern)
@@ -372,12 +378,7 @@ public class FileHashLookupTests
 
         public void AssertContainsIncludePath(string includeFolder)
         {
-            _sut.AssertContainsIncludePath(includeFolder);
-        }
-
-        public async Task AddFiles(List<IFileInfo> files)
-        {
-            await _sut.AddFiles(files.ToArray());
+            Sut.AssertContainsIncludePath(includeFolder);
         }
 
         public void AssertContainsIncludePattern(string includePattern)
@@ -389,7 +390,7 @@ public class FileHashLookupTests
 
         public void AssertIncludePatternsAreEmpty()
         {
-            _sut.IncludePatterns.Should().BeEmpty();
+            Sut.IncludePatterns.Should().BeEmpty();
         }
     }
 }
