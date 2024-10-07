@@ -84,4 +84,9 @@ class BasicFileInfo : IComparable
         
         return [IO.FileInfo] $instance.FullName
     }
+
+    hidden static [BasicFileInfo] op_Implicit([string] $fullName){
+  
+      return [BasicFileInfo](Get-Item $fullName)
+    } 
 }
