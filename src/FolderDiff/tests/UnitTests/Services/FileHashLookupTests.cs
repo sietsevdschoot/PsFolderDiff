@@ -127,33 +127,6 @@ public class FileHashLookupTests
         });
     }
 
-
-    ////   It "Returns unique items from other object it is compared to" {
-    ////       
-    ////       $myHash = GetFileHashTable "$TestDrive\MyFolder"
-    ////       
-    ////       4..8 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
-    ////
-    ////       $newHash = GetFileHashTable "$TestDrive\MyFolder"
-    ////
-    ////       $actual = $myHash.GetDiffInOther($newHash)
-    ////
-    ////       $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(4,5,6,7,8)
-    ////   }
-    ////  
-    ////   It "returns matching items from other object it is compared to" {
-    ////       
-    ////       $myHash = GetFileHashTable "$TestDrive\MyFolder"
-    ////       
-    ////       4..8 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force  }    
-    ////
-    ////       $newHash = GetFileHashTable "$TestDrive\MyFolder"
-    ////
-    ////       $actual = $myHash.GetMatchesInOther($newHash)
-    ////
-    ////       $actual.GetFiles() | ForEach-Object { [int]($_.Name -replace $_.Extension) } | Should -Be @(1, 2, 3)
-    ////   }
-
     [Fact]
     public async Task GetMatchesInOther_Returns_file_only_found_in_other()
     {
@@ -215,7 +188,6 @@ public class FileHashLookupTests
 
         // Assert
     }
-
 
     [Fact]
     public void Creates_a_file_containing_the_HashTable()
@@ -413,6 +385,11 @@ public class FileHashLookupTests
             var parsedPattern = FileCollector.ParseFileGlobbingPattern(includePattern);
 
             _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
+        }
+
+        public void AssertIncludePatternsAreEmpty()
+        {
+            _sut.IncludePatterns.Should().BeEmpty();
         }
     }
 }

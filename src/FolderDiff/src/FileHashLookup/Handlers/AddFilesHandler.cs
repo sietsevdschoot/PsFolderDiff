@@ -26,7 +26,6 @@ public class AddFilesHandler : IRequestHandler<AddFilesRequest>
                 .Select(x => new BasicFileInfo(x.File, x.Hash))
                 .ToList();
 
-
         foreach (var basicFileInfo in filesToAdd)
         {
             _fileHashLookupState.Add(basicFileInfo);

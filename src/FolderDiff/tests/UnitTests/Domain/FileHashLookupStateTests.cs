@@ -138,19 +138,14 @@ public class FileHashLookupStateTests
     public void Contains_returns_true_if_file_matches()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture();
-        fixture.WithNewFile(@"Folder1\1.txt");
-        fixture.WithNewFile(@"Folder1\2.txt");
-        fixture.WithNewFile(@"Folder2\3.txt");
-
-        fixture.AddIncludeFolder(@"Folder1\");
+        var fixture = new FileHashLookupStateTestsFixture()
+            .WithAddedFiles(Enumerable.Range(1, 3));
 
         var file1 = fixture.GetFileInfo("1.txt");
 
         // Act &&Assert
-        fixture.Sut.Contains(file1).Should.BeTrue();
+        fixture.Sut.Contains(file1).Should().BeTrue();
     }
-
 
     [Fact]
     public void Will_look_at_the_file_hash_to_determine_file_equality_or_difference()

@@ -93,7 +93,7 @@ public class FileHashLookup
         await _mediator.Send(
             new AddFilesRequest
             {
-                BasicFiles = [file]
+                BasicFiles = [file],
             },
             cancellationToken);
     }

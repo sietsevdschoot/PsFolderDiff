@@ -74,13 +74,6 @@ public abstract class FileHashTestFixture
 
         FileSystem.File.WriteAllText(file.FullName, fileContent);
 
-        PollingUtil.PollForExpectedResultInternalAsync(
-            checkExpectation: () => Task.FromResult(FileSystem.Directory.Exists(file.Directory.FullName)),
-            retrieveMessage: () => Task.FromResult($"{file.FullName} does not exist"),
-            timeout: TimeSpan.FromSeconds(1),
-            interval: TimeSpan.FromMilliseconds(20))
-            .GetAwaiter().GetResult();
-
         return file;
     }
 

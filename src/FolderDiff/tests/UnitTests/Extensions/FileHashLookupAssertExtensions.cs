@@ -35,5 +35,4 @@ public static class FileHashLookupAssertExtensions
     {
         fileHashLookup.ExcludePatterns.Should().BeEmpty();
     }
-
 }

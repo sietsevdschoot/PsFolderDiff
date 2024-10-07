@@ -1,21 +1,19 @@
-﻿using System.IO.Abstractions;
-using MediatR;
+﻿using MediatR;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Requests;
-using PsFolderDiff.FileHashLookup.Services;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
 public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLookupRequest, CompareFileHashLookupResult>
 {
-    private readonly FileCollector _fileCollector;
+    private FileHashLookupState _fileHashLookupState;
 
-    public CompareFileHashLookupHandler(FileCollector fileCollector)
+    public CompareFileHashLookupHandler(FileHashLookupState fileHashLookupState)
     {
-        _fileCollector = fileCollector;
+        _fileHashLookupState = fileHashLookupState;
     }
 
-    public Task<CompareFileHashLookupResult> Handle(CompareFileHashLookupRequest request, CancellationToken cancellationToken)
+    public async Task<CompareFileHashLookupResult> Handle(CompareFileHashLookupRequest request, CancellationToken cancellationToken)
     {
         var differencesLookup = Services.FileHashLookup.Create();
         var matchesLookup = Services.FileHashLookup.Create();
@@ -26,17 +24,20 @@ public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLooku
         {
             var currentFile = otherFiles[i];
 
-            if (_fileCollector.Contains(currentFile))
+            if (_fileHashLookupState.Contains(currentFile))
             {
-                matchesLookup.AddFile(currentFile);
+                await matchesLookup.AddFile(currentFile, cancellationToken);
             }
             else
             {
-                differencesLookup.AddFile(currentFile);
-
+                await differencesLookup.AddFile(currentFile, cancellationToken);
             }
         }
 
-        return  new Task<CompareFileHashLookupResult>();
+        return new CompareFileHashLookupResult
+        {
+            MatchesInOther = matchesLookup,
+            DifferencesInOther = differencesLookup,
+        };
     }
 }
