@@ -9,14 +9,14 @@ namespace PsFolderDiff.FileHashLookup.Handlers;
 
 public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest>
 {
-    private readonly FileCollector _fileCollector;
+    private readonly IFileCollector _fileCollector;
     private readonly IFileHashCalculationService _fileHashCalculationService;
-    private readonly FileHashLookupState _fileHashLookupState;
+    private readonly IFileHashLookupState _fileHashLookupState;
 
     public AddIncludePatternHandler(
-        FileCollector fileCollector,
+        IFileCollector fileCollector,
         IFileHashCalculationService fileHashCalculationService,
-        FileHashLookupState fileHashLookupState)
+        IFileHashLookupState fileHashLookupState)
     {
         _fileCollector = fileCollector;
         _fileHashCalculationService = fileHashCalculationService;
@@ -29,10 +29,12 @@ public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest
             ? _fileCollector.AddIncludeFolder(request.IncludePath)
             : _fileCollector.AddIncludePattern(request.IncludePattern);
 
-        var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles);
+        var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles).ToList();
 
-        foreach ((IFileInfo File, string Hash) entry in filesWithHash)
+        for (var i = 0; i < filesWithHash.Count; i++)
         {
+            (IFileInfo File, string Hash) entry = filesWithHash[i];
+
             _fileHashLookupState.Add(new BasicFileInfo(entry.File, entry.Hash));
         }
 

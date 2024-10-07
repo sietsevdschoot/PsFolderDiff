@@ -2,19 +2,19 @@
 using MediatR;
 using Microsoft.Extensions.FileSystemGlobbing;
 using PsFolderDiff.FileHashLookup.Requests;
-using PsFolderDiff.FileHashLookup.Services;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
 public class AddExcludePatternHandler : IRequestHandler<AddExcludePatternRequest>
 {
-    private readonly FileCollector _fileCollector;
-    private readonly FileHashLookupState _fileHashLookupState;
+    private readonly IFileCollector _fileCollector;
+    private readonly IFileHashLookupState _fileHashLookupState;
 
     public AddExcludePatternHandler(
-        FileCollector fileCollector,
-        FileHashLookupState fileHashLookupState)
+        IFileCollector fileCollector,
+        IFileHashLookupState fileHashLookupState)
     {
         _fileCollector = fileCollector;
         _fileHashLookupState = fileHashLookupState;

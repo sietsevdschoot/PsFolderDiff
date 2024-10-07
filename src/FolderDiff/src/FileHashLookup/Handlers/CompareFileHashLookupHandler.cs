@@ -1,14 +1,15 @@
 ﻿using MediatR;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
 public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLookupRequest, CompareFileHashLookupResult>
 {
-    private FileHashLookupState _fileHashLookupState;
+    private readonly IFileHashLookupState _fileHashLookupState;
 
-    public CompareFileHashLookupHandler(FileHashLookupState fileHashLookupState)
+    public CompareFileHashLookupHandler(IFileHashLookupState fileHashLookupState)
     {
         _fileHashLookupState = fileHashLookupState;
     }

@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using Xunit;
 
@@ -12,7 +13,7 @@ public class FileHashLookupStateTests
     public void Creates_2_way_HashTable()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture();
+        var fixture = new IFileHashLookupStateTestsFixture();
 
         // Act
         fixture.WithAddedFiles();
@@ -25,7 +26,7 @@ public class FileHashLookupStateTests
     public void Creates_a_lookup_of_all_files()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture();
+        var fixture = new IFileHashLookupStateTestsFixture();
 
         // Act
         fixture.WithAddedFiles(nrOfFiles: 3);
@@ -38,7 +39,7 @@ public class FileHashLookupStateTests
     public void Creates_a_hash_and_file_lookup()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture();
+        var fixture = new IFileHashLookupStateTestsFixture();
 
         // Act
         fixture.WithAddedFiles();
@@ -54,7 +55,7 @@ public class FileHashLookupStateTests
     public void Creates_a_List_for_files_which_share_the_same_hash()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture();
+        var fixture = new IFileHashLookupStateTestsFixture();
 
         // Act
         fixture.WithAddedFiles(nrOfFiles: 4, fileContents: "Identical Hash");
@@ -69,7 +70,7 @@ public class FileHashLookupStateTests
     public void Will_not_contain_duplicates_files()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture()
+        var fixture = new IFileHashLookupStateTestsFixture()
             .WithAddedFiles();
 
         // Act
@@ -85,7 +86,7 @@ public class FileHashLookupStateTests
     public void Will_remove_entry_and_List_if_no_items_left()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture()
+        var fixture = new IFileHashLookupStateTestsFixture()
             .WithAddedFiles();
 
         // Act
@@ -99,7 +100,7 @@ public class FileHashLookupStateTests
     public void Will_remove_entry_from_List_if_file_with_same_hash_exists()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture()
+        var fixture = new IFileHashLookupStateTestsFixture()
             .WithAddedFiles(Enumerable.Range(1, 4), "Identical Hash");
 
         var file = fixture.AllFiles.First();
@@ -116,7 +117,7 @@ public class FileHashLookupStateTests
     public void Add_When_adding_modified_file_will_remove_original_file_before_adding_modified_file()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture();
+        var fixture = new IFileHashLookupStateTestsFixture();
         var file = fixture.WithNewBasicFile(fileIdentifier: 1);
         var originalHash = file.Hash;
 
@@ -138,7 +139,7 @@ public class FileHashLookupStateTests
     public void Contains_returns_true_if_file_matches()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture()
+        var fixture = new IFileHashLookupStateTestsFixture()
             .WithAddedFiles(Enumerable.Range(1, 3));
 
         var file1 = fixture.GetFileInfo("1.txt");
@@ -284,16 +285,16 @@ public class FileHashLookupStateTests
         // Assert
     }
 
-    private class FileHashLookupStateTestsFixture : FileHashTestFixture
+    private class IFileHashLookupStateTestsFixture : FileHashTestFixture
     {
         public FileHashLookupState Sut { get; } = new();
 
-        public FileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles = 10, string? fileContents = null)
+        public IFileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles = 10, string? fileContents = null)
         {
             return WithAddedFiles(Enumerable.Range(1, nrOfFiles), fileContents);
         }
 
-        public FileHashLookupStateTestsFixture WithAddedFiles(IEnumerable<int> range, string? fileContents = null)
+        public IFileHashLookupStateTestsFixture WithAddedFiles(IEnumerable<int> range, string? fileContents = null)
         {
             foreach (var i in range)
             {

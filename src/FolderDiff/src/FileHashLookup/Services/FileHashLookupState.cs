@@ -5,7 +5,7 @@ using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Services;
 
-public class FileHashLookupState : IHasReadonlyLookups
+public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
 {
     private readonly Dictionary<string, BasicFileInfo> _fileLookup = new();
     private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new();

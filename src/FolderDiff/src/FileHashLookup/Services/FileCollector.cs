@@ -6,7 +6,7 @@ using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookup.Services;
 
-public class FileCollector : IHasReadOnlyFilePatterns
+public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 {
     private readonly IFileSystem _fileSystem;
 
@@ -49,7 +49,7 @@ public class FileCollector : IHasReadOnlyFilePatterns
         _excludePatterns.InsertNewItems(other.ExcludePatterns.ToList());
      }
 
-    public FileCollector AddExcludePattern(string excludePattern)
+    public IFileCollector AddExcludePattern(string excludePattern)
     {
         ArgumentException.ThrowIfNullOrEmpty(excludePattern, nameof(excludePattern));
 

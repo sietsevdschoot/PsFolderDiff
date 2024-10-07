@@ -9,10 +9,10 @@ namespace PsFolderDiff.FileHashLookup.Handlers;
 public class AddFilesHandler : IRequestHandler<AddFilesRequest>
 {
     private readonly IFileHashCalculationService _fileHashCalculationService;
-    private readonly FileHashLookupState _fileHashLookupState;
+    private readonly IFileHashLookupState _fileHashLookupState;
 
     public AddFilesHandler(
-        FileHashLookupState fileHashLookupState,
+        IFileHashLookupState fileHashLookupState,
         IFileHashCalculationService fileHashCalculationService)
     {
         _fileHashLookupState = fileHashLookupState;
