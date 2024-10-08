@@ -128,14 +128,14 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder2\4.txt");
         fixture.WithNewFile(@"Folder3\5.txt");
 
-        var fileHashLookup1 = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup1 = fixture.CreateFileHashLookup();
         await fileHashLookup1.AddFolder("Folder1");
 
-        var fileHashLookup2 = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup2 = fixture.CreateFileHashLookup();
         await fileHashLookup2.AddFolder("Folder2");
 
         // Act
-        var fileHashLookup = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup = fixture.CreateFileHashLookup();
         await fileHashLookup.AddFileHashLookup(fileHashLookup1);
         await fileHashLookup.AddFileHashLookup(fileHashLookup2);
 
@@ -156,13 +156,13 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
 
-        var fileHashLookup1 = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup1 = fixture.CreateFileHashLookup();
         await fileHashLookup1.AddFolder("Folder1");
 
         // Update
         fixture.WithNewFile(@"Folder1\3.txt");
         fixture.WithNewFile(@"Folder1\4.txt");
-        var fileHashLookup2 = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup2 = fixture.CreateFileHashLookup();
         await fileHashLookup2.AddFolder("Folder1");
 
         // Act
@@ -182,13 +182,13 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
 
-        var fileHashLookup1 = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup1 = fixture.CreateFileHashLookup();
         await fileHashLookup1.AddFolder("Folder1");
 
         // Update
         fixture.WithNewFile(@"Folder1\3.txt");
         fixture.WithNewFile(@"Folder1\4.txt");
-        var fileHashLookup2 = FileHashLookup.Services.FileHashLookup.Create();
+        var fileHashLookup2 = fixture.CreateFileHashLookup();
         await fileHashLookup2.AddFolder("Folder1");
 
         // Act

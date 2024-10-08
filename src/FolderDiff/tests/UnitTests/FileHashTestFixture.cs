@@ -2,6 +2,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PsFolderDiff.FileHashLookup.Configuration;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 using FileSystem = System.IO.Abstractions.FileSystem;
@@ -65,15 +66,17 @@ public abstract class FileHashTestFixture
             throw new ArgumentException($"Expected relative path to a file. Found: '{relativePath}'", nameof(relativePath));
         }
 
-        var file = FileSystem.FileInfo.New(fullName);
+        var directoryName = FileSystem.Path.GetDirectoryName(fullName)!;
+
         var fileContent = contents ?? Guid.NewGuid().ToString();
 
-        if (!file.Directory!.Exists)
+        if (!FileSystem.Directory.Exists(directoryName))
         {
-            FileSystem.Directory.CreateDirectory(file.Directory.FullName);
+            FileSystem.Directory.CreateDirectory(directoryName);
         }
 
-        FileSystem.File.WriteAllText(file.FullName, fileContent);
+        var file = new MockFileInfo(FileSystem, fullName);
+        FileSystem.AddFile(file, new MockFileData(fileContent));
 
         return file;
     }
@@ -98,5 +101,17 @@ public abstract class FileHashTestFixture
         FileSystem.File.AppendAllText(fullName, "Updated");
 
         return FileSystem.FileInfo.New(fullName);
+    }
+
+    public FileHashLookup.Services.FileHashLookup CreateFileHashLookup()
+    {
+        return FileHashLookup.Services.FileHashLookup.Create(new FileHashLookupSettings
+        {
+            ReportPollingDelay = TimeSpan.FromMilliseconds(500),
+            ConfigureServices = (services, sp) =>
+            {
+                services.AddSingleton<IFileSystem>(FileSystem);
+            },
+        });
     }
 }

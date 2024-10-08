@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
         services.AddOptions();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
+        services.AddSingleton(typeof(IProgress<>), typeof(Progress<>));
 
         services.AddSingleton<FileCollector>();
         services.AddSingleton<IFileCollector, IFileCollector>(sp => sp.GetRequiredService<FileCollector>());

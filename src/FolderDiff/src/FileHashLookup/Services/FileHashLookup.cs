@@ -39,10 +39,16 @@ public class FileHashLookup
 
     public static FileHashLookup Create(FileHashLookupSettings settings)
     {
-        var sp = new ServiceCollection()
+        var services = new ServiceCollection()
             .AddSingleton(Options.Create(settings))
-            .AddFileHashLookup()
-            .BuildServiceProvider();
+            .AddFileHashLookup();
+
+        if (settings.ConfigureServices != null)
+        {
+            settings.ConfigureServices(services, services.BuildServiceProvider());
+        }
+
+        var sp = services.BuildServiceProvider();
 
         var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
 

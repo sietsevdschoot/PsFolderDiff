@@ -1,4 +1,5 @@
 ﻿using System.IO.Abstractions;
+using System.Management.Automation;
 using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Extensions;
 using Xunit;
@@ -11,14 +12,21 @@ public class FileInfoExtensionTests
     public void CalculateMD5Hash_CalculatesIdenticalHash_as_Powershell_GetFileHash_Cmdlet()
     {
         // Arrange
+        var powershell = PowerShell.Create(RunspaceMode.NewRunspace);
+        powershell.AddCommand("Get-FileHash");
+
         var fileSystem = new FileSystem();
         var file = fileSystem.FileInfo.New(
             "C:\\Users\\Sietse\\AppData\\Local\\Temp\\FolderDiff\\2024-10-01-65c6180e-4c76-478e-bcf5-830385794e56\\1.txt");
 
         // Act
         file.Exists.Should().BeTrue();
-        file.CalculateMD5Hash().Should().Be("477665D7FA50198BF79D363D006C3788", $"Hash '{file.CalculateMD5Hash()}' is not expected format");
 
         // Assert
+        file.CalculateMD5Hash().Should().Be("477665D7FA50198BF79D363D006C3788", $"Hash '{file.CalculateMD5Hash()}' is not expected format");
+    }
+
+    private class FileInfoFixture : FileHashTestFixture
+    {
     }
 }

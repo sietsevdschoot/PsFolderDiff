@@ -1,4 +1,6 @@
-﻿namespace PsFolderDiff.FileHashLookup.Configuration;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace PsFolderDiff.FileHashLookup.Configuration;
 
 public class FileHashLookupSettings
 {
@@ -8,4 +10,6 @@ public class FileHashLookupSettings
     };
 
     public TimeSpan ReportPollingDelay { get; set; }
+
+    public Action<IServiceCollection, IServiceProvider>? ConfigureServices { get; set; }
 }
