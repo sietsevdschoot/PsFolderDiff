@@ -10,6 +10,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFileHashLookup(this IServiceCollection services)
     {
+        services.AddOptions();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
 

@@ -2,6 +2,8 @@
 using System.IO.Abstractions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using PsFolderDiff.FileHashLookup.Configuration;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Requests;
@@ -29,14 +31,16 @@ public class FileHashLookup
 
     public ReadOnlyDictionary<string, ReadOnlyCollection<BasicFileInfo>> Hash => _fileHashLookups.Hash;
 
-    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns =>
-        _filePatterns.IncludePatterns;
+    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns => _filePatterns.IncludePatterns;
 
     public IReadOnlyCollection<string> ExcludePatterns => _filePatterns.ExcludePatterns;
 
-    public static FileHashLookup Create()
+    public static FileHashLookup Create() => Create(FileHashLookupSettings.Default);
+
+    public static FileHashLookup Create(FileHashLookupSettings settings)
     {
         var sp = new ServiceCollection()
+            .AddSingleton(Options.Create(settings))
             .AddFileHashLookup()
             .BuildServiceProvider();
 
