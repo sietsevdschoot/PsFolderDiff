@@ -10,21 +10,56 @@
 ////
 public class ProgressEventArgs : EventArgs
 {
-    public string Activity { get; init; } = default!;
+    public ProgressEventArgs(
+        string activity,
+        string status)
+    {
+        Activity = activity;
+        Status = status;
+    }
 
-    public string Status { get; init; } = default!;
+    public ProgressEventArgs(
+        string activity,
+        string status,
+        string? currentOperation,
+        string? currentItem,
+        int currentProgress,
+        int total) : this(activity, status)
+    {
+        if (string.IsNullOrEmpty(currentOperation) && string.IsNullOrEmpty(currentItem))
+        {
+            throw new InvalidOperationException($"Need either '{nameof(currentOperation)}' or '{nameof(currentItem)}'");
+        }
 
-    public string? CurrentOperation { get; set; } = default!;
+        if (total == 0)
+        {
+            throw new ArgumentException("Total can't be 0");
+        }
 
-    public int? CurrentProgress { get; set; }
+        CurrentOperation = currentOperation ?? $"({currentProgress} / {total}) {currentItem}";
+        PercentComplete = (double)currentProgress / total * 100;
+    }
 
-    public int? Total { get; set; }
+    public ProgressEventArgs(
+        string activity,
+        string status,
+        string currentOperation,
+        string currentItem,
+        int currentProgress,
+        int total,
+        TimeSpan currentDuration)
+        :this(activity, status, currentOperation, currentItem, currentProgress, total)
+    {
+        SecondsRemaining =  Convert.ToInt32(currentDuration.TotalSeconds / Math.Max(currentProgress, 1) * (total - currentProgress));
+    }
 
-    public TimeSpan? Elapsed { get; set; }
+    public string Activity { get; private set; }
 
-    public double? PercentComplete => Total.HasValue
-        ? (CurrentProgress ?? 0 / Total).GetValueOrDefault() * 100
-        : null;
+    public string Status { get; private set; }
 
-    public int? SecondsRemaining => Convert.ToInt32(Elapsed.GetValueOrDefault().TotalSeconds / Math.Max(CurrentProgress.GetValueOrDefault(), 1) * Total);
+    public string? CurrentOperation { get; private set; }
+
+    public double? PercentComplete { get; private set; }
+
+    public int? SecondsRemaining { get; private set; }
 }

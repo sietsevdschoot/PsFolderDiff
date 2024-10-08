@@ -1,11 +1,9 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookup.Configuration;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.UnitTests.Utils;
-using FileSystem = System.IO.Abstractions.FileSystem;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests;
 
@@ -14,21 +12,8 @@ public abstract class FileHashTestFixture
     #pragma warning disable SA1401 // Field is used by other private fixtures.
     protected readonly MockFileSystem FileSystem;
 
-    private static readonly PollingUtil PollingUtil;
     private readonly string _workingDirectory;
     private int _i;
-
-    static FileHashTestFixture()
-    {
-        var sp = new ServiceCollection()
-            .AddLogging(builder => builder
-                .AddConsole()
-                .SetMinimumLevel(LogLevel.Warning))
-            .AddSingleton<PollingUtil>()
-            .BuildServiceProvider();
-
-        PollingUtil = sp.GetRequiredService<PollingUtil>();
-    }
 
     protected FileHashTestFixture()
     {
@@ -98,7 +83,7 @@ public abstract class FileHashTestFixture
 
     public IFileInfo UpdateFile(string fullName)
     {
-        FileSystem.File.AppendAllText(fullName, "Updated");
+        FileSystem.File.AppendAllText(fullName, "-Updated");
 
         return FileSystem.FileInfo.New(fullName);
     }
