@@ -12,19 +12,19 @@ public class ProgressEventArgs : EventArgs
 {
     public ProgressEventArgs(
         string activity,
-        string status)
+        string currentOperation)
     {
         Activity = activity;
-        Status = status;
+        CurrentOperation = currentOperation;
     }
 
     public ProgressEventArgs(
         string activity,
-        string status,
-        string? currentOperation,
+        string currentOperation,
+        string? status,
         string? currentItem,
         int currentProgress,
-        int total) : this(activity, status)
+        int total) : this(activity, currentOperation)
     {
         if (string.IsNullOrEmpty(currentOperation) && string.IsNullOrEmpty(currentItem))
         {

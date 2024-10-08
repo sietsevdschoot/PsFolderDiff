@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.IO.Abstractions;
-using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using PsFolderDiff.FileHashLookup.Configuration;
 using PsFolderDiff.FileHashLookup.Extensions;
@@ -22,13 +21,11 @@ public class FileHashCalculationService : IFileHashCalculationService
         _progress = progress;
     }
 
-    public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files)
+    public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo<> files)
     {
-        _progress.Report(new ProgressEventArgs
-        {
-            Activity = "Adding or updating files.",
-            CurrentOperation = "Collecting information before starting hashing.",
-        });
+        _progress.Report(new ProgressEventArgs(
+            activity: "Adding or updating files.",
+            status: "Collecting information before starting hashing."));
 
         var totalSize = files.Sum(x => x.Length);
         var currentProcessedSize = 0d;
@@ -42,15 +39,21 @@ public class FileHashCalculationService : IFileHashCalculationService
 
             if (updateStatusStopwatch.Elapsed > _settings.Value.ReportPollingDelay)
             {
-                _progress.Report(new ProgressEventArgs
-                {
-                    Activity = "Adding or updating files.",
-                    CurrentOperation = "Calculating Hash",
-                    Status = $"({i} of {files.Count}) {file.FullName}",
-                    CurrentProgress = i,
-                    Total = files.Count,
-                    Elapsed = durationStopwatch.Elapsed,
-                });
+                _progress.Report(new ProgressEventArgs(
+                    activity: "Adding or updating files.",
+                    status:
+
+                    ));
+
+                ////_progress.Report(new ProgressEventArgs
+                ////{
+                ////    Activity = "Adding or updating files.",
+                ////    CurrentOperation = "Calculating Hash",
+                ////    Status = $"({i} of {files.Count}) {file.FullName}",
+                ////    CurrentProgress = i,
+                ////    Total = files.Count,
+                ////    Elapsed = durationStopwatch.Elapsed,
+                ////});
 
                 updateStatusStopwatch.Restart();
             }
