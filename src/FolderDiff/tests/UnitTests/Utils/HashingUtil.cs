@@ -1,5 +1,4 @@
 ﻿using System.IO.Abstractions;
-using System.Security.Cryptography;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
 

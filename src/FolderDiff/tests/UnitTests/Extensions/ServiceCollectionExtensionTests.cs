@@ -17,10 +17,10 @@ public class ServiceCollectionExtensionTests
             .BuildServiceProvider();
 
         // Act
-        var fileHashLookup = sp.GetRequiredService<IFileCollector>();
-        var progressReporter = sp.GetRequiredService<IHasReadOnlyFilePatterns>();
+        var fileCollector = sp.GetRequiredService<IFileCollector>();
+        var readOnlyFilePattern = sp.GetRequiredService<IHasReadOnlyFilePatterns>();
 
         // Assert
-        fileHashLookup.Should().BeSameAs(progressReporter);
+        fileCollector.Should().BeSameAs(readOnlyFilePattern);
     }
 }
