@@ -54,44 +54,7 @@ public class BasicFileInfoTests
         basicFile1.CompareTo(updatedBasicFile).Should().Be(-1);
     }
 
-    ////[Fact]
-    ////public void Exists_If_File_exists_on_fileSystem_returns_true()
-    ////{
-    ////    // Arrange
-    ////    var fixture = new BasicFileInfoFixture();
-
-    ////    var file = fixture.WithNewBasicFile();
-
-    ////    // Act
-    ////    var exists = file.Exists;
-
-    ////    // Assert
-    ////    exists.Should().BeTrue();
-    ////}
-
-    ////[Fact]
-    ////public void Exists_If_File_does_not_exist_on_fileSystem_returns_false()
-    ////{
-    ////    // Arrange
-    ////    var fixture = new BasicFileInfoFixture();
-
-    ////    var file = fixture.WithNewBasicFile();
-    ////    fixture.RemoveFile(file.FullName);
-
-    ////    // Act
-    ////    var exists = file.Exists;
-
-    ////    // Assert
-    ////    exists.Should().BeFalse();
-    ////}
-
     private class BasicFileInfoFixture : FileHashTestFixture
     {
-        public BasicFileInfoFixture RemoveFile(string fullName)
-        {
-            FileSystem.FileInfo.New(fullName).Delete();
-
-            return this;
-        }
     }
 }
