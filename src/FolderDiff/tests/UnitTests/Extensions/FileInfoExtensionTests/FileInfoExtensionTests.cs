@@ -12,25 +12,52 @@ public class FileInfoExtensionTests
     public void CalculateMD5Hash_CalculatesIdenticalHash_as_Powershell_GetFileHash_Cmdlet()
     {
         // Arrange
-        var tempFile = Path.GetTempFileName();
-        File.WriteAllText(tempFile, Guid.NewGuid().ToString());
+        var fixture = new FileInfoExtensionFixture();
 
-        var powershell = PowerShell.Create();
+        fixture.WithNewRandomFile();
+        fixture.WithPowershellCalculatedMd5Hash();
 
-        var result = powershell.AddCommand("Get-FileHash")
-            .AddParameter("Path", tempFile)
-            .AddParameter("Algorithm", "MD5")
-            .Invoke();
+        // Act && Assert
+        fixture.AssertCalculateMd5HashMatchesPowershellHash();
+    }
 
-        var expected = result[0].Members["Hash"].Value.ToString();
+    private class FileInfoExtensionFixture
+    {
+        private string? _tempFile;
+        private string? _expected;
 
-        var file = new FileSystem()
-            .FileInfo.New(tempFile);
+        public FileInfoExtensionFixture WithNewRandomFile()
+        {
+            _tempFile = Path.GetTempFileName();
+            File.WriteAllText(_tempFile, Guid.NewGuid().ToString());
 
-        // Act
-        var actual = file.CalculateMD5Hash();
+            return this;
+        }
 
-        // Assert
-        actual.Should().Be(expected);
+        public FileInfoExtensionFixture WithPowershellCalculatedMd5Hash()
+        {
+            var powershell = PowerShell.Create();
+
+            var result = powershell.AddCommand("Get-FileHash")
+                .AddParameter("Path", _tempFile)
+                .AddParameter("Algorithm", "MD5")
+                .Invoke();
+
+            _expected = result[0].Members["Hash"].Value.ToString();
+
+            return this;
+        }
+
+        public void AssertCalculateMd5HashMatchesPowershellHash()
+        {
+            var file = new FileSystem()
+                .FileInfo.New(_tempFile ?? string.Empty);
+
+            // Act
+            var actual = file.CalculateMD5Hash();
+
+            // Assert
+            actual.Should().Be(_expected);
+        }
     }
 }
