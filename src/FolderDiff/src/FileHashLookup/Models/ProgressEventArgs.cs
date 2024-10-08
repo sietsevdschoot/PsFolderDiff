@@ -16,9 +16,8 @@ public class ProgressEventArgs : EventArgs
 
     public string? CurrentOperation { get; set; } = default!;
 
-    
     public int? CurrentProgress { get; set; }
-    
+
     public int? Total { get; set; }
 
     public TimeSpan? Elapsed { get; set; }
@@ -27,5 +26,5 @@ public class ProgressEventArgs : EventArgs
         ? (CurrentProgress ?? 0 / Total).GetValueOrDefault() * 100
         : null;
 
-    public int? SecondsRemaining => Convert.ToInt32(Elapsed.GetValueOrDefault().TotalSeconds / Math.Max(CurrentProgress.GetValueOrDefault(), 1) * Total); 
-} 
+    public int? SecondsRemaining => Convert.ToInt32(Elapsed.GetValueOrDefault().TotalSeconds / Math.Max(CurrentProgress.GetValueOrDefault(), 1) * Total);
+}

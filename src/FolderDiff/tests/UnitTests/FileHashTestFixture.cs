@@ -1,4 +1,5 @@
 ﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookup.Domain;
@@ -10,7 +11,7 @@ namespace PsFolderDiff.FileHashLookup.UnitTests;
 public abstract class FileHashTestFixture
 {
     #pragma warning disable SA1401 // Field is used by other private fixtures.
-    protected readonly FileSystem FileSystem;
+    protected readonly MockFileSystem FileSystem;
 
     private static readonly PollingUtil PollingUtil;
     private readonly string _workingDirectory;
@@ -30,7 +31,7 @@ public abstract class FileHashTestFixture
 
     protected FileHashTestFixture()
     {
-        FileSystem = new FileSystem();
+        FileSystem = new MockFileSystem();
 
         _workingDirectory = FileSystem.Path
             .Combine(FileSystem.Path.GetTempPath(), "FolderDiff", $"{DateTime.Now:yyyy-MM-dd}-{Guid.NewGuid()}");

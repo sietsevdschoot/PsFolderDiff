@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.IO.Abstractions;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
@@ -358,6 +359,7 @@ public class FileHashLookupTests
         {
             var sp = new ServiceCollection()
                 .AddFileHashLookup()
+                .AddSingleton<IFileSystem>(FileSystem)
                 .BuildServiceProvider();
 
             _fileCollector = sp.GetRequiredService<IHasReadOnlyFilePatterns>();
