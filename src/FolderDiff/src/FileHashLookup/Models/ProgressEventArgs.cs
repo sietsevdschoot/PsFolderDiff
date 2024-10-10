@@ -21,10 +21,11 @@ public class ProgressEventArgs : EventArgs
     public ProgressEventArgs(
         string activity,
         string currentOperation,
-        string? status,
-        string? currentItem,
-        int currentProgress,
-        int total) : this(activity, currentOperation)
+        long currentProgress,
+        long total,
+        string? status = null,
+        string? currentItem = null)
+            : this(activity, currentOperation)
     {
         if (string.IsNullOrEmpty(currentOperation) && string.IsNullOrEmpty(currentItem))
         {
@@ -36,28 +37,28 @@ public class ProgressEventArgs : EventArgs
             throw new ArgumentException("Total can't be 0");
         }
 
-        CurrentOperation = currentOperation ?? $"({currentProgress} / {total}) {currentItem}";
+        Status = status ?? $"({currentProgress} / {total}) {currentItem}";
         PercentComplete = (double)currentProgress / total * 100;
     }
 
     public ProgressEventArgs(
         string activity,
-        string status,
         string currentOperation,
-        string currentItem,
-        int currentProgress,
-        int total,
-        TimeSpan currentDuration)
-        :this(activity, status, currentOperation, currentItem, currentProgress, total)
+        long currentProgress,
+        long total,
+        TimeSpan currentDuration,
+        string? status = null,
+        string? currentItem = null)
+        : this(activity, currentOperation, currentProgress, total, status, currentItem)
     {
-        SecondsRemaining =  Convert.ToInt32(currentDuration.TotalSeconds / Math.Max(currentProgress, 1) * (total - currentProgress));
+        SecondsRemaining = Convert.ToInt32(currentDuration.TotalSeconds / Math.Max(currentProgress, 1) * (total - currentProgress));
     }
 
     public string Activity { get; private set; }
 
-    public string Status { get; private set; }
+    public string CurrentOperation { get; private set; }
 
-    public string? CurrentOperation { get; private set; }
+    public string? Status { get; private set; }
 
     public double? PercentComplete { get; private set; }
 

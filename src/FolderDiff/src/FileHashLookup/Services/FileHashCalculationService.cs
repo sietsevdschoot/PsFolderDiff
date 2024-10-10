@@ -21,14 +21,14 @@ public class FileHashCalculationService : IFileHashCalculationService
         _progress = progress;
     }
 
-    public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo<> files)
+    public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files)
     {
         _progress.Report(new ProgressEventArgs(
             activity: "Adding or updating files.",
-            status: "Collecting information before starting hashing."));
+            currentOperation: "Collecting information before starting hashing."));
 
         var totalSize = files.Sum(x => x.Length);
-        var currentProcessedSize = 0d;
+        var currentProcessedSize = 0L;
 
         var updateStatusStopwatch = Stopwatch.StartNew();
         var durationStopwatch = Stopwatch.StartNew();
@@ -41,19 +41,11 @@ public class FileHashCalculationService : IFileHashCalculationService
             {
                 _progress.Report(new ProgressEventArgs(
                     activity: "Adding or updating files.",
-                    status:
-
-                    ));
-
-                ////_progress.Report(new ProgressEventArgs
-                ////{
-                ////    Activity = "Adding or updating files.",
-                ////    CurrentOperation = "Calculating Hash",
-                ////    Status = $"({i} of {files.Count}) {file.FullName}",
-                ////    CurrentProgress = i,
-                ////    Total = files.Count,
-                ////    Elapsed = durationStopwatch.Elapsed,
-                ////});
+                    currentOperation: "Calculating Hash",
+                    currentItem: file.FullName,
+                    currentProgress: currentProcessedSize,
+                    total: totalSize,
+                    currentDuration: durationStopwatch.Elapsed));
 
                 updateStatusStopwatch.Restart();
             }
