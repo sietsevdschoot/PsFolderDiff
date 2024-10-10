@@ -16,14 +16,17 @@ public class FileHashLookup
     private readonly IMediator _mediator;
     private readonly IHasReadOnlyFilePatterns _filePatterns;
     private readonly IHasReadonlyLookups _fileHashLookups;
+    private IEventAggregator _eventAggregator;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
         IHasReadonlyLookups fileHashLookups,
+        IEventAggregator eventAggregator,
         IMediator mediator)
     {
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
+        _eventAggregator = eventAggregator;
         _mediator = mediator;
     }
 
@@ -51,6 +54,7 @@ public class FileHashLookup
         var sp = services.BuildServiceProvider();
 
         var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
+
 
         return fileHashLookup;
     }

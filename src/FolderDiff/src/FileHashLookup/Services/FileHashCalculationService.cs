@@ -11,7 +11,7 @@ namespace PsFolderDiff.FileHashLookup.Services;
 public class FileHashCalculationService : IFileHashCalculationService
 {
     private readonly IProgress<ProgressEventArgs> _progress;
-    private IOptions<FileHashLookupSettings> _settings;
+    private readonly IOptions<FileHashLookupSettings> _settings;
 
     public FileHashCalculationService(
         IProgress<ProgressEventArgs> progress,

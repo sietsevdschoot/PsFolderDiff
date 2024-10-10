@@ -1,8 +1,9 @@
 ﻿using PsFolderDiff.FileHashLookup.Models;
+using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
-namespace PsFolderDiff.FileHashLookup.Handlers;
+namespace PsFolderDiff.FileHashLookup.Services;
 
-public class EventAggregator
+public class EventAggregator : IEventAggregator
 {
     private readonly List<IProgress<ProgressEventArgs>> _subscribers = new();
 

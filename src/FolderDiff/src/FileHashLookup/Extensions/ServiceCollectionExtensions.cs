@@ -1,6 +1,7 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
@@ -12,8 +13,23 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions();
         services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IEventAggregator, EventAggregator>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
         services.AddSingleton(typeof(IProgress<>), typeof(Progress<>));
+
+        services.AddTransient<IProgress<ProgressEventArgs>>(
+            provider => new Progress<ProgressEventArgs>(message =>
+                provider.GetRequiredService<IEventAggregator>()
+                    .Publish(message)
+            )
+        );
+
+        services.AddSingleton(new Func<IServiceProvider, IProgress<ProgressEventArgs>>(sp =>
+            new Progress<ProgressEventArgs>(
+                eventArgs =>
+                {
+                    Console.WriteLine($"{eventArgs.CurrentOperation}");
+                })));
 
         services.AddSingleton<FileCollector>();
         services.AddSingleton<IFileCollector, IFileCollector>(sp => sp.GetRequiredService<FileCollector>());
