@@ -16,17 +16,14 @@ public class FileHashLookup
     private readonly IMediator _mediator;
     private readonly IHasReadOnlyFilePatterns _filePatterns;
     private readonly IHasReadonlyLookups _fileHashLookups;
-    private readonly IEventAggregator _eventAggregator;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
         IHasReadonlyLookups fileHashLookups,
-        IEventAggregator eventAggregator,
         IMediator mediator)
     {
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
-        _eventAggregator = eventAggregator;
         _mediator = mediator;
     }
 
