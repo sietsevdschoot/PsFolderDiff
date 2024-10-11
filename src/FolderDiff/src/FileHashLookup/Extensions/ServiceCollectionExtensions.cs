@@ -18,11 +18,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(typeof(IProgress<>), typeof(Progress<>));
 
         services.AddTransient<IProgress<ProgressEventArgs>>(
-            provider => new Progress<ProgressEventArgs>(message =>
-                provider.GetRequiredService<IEventAggregator>()
-                    .Publish(message)
-            )
-        );
+            sp => new Progress<ProgressEventArgs>(message =>
+            {
+                var eventAggregator = sp.GetRequiredService<IEventAggregator>();
+                eventAggregator.Publish(message);
+            }));
 
         services.AddSingleton(new Func<IServiceProvider, IProgress<ProgressEventArgs>>(sp =>
             new Progress<ProgressEventArgs>(

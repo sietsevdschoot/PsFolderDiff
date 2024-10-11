@@ -38,7 +38,7 @@ public class ProgressEventArgs : EventArgs
         }
 
         Status = status ?? $"({currentProgress} / {total}) {currentItem}";
-        PercentComplete = (double)currentProgress / total * 100;
+        PercentComplete = Math.Round((double)currentProgress / total * 100, 2);
     }
 
     public ProgressEventArgs(
