@@ -7,12 +7,11 @@ public class FileHashLookupSettings
 {
     public static FileHashLookupSettings Default => new FileHashLookupSettings
     {
-        ReportPollingDelay = TimeSpan.Zero,
-        ////ReportPollingDelay = TimeSpan.FromMilliseconds(500),
+        ReportPollingDelay = TimeSpan.FromMilliseconds(500),
         ReportProgress = new Progress<ProgressEventArgs>(progress =>
         {
             var progressMessage = string.Format(
-                "{0}{1}{2}{3}",
+                "{0,4}{1}{2}{3}",
                 progress.PercentComplete.HasValue ? $"{progress.PercentComplete}% " : null,
                 $"{progress.Activity} - {progress.CurrentOperation}",
                 !string.IsNullOrEmpty(progress.Status) ? $" | {progress.Status}" : null,
@@ -26,5 +25,8 @@ public class FileHashLookupSettings
 
     public Action<IServiceCollection, IServiceProvider>? ConfigureServices { get; set; }
 
-    public IProgress<ProgressEventArgs> ReportProgress { get; set; } = new Progress<ProgressEventArgs>(_ => { /* empty */ });
+    public IProgress<ProgressEventArgs> ReportProgress { get; set; } = new Progress<ProgressEventArgs>(_ =>
+    {
+        Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(FileHashLookupSettings.ReportProgress)} to display progress.");
+    });
 }

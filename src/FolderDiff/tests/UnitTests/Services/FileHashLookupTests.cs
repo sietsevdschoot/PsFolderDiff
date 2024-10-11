@@ -1,7 +1,6 @@
 ﻿using System.IO.Abstractions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
 using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
@@ -357,13 +356,17 @@ public class FileHashLookupTests
 
         public FileHashLookupTestFixture()
         {
-            var sp = new ServiceCollection()
-                .AddFileHashLookup()
-                .AddSingleton<IFileSystem>(FileSystem)
-                .BuildServiceProvider();
+            var provider = CreateFileHashLookupWithProvider(settings =>
+            {
+                settings.ReportPollingDelay = TimeSpan.Zero;
+                settings.ConfigureServices = (services, _) =>
+                {
+                    services.AddSingleton<IFileSystem>(FileSystem);
+                };
+            });
 
-            _fileCollector = sp.GetRequiredService<IHasReadOnlyFilePatterns>();
-            Sut = sp.GetRequiredService<FileHashLookup.Services.FileHashLookup>();
+            Sut = provider.FileHashLookup;
+            _fileCollector = provider.ServiceProvider.GetRequiredService<IHasReadOnlyFilePatterns>();
         }
 
         public FileHashLookup.Services.FileHashLookup Sut { get; }

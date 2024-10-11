@@ -24,13 +24,6 @@ public static class ServiceCollectionExtensions
                 eventAggregator.Publish(message);
             }));
 
-        services.AddSingleton(new Func<IServiceProvider, IProgress<ProgressEventArgs>>(sp =>
-            new Progress<ProgressEventArgs>(
-                eventArgs =>
-                {
-                    Console.WriteLine($"{eventArgs.CurrentOperation}");
-                })));
-
         services.AddSingleton<FileCollector>();
         services.AddSingleton<IFileCollector, IFileCollector>(sp => sp.GetRequiredService<FileCollector>());
         services.AddSingleton<IHasReadOnlyFilePatterns, FileCollector>(sp => sp.GetRequiredService<FileCollector>());

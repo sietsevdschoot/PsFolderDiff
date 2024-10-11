@@ -90,13 +90,30 @@ public abstract class FileHashTestFixture
 
     public FileHashLookup.Services.FileHashLookup CreateFileHashLookup()
     {
-        return FileHashLookup.Services.FileHashLookup.Create(new FileHashLookupSettings
+        var provider = CreateFileHashLookupWithProviderMockFileSystem();
+
+        return provider.FileHashLookup;
+    }
+
+    public (FileHashLookup.Services.FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProviderMockFileSystem()
+    {
+        return CreateFileHashLookupWithProvider(settings =>
         {
-            ReportPollingDelay = TimeSpan.FromMilliseconds(500),
-            ConfigureServices = (services, sp) =>
+            settings.ReportPollingDelay = TimeSpan.Zero;
+            settings.ConfigureServices = (services, sp) =>
             {
                 services.AddSingleton<IFileSystem>(FileSystem);
-            },
+            };
         });
+    }
+
+    public (FileHashLookup.Services.FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider(Action<FileHashLookupSettings>? configureSettings = null)
+    {
+        var settings = FileHashLookupSettings.Default;
+        configureSettings?.Invoke(settings);
+
+        var services = new ServiceCollection();
+
+        return FileHashLookup.Services.FileHashLookup.Create(services, settings);
     }
 }

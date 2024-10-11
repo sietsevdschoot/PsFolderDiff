@@ -42,6 +42,7 @@ public class FileHashCalculationService : IFileHashCalculationService
                 _progress.Report(new ProgressEventArgs(
                     activity: "Adding or updating files.",
                     currentOperation: "Calculating Hash",
+                    status: $"({i + 1} / {files.Count}) {file.FullName}",
                     currentItem: file.FullName,
                     currentProgress: currentProcessedSize,
                     total: totalSize,

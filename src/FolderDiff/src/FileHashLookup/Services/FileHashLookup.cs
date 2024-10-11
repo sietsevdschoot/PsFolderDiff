@@ -42,23 +42,9 @@ public class FileHashLookup
 
     public static FileHashLookup Create(FileHashLookupSettings settings)
     {
-        var services = new ServiceCollection()
-            .AddSingleton(Options.Create(settings))
-            .AddFileHashLookup();
+        var provider = Create(new ServiceCollection(), settings);
 
-        if (settings.ConfigureServices != null)
-        {
-            settings.ConfigureServices(services, services.BuildServiceProvider());
-        }
-
-        var sp = services.BuildServiceProvider();
-
-        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
-        var eventAggregator = sp.GetRequiredService<IEventAggregator>();
-
-        eventAggregator.Subscribe(settings.ReportProgress);
-
-        return fileHashLookup;
+        return provider.FileHashLookup;
     }
 
     public async Task AddFolder(string path, CancellationToken cancellationToken = default)
@@ -158,5 +144,23 @@ public class FileHashLookup
             cancellationToken);
 
         return compareResult.MatchesInOther;
+    }
+
+    internal static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) Create(IServiceCollection services, FileHashLookupSettings settings)
+    {
+        services
+            .AddSingleton(Options.Create(settings))
+            .AddFileHashLookup();
+
+        settings.ConfigureServices?.Invoke(services, services.BuildServiceProvider());
+
+        var sp = services.BuildServiceProvider();
+
+        sp.GetRequiredService<IEventAggregator>()
+            .Subscribe(settings.ReportProgress);
+
+        return (
+            FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
+            ServiceProvider: sp);
     }
 }

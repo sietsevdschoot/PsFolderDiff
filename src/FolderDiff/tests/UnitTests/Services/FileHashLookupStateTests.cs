@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
-using PsFolderDiff.FileHashLookup.Services.Interfaces;
 using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using Xunit;
 
