@@ -1,10 +1,11 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookup.Extensions;
-using PsFolderDiff.FileHashLookup.Services.Interfaces;
+using PsFolderDiff.FileHashLookupLib.Extensions;
+using PsFolderDiff.FileHashLookupLib.Services;
+using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 
 public class ServiceCollectionExtensionTests
 {
@@ -32,7 +33,7 @@ public class ServiceCollectionExtensionTests
             .BuildServiceProvider();
 
         // Act
-        var fileHashLookup = sp.GetRequiredService<FileHashLookup.Services.FileHashLookup>();
+        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
 
         // Assert
         fileHashLookup.Should().NotBeNull();

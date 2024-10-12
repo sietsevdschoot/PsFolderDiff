@@ -1,11 +1,9 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookup.Configuration;
-using PsFolderDiff.FileHashLookup.Domain;
-using PsFolderDiff.FileHashLookup.UnitTests.Utils;
+using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests;
 
 public abstract class FileHashTestFixture
 {

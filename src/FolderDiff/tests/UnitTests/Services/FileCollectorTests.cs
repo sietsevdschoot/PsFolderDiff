@@ -1,11 +1,11 @@
 ﻿using System.IO.Abstractions;
 using FluentAssertions;
-using PsFolderDiff.FileHashLookup.Services;
-using PsFolderDiff.FileHashLookup.Services.Interfaces;
-using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
+using PsFolderDiff.FileHashLookupLib.Services;
+using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
 
 public class FileCollectorTests
 {

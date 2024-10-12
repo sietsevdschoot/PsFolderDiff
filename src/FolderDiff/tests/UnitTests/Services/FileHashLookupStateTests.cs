@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookup.Domain;
-using PsFolderDiff.FileHashLookup.Extensions;
-using PsFolderDiff.FileHashLookup.Services;
-using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
+using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.Extensions;
+using PsFolderDiff.FileHashLookupLib.Services;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
 
 public class FileHashLookupStateTests
 {

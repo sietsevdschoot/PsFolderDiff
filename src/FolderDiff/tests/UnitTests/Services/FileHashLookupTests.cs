@@ -1,12 +1,11 @@
-﻿using System.IO.Abstractions;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookup.Services;
-using PsFolderDiff.FileHashLookup.Services.Interfaces;
-using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
+using PsFolderDiff.FileHashLookupLib.Services;
+using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
 
 public class FileHashLookupTests
 {
@@ -389,7 +388,7 @@ public class FileHashLookupTests
             _fileCollector = provider.ServiceProvider.GetRequiredService<IHasReadOnlyFilePatterns>();
         }
 
-        public FileHashLookup.Services.FileHashLookup Sut { get; }
+        public FileHashLookup Sut { get; }
 
         public void AssertContainsFileNames(params int[] expected)
         {

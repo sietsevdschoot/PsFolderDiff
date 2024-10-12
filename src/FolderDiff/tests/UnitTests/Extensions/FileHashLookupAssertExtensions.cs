@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
-using PsFolderDiff.FileHashLookup.Services;
+using PsFolderDiff.FileHashLookupLib.Services;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 
 public static class FileHashLookupAssertExtensions
 {
-    public static void AssertContainsFileNames(this FileHashLookup.Services.FileHashLookup fileHashLookup, params int[] expected)
+    public static void AssertContainsFileNames(this FileHashLookup fileHashLookup, params int[] expected)
     {
         var files = fileHashLookup.GetFiles();
 
@@ -17,7 +17,7 @@ public static class FileHashLookupAssertExtensions
         actual.Should().BeEquivalentTo(expected);
     }
 
-    public static void AssertContainsIncludePath(this FileHashLookup.Services.FileHashLookup fileHashLookup, string includeFolder)
+    public static void AssertContainsIncludePath(this FileHashLookup fileHashLookup, string includeFolder)
     {
         var expected = $@"{includeFolder.Trim(Path.DirectorySeparatorChar)}\**\";
 
@@ -26,12 +26,12 @@ public static class FileHashLookupAssertExtensions
         fileHashLookup.IncludePatterns.Should().Contain(parsedPattern);
     }
 
-    public static void AssertIncludePatternsAreEmpty(this FileHashLookup.Services.FileHashLookup fileHashLookup)
+    public static void AssertIncludePatternsAreEmpty(this FileHashLookup fileHashLookup)
     {
         fileHashLookup.IncludePatterns.Should().BeEmpty();
     }
 
-    public static void AssertExcludePatternsAreEmpty(this FileHashLookup.Services.FileHashLookup fileHashLookup)
+    public static void AssertExcludePatternsAreEmpty(this FileHashLookup fileHashLookup)
     {
         fileHashLookup.ExcludePatterns.Should().BeEmpty();
     }

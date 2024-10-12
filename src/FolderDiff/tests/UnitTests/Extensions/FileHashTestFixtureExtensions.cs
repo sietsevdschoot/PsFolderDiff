@@ -1,11 +1,12 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookup.Configuration;
-using PsFolderDiff.FileHashLookup.Domain;
-using PsFolderDiff.FileHashLookup.UnitTests.Utils;
+using PsFolderDiff.FileHashLookupLib.Configuration;
+using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.Services;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 
 public static class FileHashTestFixtureExtensions
 {
@@ -161,7 +162,7 @@ public static class FileHashTestFixtureExtensions
         return fixture.FileSystem.FileInfo.New(fullName);
     }
 
-    public static FileHashLookup.Services.FileHashLookup CreateFileHashLookup<TFixture>(this TFixture fixture)
+    public static FileHashLookup CreateFileHashLookup<TFixture>(this TFixture fixture)
         where TFixture : FileHashTestFixture
     {
         var provider = fixture.CreateFileHashLookupWithProviderMockFileSystem();
@@ -169,7 +170,7 @@ public static class FileHashTestFixtureExtensions
         return provider.FileHashLookup;
     }
 
-    public static (FileHashLookup.Services.FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProviderMockFileSystem<TFixture>(this TFixture fixture)
+    public static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProviderMockFileSystem<TFixture>(this TFixture fixture)
         where TFixture : FileHashTestFixture
     {
         return fixture.CreateFileHashLookupWithProvider(settings =>
@@ -182,7 +183,7 @@ public static class FileHashTestFixtureExtensions
         });
     }
 
-    public static (FileHashLookup.Services.FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider<TFixture>(this TFixture fixture, Action<FileHashLookupSettings>? configureSettings = null)
+    public static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider<TFixture>(this TFixture fixture, Action<FileHashLookupSettings>? configureSettings = null)
         where TFixture : FileHashTestFixture
     {
         var settings = FileHashLookupSettings.Default;
@@ -190,6 +191,6 @@ public static class FileHashTestFixtureExtensions
 
         var services = new ServiceCollection();
 
-        return FileHashLookup.Services.FileHashLookup.Create(services, settings);
+        return FileHashLookup.Create(services, settings);
     }
 }

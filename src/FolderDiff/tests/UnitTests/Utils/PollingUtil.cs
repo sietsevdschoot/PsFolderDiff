@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Utils;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
 public class PollingUtil
 {

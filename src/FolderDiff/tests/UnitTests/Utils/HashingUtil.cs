@@ -1,8 +1,8 @@
 ﻿using System.IO.Abstractions;
-using PsFolderDiff.FileHashLookup.Domain;
-using PsFolderDiff.FileHashLookup.Extensions;
+using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.Extensions;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Utils;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
 public static class HashingUtil
 {

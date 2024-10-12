@@ -1,10 +1,10 @@
 ﻿using System.IO.Abstractions;
 using System.Management.Automation;
 using FluentAssertions;
-using PsFolderDiff.FileHashLookup.Extensions;
+using PsFolderDiff.FileHashLookupLib.Extensions;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions.FileInfoExtensionTests;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions.FileInfoExtensionTests;
 
 public class FileInfoExtensionTests
 {

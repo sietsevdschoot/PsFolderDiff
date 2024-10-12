@@ -1,9 +1,9 @@
 ﻿using FluentAssertions;
-using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
-using PsFolderDiff.FileHashLookup.UnitTests.Utils;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 using Xunit;
 
-namespace PsFolderDiff.FileHashLookup.UnitTests.Domain;
+namespace PsFolderDiff.FileHashLookupLib.UnitTests.Domain;
 
 public class BasicFileInfoTests
 {
