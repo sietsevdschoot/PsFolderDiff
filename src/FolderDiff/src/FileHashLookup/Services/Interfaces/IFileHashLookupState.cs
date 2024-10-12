@@ -9,7 +9,7 @@ public interface IFileHashLookupState
 
     void AddFileHashLookup(FileHashLookup other);
 
-    bool Contains(BasicFileInfo file);
+    FileContainsState Contains(BasicFileInfo file);
 
     bool Contains(IFileInfo file);
 

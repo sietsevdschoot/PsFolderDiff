@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using PsFolderDiff.FileHashLookup.Domain;
+using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Services;
@@ -44,18 +45,27 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
         }
     }
 
-    public bool Contains(BasicFileInfo file)
+    public FileContainsState Contains(BasicFileInfo file)
     {
-        return _fileLookup.TryGetValue(file.FullName, out var foundFile)
-               && foundFile.CreationTime == file.CreationTime
-               && foundFile.Hash == file.Hash;
+        if (_fileLookup.TryGetValue(file.FullName, out var foundFile))
+        {
+            return foundFile.CreationTime == file.CreationTime && foundFile.Hash == file.Hash
+                ? FileContainsState.Match
+                : FileContainsState.Modified;
+        }
+        else
+        {
+            return FileContainsState.NoMatch;
+        }
     }
 
     public bool Contains(IFileInfo file)
     {
-        return _fileLookup.TryGetValue(file.FullName, out var foundFile)
-               && foundFile.CreationTime == file.CreationTime
-               && foundFile.LastWriteTime == file.LastWriteTime;
+        var basicFileInfo = new BasicFileInfo(file, file.CalculateMD5Hash());
+
+        var fileState = Contains(basicFileInfo);
+
+        return fileState == FileContainsState.Match || fileState == FileContainsState.Modified;
     }
 
     public void Remove(IFileInfo file)

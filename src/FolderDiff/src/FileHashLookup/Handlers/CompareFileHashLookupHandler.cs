@@ -1,6 +1,6 @@
 ﻿using MediatR;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Requests;
-using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
@@ -25,7 +25,7 @@ public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLooku
         {
             var currentFile = otherFiles[i];
 
-            if (_fileHashLookupState.Contains(currentFile))
+            if (_fileHashLookupState.Contains(currentFile) == FileContainsState.Match)
             {
                 await matchesLookup.AddFile(currentFile, cancellationToken);
             }

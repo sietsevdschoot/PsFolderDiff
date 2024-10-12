@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
@@ -135,6 +136,47 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
+    public void Contains_when_file_is_not_present_in_FileHashLookup_returns_NoMatch()
+    {
+        // Arrange
+        var fixture = new IFileHashLookupStateTestsFixture()
+            .WithAddedFiles(1);
+
+        var file2 = fixture.WithNewBasicFile(2);
+
+        // Act && Assert
+        fixture.Sut.Contains(file2).Should().Be(FileContainsState.NoMatch);
+    }
+
+    [Fact]
+    public void Contains_when_file_is_present_in_FileHashLookup_returns_Match()
+    {
+        // Arrange
+        var fixture = new IFileHashLookupStateTestsFixture()
+            .WithAddedFiles(1);
+
+        var file1 = fixture.GetBasicFileInfo(1);
+
+        // Act && Assert
+        fixture.Sut.Contains(file1).Should().Be(FileContainsState.Match);
+    }
+
+    [Fact]
+    public void Contains_when_file_is_present_in_FileHashLookup_and_changed_after_returns_Modified()
+    {
+        // Arrange
+        var fixture = new IFileHashLookupStateTestsFixture()
+            .WithAddedFiles(1);
+
+        var file1 = fixture.GetBasicFileInfo(1);
+        fixture.UpdateFile(file1);
+        file1 = fixture.GetBasicFileInfo(1);
+
+        // Act && Assert
+        fixture.Sut.Contains(file1).Should().Be(FileContainsState.Modified);
+    }
+
+    [Fact]
     public void Contains_returns_true_if_file_matches()
     {
         // Arrange
@@ -143,7 +185,7 @@ public class FileHashLookupStateTests
 
         var file1 = fixture.GetFileInfo("1.txt");
 
-        // Act &&Assert
+        // Act && Assert
         fixture.Sut.Contains(file1).Should().BeTrue();
     }
 

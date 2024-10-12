@@ -32,13 +32,11 @@ public class ProgressEventArgs : EventArgs
             throw new InvalidOperationException($"Need either '{nameof(currentOperation)}' or '{nameof(currentItem)}'");
         }
 
-        if (total == 0)
-        {
-            throw new ArgumentException("Total can't be 0");
-        }
-
         Status = status ?? $"({currentProgress} / {total}) {currentItem}";
-        PercentComplete = Math.Round((double)currentProgress / total * 100, 2);
+
+        PercentComplete = total != 0L
+            ? Math.Round((double)currentProgress / total * 100, 2)
+            : null;
     }
 
     public ProgressEventArgs(

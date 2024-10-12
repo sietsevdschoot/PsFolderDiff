@@ -10,7 +10,6 @@ namespace PsFolderDiff.FileHashLookup.UnitTests;
 public abstract class FileHashTestFixture
 {
     #pragma warning disable SA1401 // Field is used by other private fixtures.
-    protected readonly MockFileSystem FileSystem;
 
     private readonly string _workingDirectory;
     private int _i;
@@ -27,6 +26,8 @@ public abstract class FileHashTestFixture
 
         _i = 1;
     }
+
+    public IFileSystem FileSystem { get; }
 
     public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
 
@@ -60,10 +61,20 @@ public abstract class FileHashTestFixture
             FileSystem.Directory.CreateDirectory(directoryName);
         }
 
-        var file = new MockFileInfo(FileSystem, fullName);
-        FileSystem.AddFile(file, new MockFileData(fileContent));
+        IFileInfo createdFile;
 
-        return file;
+        if (FileSystem is MockFileSystem mockFileSystem)
+        {
+            createdFile = new MockFileInfo(mockFileSystem, fullName);
+            mockFileSystem.AddFile(createdFile, new MockFileData(fileContent));
+        }
+        else
+        {
+            FileSystem.File.WriteAllText(fullName, fileContent);
+            createdFile = FileSystem.FileInfo.New(fullName);
+        }
+
+        return createdFile;
     }
 
     public BasicFileInfo WithNewBasicFile(int? fileIdentifier = null, string? contents = null)
@@ -100,9 +111,9 @@ public abstract class FileHashTestFixture
         return CreateFileHashLookupWithProvider(settings =>
         {
             settings.ReportPollingDelay = TimeSpan.Zero;
-            settings.ConfigureServices = (services, sp) =>
+            settings.ConfigureServices = (services, _) =>
             {
-                services.AddSingleton<IFileSystem>(FileSystem);
+                services.AddSingleton(FileSystem);
             };
         });
     }

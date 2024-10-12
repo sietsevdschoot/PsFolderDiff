@@ -32,10 +32,6 @@ public sealed record BasicFileInfo
 
     public string Hash { get; init; }
 
-    public static explicit operator FileInfo(BasicFileInfo file) => new FileInfo(file.FullName);
-
-    public static explicit operator BasicFileInfo(FileInfoBase file) => new BasicFileInfo(file, file.CalculateMD5Hash());
-
     public int CompareTo(BasicFileInfo? other)
     {
         if (ReferenceEquals(null, other))
