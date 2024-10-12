@@ -71,8 +71,9 @@ public class FileHashLookupStateTests
     public void Will_not_contain_duplicates_files()
     {
         // Arrange
-        var fixture = new FileHashLookupStateTestsFixture()
-            .WithAddedFiles();
+        var fixture = new FileHashLookupStateTestsFixture();
+
+        fixture.WithAddedFiles();
 
         // Act
         var file = fixture.AllFiles.First();
@@ -102,7 +103,7 @@ public class FileHashLookupStateTests
     {
         // Arrange
         var fixture = new FileHashLookupStateTestsFixture()
-            .WithAddedFiles(Enumerable.Range(1, 4), "Identical Hash");
+            .WithAddedFiles(Enumerable.Range(1, 4).ToList(), "Identical Hash");
 
         var file = fixture.AllFiles.First();
 
@@ -182,29 +183,12 @@ public class FileHashLookupStateTests
     {
         // Arrange
         var fixture = new FileHashLookupStateTestsFixture()
-            .WithAddedFiles(Enumerable.Range(1, 3));
+            .WithAddedFiles(Enumerable.Range(1, 3).ToList());
 
         var file1 = fixture.GetFileInfo("1.txt");
 
         // Act && Assert
         fixture.Sut.Contains(file1).Should().BeTrue();
-    }
-
-    [Fact]
-    public void Will_look_at_the_file_hash_to_determine_file_equality_or_difference()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-
-        ////    1..3 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\$_.txt - Value "My Test Value" - Force  }
-        ////    $myHash = GetFileHashTable "$TestDrive\MyFolder"
-        ////    4..5 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder2\$_.txt - Value "My Test Value" - Force  }
-        ////    $newHash = GetFileHashTable "$TestDrive\MyFolder2"
-        ////    $actual = $myHash.GetMatchesInOther($newHash)
-        ////    $actual.GetFiles() | ForEach - Object { [int]($_.Name - replace $_.Extension) } | Should - Be @(4, 5)
     }
 
     [Fact]
@@ -331,25 +315,35 @@ public class FileHashLookupStateTests
     {
         public FileHashLookupStateTestsFixture()
         {
-            var provider = CreateFileHashLookupWithProvider();
+            var provider = this.CreateFileHashLookupWithProvider();
             Sut = provider.ServiceProvider.GetRequiredService<FileHashLookupState>();
         }
 
         public FileHashLookupState Sut { get; }
 
-        public FileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles = 10, string? fileContents = null)
+        public FileHashLookupStateTestsFixture WithAddedFiles()
         {
-            return WithAddedFiles(Enumerable.Range(1, nrOfFiles), fileContents);
+            FileHashTestFixtureExtensions.WithAddedFiles(this);
+
+            AllFiles.ForEach(file => Sut.Add(file));
+
+            return this;
         }
 
-        public FileHashLookupStateTestsFixture WithAddedFiles(IEnumerable<int> range, string? fileContents = null)
+        public FileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles, string? fileContents = null)
         {
-            foreach (var i in range)
-            {
-                var file = WithNewBasicFile(i, fileContents);
+            FileHashTestFixtureExtensions.WithAddedFiles(this, nrOfFiles, fileContents);
 
-                Sut.Add(file);
-            }
+            AllFiles.ForEach(file => Sut.Add(file));
+
+            return this;
+        }
+
+        public FileHashLookupStateTestsFixture WithAddedFiles(List<int> range, string? fileContents = null)
+        {
+            FileHashTestFixtureExtensions.WithAddedFiles(this, range, fileContents);
+
+            AllFiles.ForEach(file => Sut.Add(file));
 
             return this;
         }

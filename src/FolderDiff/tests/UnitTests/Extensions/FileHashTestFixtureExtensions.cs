@@ -1,11 +1,16 @@
 ﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
+using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookup.Configuration;
 using PsFolderDiff.FileHashLookup.Domain;
+using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 
 public static class FileHashTestFixtureExtensions
 {
-    public static IFileInfo GetFileInfo(this FileHashTestFixture fixture, string filename)
+    public static IFileInfo GetFileInfo<TFixture>(this TFixture fixture, string filename)
+        where TFixture : FileHashTestFixture
     {
         var file = fixture.AllFiles.SingleOrDefault(x =>
             string.Equals(fixture.FileSystem.Path.GetFileName(x.FullName), filename, StringComparison.InvariantCultureIgnoreCase));
@@ -18,7 +23,8 @@ public static class FileHashTestFixtureExtensions
         return fixture.AsFileInfo(file);
     }
 
-    public static IFileInfo GetFileInfo(this FileHashTestFixture fixture, int identifier)
+    public static IFileInfo GetFileInfo<TFixture>(this TFixture fixture, int identifier)
+        where TFixture : FileHashTestFixture
     {
         var file = fixture.AllFiles.Select(fixture.AsFileInfo).SingleOrDefault(x =>
             string.Equals(fixture.FileSystem.Path.GetFileNameWithoutExtension(x.Name), identifier.ToString(), StringComparison.InvariantCultureIgnoreCase));
@@ -31,7 +37,8 @@ public static class FileHashTestFixtureExtensions
         return file;
     }
 
-    public static BasicFileInfo GetBasicFileInfo(this FileHashTestFixture fixture, string name)
+    public static BasicFileInfo GetBasicFileInfo<TFixture>(this TFixture fixture, string name)
+        where TFixture : FileHashTestFixture
     {
         var file = fixture.AllFiles.SingleOrDefault(x =>
             string.Equals(fixture.FileSystem.Path.GetFileName(x.FullName), name, StringComparison.InvariantCultureIgnoreCase));
@@ -44,7 +51,8 @@ public static class FileHashTestFixtureExtensions
         return file;
     }
 
-    public static BasicFileInfo GetBasicFileInfo(this FileHashTestFixture fixture, int identifier)
+    public static BasicFileInfo GetBasicFileInfo<TFixture>(this TFixture fixture, int identifier)
+        where TFixture : FileHashTestFixture
     {
         var file = fixture.AllFiles.SingleOrDefault(x =>
             string.Equals(fixture.FileSystem.Path.GetFileNameWithoutExtension(x.FullName), identifier.ToString(), StringComparison.InvariantCultureIgnoreCase));
@@ -55,5 +63,133 @@ public static class FileHashTestFixtureExtensions
         }
 
         return file;
+    }
+
+    public static TFixture WithAddedFiles<TFixture>(this TFixture fixture, int nrOfFiles = 10, string? fileContents = null)
+        where TFixture : FileHashTestFixture
+    {
+        return fixture.WithAddedFiles(Enumerable.Range(1, nrOfFiles).ToList(), fileContents);
+    }
+
+    public static TFixture WithAddedFiles<TFixture>(this TFixture fixture, List<int> range, string? fileContents = null)
+        where TFixture : FileHashTestFixture
+    {
+        List<BasicFileInfo> files = range.Select(x => fixture.WithNewBasicFile(x, fileContents)).ToList();
+
+        files.ForEach(file => fixture.AddFile(file.FullName, fileContents));
+
+        return fixture;
+    }
+
+    public static IFileInfo AddFile<TFixture>(this TFixture fixture, string fullName, string? fileContents = null)
+        where TFixture : FileHashTestFixture
+    {
+        IFileInfo createdFile;
+        fileContents ??= Guid.NewGuid().ToString();
+
+        if (fixture.FileSystem is MockFileSystem mockFileSystem)
+        {
+            createdFile = new MockFileInfo(mockFileSystem, fullName);
+            mockFileSystem.AddFile(createdFile, new MockFileData(fileContents));
+        }
+        else
+        {
+            fixture.FileSystem.File.WriteAllText(fullName, fileContents);
+            createdFile = fixture.FileSystem.FileInfo.New(fullName);
+        }
+
+        return createdFile;
+    }
+
+    public static IFileInfo AsFileInfo<TFixture>(this TFixture fixture, BasicFileInfo file)
+        where TFixture : FileHashTestFixture
+    {
+        return fixture.FileSystem.FileInfo.New(file.FullName);
+    }
+
+    public static IFileInfo WithNewFile<TFixture>(this TFixture fixture, int? fileIdentifier = null, string? contents = null)
+        where TFixture : FileHashTestFixture
+    {
+        return fixture.WithNewFile($"{fileIdentifier ?? fixture.GetNextIdentifier()}.txt", contents);
+    }
+
+    public static IFileInfo WithNewFile<TFixture>(this TFixture fixture, string relativePath, string? contents = null)
+        where TFixture : FileHashTestFixture
+    {
+        var fullName = fixture.FileSystem.Path.Combine(fixture.WorkingDirectory.FullName, relativePath);
+
+        if (!fixture.FileSystem.Path.HasExtension(fullName))
+        {
+            throw new ArgumentException($"Expected relative path to a file. Found: '{relativePath}'", nameof(relativePath));
+        }
+
+        var directoryName = fixture.FileSystem.Path.GetDirectoryName(fullName)!;
+
+        var fileContent = contents ?? Guid.NewGuid().ToString();
+
+        if (!fixture.FileSystem.Directory.Exists(directoryName))
+        {
+            fixture.FileSystem.Directory.CreateDirectory(directoryName);
+        }
+
+        return fixture.AddFile(fullName, fileContent);
+    }
+
+    public static BasicFileInfo WithNewBasicFile<TFixture>(this TFixture fixture, int? fileIdentifier = null, string? contents = null)
+        where TFixture : FileHashTestFixture
+    {
+        return HashingUtil.CreateBasicFileInfo(fixture.WithNewFile(fileIdentifier, contents));
+    }
+
+    public static IFileInfo UpdateFile<TFixture>(this TFixture fixture, IFileInfo file)
+        where TFixture : FileHashTestFixture
+    {
+        return fixture.UpdateFile(file.FullName);
+    }
+
+    public static BasicFileInfo UpdateFile<TFixture>(this TFixture fixture, BasicFileInfo file)
+        where TFixture : FileHashTestFixture
+    {
+        return HashingUtil.CreateBasicFileInfo(fixture.UpdateFile(file.FullName));
+    }
+
+    public static IFileInfo UpdateFile<TFixture>(this TFixture fixture, string fullName)
+        where TFixture : FileHashTestFixture
+    {
+        fixture.FileSystem.File.AppendAllText(fullName, "-Updated");
+
+        return fixture.FileSystem.FileInfo.New(fullName);
+    }
+
+    public static FileHashLookup.Services.FileHashLookup CreateFileHashLookup<TFixture>(this TFixture fixture)
+        where TFixture : FileHashTestFixture
+    {
+        var provider = fixture.CreateFileHashLookupWithProviderMockFileSystem();
+
+        return provider.FileHashLookup;
+    }
+
+    public static (FileHashLookup.Services.FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProviderMockFileSystem<TFixture>(this TFixture fixture)
+        where TFixture : FileHashTestFixture
+    {
+        return fixture.CreateFileHashLookupWithProvider(settings =>
+        {
+            settings.ReportPollingDelay = TimeSpan.Zero;
+            settings.ConfigureServices = (services, _) =>
+            {
+                services.AddSingleton(fixture.FileSystem);
+            };
+        });
+    }
+
+    public static (FileHashLookup.Services.FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider<TFixture>(this TFixture fixture, Action<FileHashLookupSettings>? configureSettings = null)
+        where TFixture : FileHashTestFixture
+    {
+        var settings = FileHashLookupSettings.Default;
+        configureSettings?.Invoke(settings);
+
+        var services = new ServiceCollection();
+
+        return FileHashLookup.Services.FileHashLookup.Create(services, settings);
     }
 }

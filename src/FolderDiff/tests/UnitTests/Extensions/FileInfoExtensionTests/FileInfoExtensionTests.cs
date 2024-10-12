@@ -26,15 +26,13 @@ public class FileInfoExtensionTests
         private string? _tempFile;
         private string? _expected;
 
-        public FileInfoExtensionFixture WithNewRandomFile()
+        public void WithNewRandomFile()
         {
             _tempFile = Path.GetTempFileName();
             File.WriteAllText(_tempFile, Guid.NewGuid().ToString());
-
-            return this;
         }
 
-        public FileInfoExtensionFixture WithPowershellCalculatedMd5Hash()
+        public void WithPowershellCalculatedMd5Hash()
         {
             var powershell = PowerShell.Create();
 
@@ -44,8 +42,6 @@ public class FileInfoExtensionTests
                 .Invoke();
 
             _expected = result[0].Members["Hash"].Value.ToString();
-
-            return this;
         }
 
         public void AssertCalculateMd5HashMatchesPowershellHash()

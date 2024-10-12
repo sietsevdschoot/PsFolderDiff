@@ -1,5 +1,5 @@
-﻿using System.IO.Abstractions;
-using FluentAssertions;
+﻿using FluentAssertions;
+using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using PsFolderDiff.FileHashLookup.UnitTests.Utils;
 using Xunit;
 
@@ -54,7 +54,5 @@ public class BasicFileInfoTests
         basicFile1.CompareTo(updatedBasicFile).Should().Be(-1);
     }
 
-    private class BasicFileInfoFixture : FileHashTestFixture
-    {
-    }
+    private class BasicFileInfoFixture : FileHashTestFixture;
 }

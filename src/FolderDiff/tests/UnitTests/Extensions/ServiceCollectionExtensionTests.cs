@@ -23,4 +23,18 @@ public class ServiceCollectionExtensionTests
         // Assert
         fileCollector.Should().BeSameAs(readOnlyFilePattern);
     }
+
+    [Fact]
+    public void Register_CanResolve_FileHashLookup()
+    {
+        var sp = new ServiceCollection()
+            .AddFileHashLookup()
+            .BuildServiceProvider();
+
+        // Act
+        var fileHashLookup = sp.GetRequiredService<FileHashLookup.Services.FileHashLookup>();
+
+        // Assert
+        fileHashLookup.Should().NotBeNull();
+    }
 }

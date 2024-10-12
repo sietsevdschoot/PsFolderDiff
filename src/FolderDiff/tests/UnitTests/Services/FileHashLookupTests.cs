@@ -148,6 +148,26 @@ public class FileHashLookupTests
     }
 
     [Fact]
+    public void Will_look_at_the_file_hash_to_determine_file_equality_or_difference()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+
+        fixture.WithNewFile("Folder1\\File1.txt");
+
+        // Act
+
+        // Assert
+
+        ////    1..3 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\$_.txt - Value "My Test Value" - Force  }
+        ////    $myHash = GetFileHashTable "$TestDrive\MyFolder"
+        ////    4..5 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder2\$_.txt - Value "My Test Value" - Force  }
+        ////    $newHash = GetFileHashTable "$TestDrive\MyFolder2"
+        ////    $actual = $myHash.GetMatchesInOther($newHash)
+        ////    $actual.GetFiles() | ForEach - Object { [int]($_.Name - replace $_.Extension) } | Should - Be @(4, 5)
+    }
+
+    [Fact]
     public async Task GetMatchesInOther_Returns_file_only_found_in_other()
     {
         // Arrange
@@ -356,12 +376,12 @@ public class FileHashLookupTests
 
         public FileHashLookupTestFixture()
         {
-            var provider = CreateFileHashLookupWithProvider(settings =>
+            var provider = this.CreateFileHashLookupWithProvider(settings =>
             {
                 settings.ReportPollingDelay = TimeSpan.Zero;
                 settings.ConfigureServices = (services, _) =>
                 {
-                    services.AddSingleton<IFileSystem>(FileSystem);
+                    services.AddSingleton(FileSystem);
                 };
             });
 

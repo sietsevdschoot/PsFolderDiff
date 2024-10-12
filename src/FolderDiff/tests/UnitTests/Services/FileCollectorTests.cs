@@ -2,6 +2,7 @@
 using FluentAssertions;
 using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
+using PsFolderDiff.FileHashLookup.UnitTests.Extensions;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookup.UnitTests.Services;
@@ -12,7 +13,7 @@ public class FileCollectorTests
     public void AddIncludeFolder_Adding_NonExisting_Folder_Throws()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
 
         // Act
         var act = () => fixture.AddIncludeFolder("NonExistingFolder");
@@ -25,7 +26,7 @@ public class FileCollectorTests
     public void AddIncludeFolder_Adds_Folder_And_Collects_Files_Recursively()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
         fixture.WithNewFile(@"Folder1\Sub1\3.txt");
@@ -43,7 +44,7 @@ public class FileCollectorTests
     public void AddIncludeFolder_Returns_Collected_Files_For_This_Include_Pattern()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
         fixture.WithNewFile(@"Folder2\3.txt");
@@ -61,7 +62,7 @@ public class FileCollectorTests
     public void AddIncludePattern_Can_use_file_glob()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.exe");
         fixture.WithNewFile(@"Folder1\Sub1\3.exe");
@@ -78,7 +79,7 @@ public class FileCollectorTests
     public void AddIncludePattern_Can_Include_SubFolder()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.exe");
         fixture.WithNewFile(@"Folder1\Sub1\3.exe");
@@ -95,7 +96,7 @@ public class FileCollectorTests
     public void AddExcludePattern_ExcludesFolderInCollectedFileResults()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
         fixture.WithNewFile(@"Folder1\Sub1\3.txt");
@@ -115,7 +116,7 @@ public class FileCollectorTests
     public void AddExcludePattern_CanExcludesPatternInCollectedFilesResults()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.doc");
         fixture.WithNewFile(@"Folder1\Sub1\3.doc");
@@ -134,7 +135,7 @@ public class FileCollectorTests
     public void GetFiles_Returns_All_Collected_Files()
     {
         // Arrange
-        var fixture = new IFileCollectorTestFixture();
+        var fixture = new FileCollectorTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\Sub1\2.txt");
         fixture.WithNewFile(@"Folder2\Sub1\3.txt");
@@ -151,18 +152,16 @@ public class FileCollectorTests
         fixture.AssertContainsFileNames(actual, [1, 4]);
     }
 
-    private class IFileCollectorTestFixture : FileHashTestFixture
+    private class FileCollectorTestFixture : FileHashTestFixture
     {
         private readonly IFileCollector _sut;
 
-        public IFileCollectorTestFixture()
+        public FileCollectorTestFixture()
         {
             _sut = new FileCollector(FileSystem);
         }
 
         public new string WorkingDirectory => base.WorkingDirectory.FullName;
-
-        public IFileCollector Sut => _sut;
 
         public List<IFileInfo> AddIncludeFolder(string path)
         {
@@ -178,7 +177,7 @@ public class FileCollectorTests
             return _sut.AddIncludePattern(path);
         }
 
-        public IFileCollectorTestFixture AddExcludePattern(string pattern)
+        public FileCollectorTestFixture AddExcludePattern(string pattern)
         {
             _sut.AddExcludePattern(pattern);
 

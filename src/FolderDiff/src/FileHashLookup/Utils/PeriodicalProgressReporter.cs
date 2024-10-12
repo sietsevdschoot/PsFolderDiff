@@ -36,11 +36,7 @@ public class PeriodicalProgressReporter<T> : IPeriodicalProgressReporter<T>
     {
         if (_stopwatch.Elapsed > _settings.ReportPollingDelay)
         {
-            var value = getValue(currentProgress);
-
-            _progress.Report(value);
-
-            _stopwatch.Restart();
+            Report(() => getValue(currentProgress));
         }
     }
 }
