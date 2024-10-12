@@ -15,7 +15,7 @@ public class FileHashLookupSettings
                 progress.PercentComplete.HasValue ? $"{progress.PercentComplete}% " : null,
                 $"{progress.Activity} - {progress.CurrentOperation}",
                 !string.IsNullOrEmpty(progress.Status) ? $" | {progress.Status}" : null,
-                progress.SecondsRemaining.HasValue && progress.SecondsRemaining > 0 ? $" ({progress.SecondsRemaining} remaining)" : null);
+                progress.SecondsRemaining is > 0 ? $" ({progress.SecondsRemaining} remaining)" : null);
 
             Console.WriteLine(progressMessage);
         }),
