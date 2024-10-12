@@ -24,7 +24,7 @@ public class FileHashCalculationService : IFileHashCalculationService
     public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files)
     {
         _progress.Report(new ProgressEventArgs(
-            activity: "Adding or updating files.",
+            activity: "Calculate file hashes.",
             currentOperation: "Collecting information before starting hashing."));
 
         var totalSize = files.Sum(x => x.Length);
@@ -40,8 +40,8 @@ public class FileHashCalculationService : IFileHashCalculationService
             if (updateStatusStopwatch.Elapsed > _settings.Value.ReportPollingDelay)
             {
                 _progress.Report(new ProgressEventArgs(
-                    activity: "Adding or updating files.",
-                    currentOperation: "Calculating Hash",
+                    activity: "Calculate file hashes.",
+                    currentOperation: "Calculating Hash.",
                     status: $"({i + 1} / {files.Count}) {file.FullName}",
                     currentItem: file.FullName,
                     currentProgress: currentProcessedSize,

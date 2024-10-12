@@ -1,8 +1,9 @@
-﻿using System.IO.Abstractions;
-using MediatR;
+﻿using MediatR;
 using PsFolderDiff.FileHashLookup.Domain;
+using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
+using PsFolderDiff.FileHashLookup.Utils;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
@@ -11,19 +12,26 @@ public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest
     private readonly IFileCollector _fileCollector;
     private readonly IFileHashCalculationService _fileHashCalculationService;
     private readonly IFileHashLookupState _fileHashLookupState;
+    private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
 
     public AddIncludePatternHandler(
         IFileCollector fileCollector,
         IFileHashCalculationService fileHashCalculationService,
-        IFileHashLookupState fileHashLookupState)
+        IFileHashLookupState fileHashLookupState,
+        IPeriodicalProgressReporter<ProgressEventArgs> progress)
     {
         _fileCollector = fileCollector;
         _fileHashCalculationService = fileHashCalculationService;
         _fileHashLookupState = fileHashLookupState;
+        _progress = progress;
     }
 
     public Task Handle(AddIncludePatternRequest request, CancellationToken cancellationToken)
     {
+        _progress.Report(() => new ProgressEventArgs(
+            activity: "Including folders or patterns",
+            currentOperation: "Collecting files to include"));
+
         var collectedFiles = !string.IsNullOrEmpty(request.IncludePath)
             ? _fileCollector.AddIncludeFolder(request.IncludePath)
             : _fileCollector.AddIncludePattern(request.IncludePattern);
@@ -32,7 +40,16 @@ public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest
 
         for (var i = 0; i < filesWithHash.Count; i++)
         {
-            (IFileInfo File, string Hash) entry = filesWithHash[i];
+            var entry = filesWithHash[i];
+
+            _progress.Report(
+                progress => new ProgressEventArgs(
+                    activity: "Excluding files or patterns",
+                    currentOperation: "Excluding files.",
+                    currentItem: entry.File.FullName,
+                    currentProgress: progress,
+                    total: filesWithHash.Count),
+                currentProgress: i);
 
             _fileHashLookupState.Add(new BasicFileInfo(entry.File, entry.Hash));
         }

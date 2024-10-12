@@ -10,18 +10,6 @@ public static class EnumerableExtensions
         }
     }
 
-    public static void ForEach<T>(this IEnumerable<T> items, Action<T, int> action)
-    {
-        var i = 0;
-
-        foreach (var item in items)
-        {
-            action(item, i);
-
-            i++;
-        }
-    }
-
     public static void InsertNewItems<T>(this List<T> @this, List<T> other, IEqualityComparer<T>? comparer = null)
     {
         foreach (var otherEntry in other)

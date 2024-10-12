@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Services;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
+using PsFolderDiff.FileHashLookup.Utils;
 
 namespace PsFolderDiff.FileHashLookup.Extensions;
 
@@ -16,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IEventAggregator, EventAggregator>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
         services.AddSingleton(typeof(IProgress<>), typeof(Progress<>));
+        services.AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
         services.AddTransient<IProgress<ProgressEventArgs>>(
             sp => new Progress<ProgressEventArgs>(message =>

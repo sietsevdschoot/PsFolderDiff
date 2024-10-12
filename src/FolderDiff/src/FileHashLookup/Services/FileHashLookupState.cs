@@ -2,7 +2,9 @@
 using System.IO.Abstractions;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
+using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
+using PsFolderDiff.FileHashLookup.Utils;
 
 namespace PsFolderDiff.FileHashLookup.Services;
 
@@ -10,6 +12,12 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
 {
     private readonly Dictionary<string, BasicFileInfo> _fileLookup = new();
     private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new();
+    private IPeriodicalProgressReporter<ProgressEventArgs> _progress;
+
+    public FileHashLookupState(IPeriodicalProgressReporter<ProgressEventArgs> progress)
+    {
+        _progress = progress;
+    }
 
     public IReadOnlyDictionary<string, BasicFileInfo> File => _fileLookup.AsReadOnly();
 
@@ -36,11 +44,25 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
 
     public void AddFileHashLookup(FileHashLookup other)
     {
+        _progress.Report(() => new ProgressEventArgs(
+            activity: "Adding FileHashLookup",
+            currentOperation: "Collecting files"));
+
         var allOtherFiles = other.GetFiles();
 
         for (var i = 0; i < allOtherFiles.Count; i++)
         {
             var file = allOtherFiles[i];
+
+            _progress.Report(
+                progress => new ProgressEventArgs(
+                    activity: "Adding FileHashLookup",
+                    currentOperation: "Adding files.",
+                    currentItem: file.FullName,
+                    currentProgress: progress,
+                    total: allOtherFiles.Count),
+                currentProgress: i);
+
             Add(file);
         }
     }

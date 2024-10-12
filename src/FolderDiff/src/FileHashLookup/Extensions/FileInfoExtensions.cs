@@ -10,16 +10,6 @@ public static class FileInfoExtensions
     // ReSharper disable once InconsistentNaming
     private static readonly MD5 MD5 = MD5.Create();
 
-    public static byte[] ReadAllBytes(this IFileInfo file)
-    {
-        using var stream = file.OpenRead();
-        using var ms = new MemoryStream();
-
-        stream.CopyTo(ms);
-
-        return ms.ToArray();
-    }
-
     /// <summary>
     /// TODO: Measure buffer optimum for hashing (large) files.
     /// https://github.com/dotnet/BenchmarkDotNet.

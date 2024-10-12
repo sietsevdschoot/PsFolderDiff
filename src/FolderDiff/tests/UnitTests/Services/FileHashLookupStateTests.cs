@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookup.Domain;
 using PsFolderDiff.FileHashLookup.Extensions;
 using PsFolderDiff.FileHashLookup.Services;
@@ -328,7 +329,13 @@ public class FileHashLookupStateTests
 
     private class IFileHashLookupStateTestsFixture : FileHashTestFixture
     {
-        public FileHashLookupState Sut { get; } = new();
+        public IFileHashLookupStateTestsFixture()
+        {
+            var provider = CreateFileHashLookupWithProvider();
+            Sut = provider.ServiceProvider.GetRequiredService<FileHashLookupState>();
+        }
+
+        public FileHashLookupState Sut { get; }
 
         public IFileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles = 10, string? fileContents = null)
         {

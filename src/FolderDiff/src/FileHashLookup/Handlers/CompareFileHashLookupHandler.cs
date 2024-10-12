@@ -1,17 +1,23 @@
 ﻿using MediatR;
 using PsFolderDiff.FileHashLookup.Domain;
+using PsFolderDiff.FileHashLookup.Models;
 using PsFolderDiff.FileHashLookup.Requests;
 using PsFolderDiff.FileHashLookup.Services.Interfaces;
+using PsFolderDiff.FileHashLookup.Utils;
 
 namespace PsFolderDiff.FileHashLookup.Handlers;
 
 public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLookupRequest, CompareFileHashLookupResult>
 {
     private readonly IFileHashLookupState _fileHashLookupState;
+    private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
 
-    public CompareFileHashLookupHandler(IFileHashLookupState fileHashLookupState)
+    public CompareFileHashLookupHandler(
+        IFileHashLookupState fileHashLookupState,
+        IPeriodicalProgressReporter<ProgressEventArgs> progress)
     {
         _fileHashLookupState = fileHashLookupState;
+        _progress = progress;
     }
 
     public async Task<CompareFileHashLookupResult> Handle(CompareFileHashLookupRequest request, CancellationToken cancellationToken)
@@ -19,11 +25,24 @@ public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLooku
         var differencesLookup = Services.FileHashLookup.Create();
         var matchesLookup = Services.FileHashLookup.Create();
 
+        _progress.Report(() => new ProgressEventArgs(
+            activity: "Compare FileHashLookup",
+            currentOperation: "Collecting files in other"));
+
         var otherFiles = request.FileHashLookup.GetFiles();
 
         for (var i = 0; i < otherFiles.Count; i++)
         {
             var currentFile = otherFiles[i];
+
+            _progress.Report(
+                progress => new ProgressEventArgs(
+                    activity: "Compare FileHashLookup",
+                    currentOperation: "Comparing files",
+                    currentItem: currentFile.FullName,
+                    currentProgress: progress,
+                    total: otherFiles.Count),
+                currentProgress: i);
 
             if (_fileHashLookupState.Contains(currentFile) == FileContainsState.Match)
             {
