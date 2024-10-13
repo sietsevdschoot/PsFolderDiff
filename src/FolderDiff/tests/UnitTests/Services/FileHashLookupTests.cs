@@ -1,9 +1,10 @@
-﻿using FluentAssertions;
+﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
-using System.IO.Abstractions.TestingHelpers;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
@@ -86,21 +87,27 @@ public class FileHashLookupTests
             { @"d:\Temp\Folder2\4.txt", new MockFileData(Guid.NewGuid().ToString()) },
         });
 
-        // Continue here.
-        fixture.CreateFileHashLookupWithProviderMockFileSystem()
+        var provider = fixture.CreateFileHashLookupWithProvider(settings =>
+        {
+            settings.ConfigureServices = (services, sp) =>
+            {
+                services.AddSingleton<IFileSystem>(fileSystem);
+            };
+        });
 
-        var fileCollector = new FileCollector(fileSystem);
+        var fileHashlookup = provider.FileHashLookup;
 
         // Act
-        fileCollector.AddIncludeFolder(@"c:\Temp\Folder1");
-        fileCollector.AddIncludeFolder(@"d:\Temp\Folder2");
+        await fileHashlookup.AddFolder(@"c:\Temp\Folder1\");
+        await fileHashlookup.AddFolder(@"d:\Temp\Folder2\");
+
+        await fileHashlookup.AddExcludePattern(@"d:\Temp\");
 
         // Assert
-        var actualFileNames = fileCollector.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
+        var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
 
-        actualFileNames.Should().BeEquivalentTo([1, 2, 3, 4]);
+        actualFileNames.Should().BeEquivalentTo([1, 2]);
     }
-
 
     [Fact]
     public async Task AddFiles_AddsFilesAndCalculatesHash()
