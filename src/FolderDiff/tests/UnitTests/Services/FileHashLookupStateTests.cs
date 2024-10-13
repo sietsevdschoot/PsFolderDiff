@@ -323,7 +323,7 @@ public class FileHashLookupStateTests
 
         public FileHashLookupStateTestsFixture WithAddedFiles()
         {
-            FileHashTestFixtureExtensions.WithAddedFiles(this);
+            FileHashTestFixtureFileExtensions.WithAddedFiles(this);
 
             AllFiles.ForEach(file => Sut.Add(file));
 
@@ -332,7 +332,7 @@ public class FileHashLookupStateTests
 
         public FileHashLookupStateTestsFixture WithAddedFiles(int nrOfFiles, string? fileContents = null)
         {
-            FileHashTestFixtureExtensions.WithAddedFiles(this, nrOfFiles, fileContents);
+            FileHashTestFixtureFileExtensions.WithAddedFiles(this, nrOfFiles, fileContents);
 
             AllFiles.ForEach(file => Sut.Add(file));
 
@@ -341,7 +341,7 @@ public class FileHashLookupStateTests
 
         public FileHashLookupStateTestsFixture WithAddedFiles(List<int> range, string? fileContents = null)
         {
-            FileHashTestFixtureExtensions.WithAddedFiles(this, range, fileContents);
+            FileHashTestFixtureFileExtensions.WithAddedFiles(this, range, fileContents);
 
             AllFiles.ForEach(file => Sut.Add(file));
 

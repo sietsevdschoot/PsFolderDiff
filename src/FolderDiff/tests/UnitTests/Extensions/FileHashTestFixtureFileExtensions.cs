@@ -8,7 +8,7 @@ using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 
-public static class FileHashTestFixtureExtensions
+public static class FileHashTestFixtureFileExtensions
 {
     public static IFileInfo GetFileInfo<TFixture>(this TFixture fixture, string filename)
         where TFixture : FileHashTestFixture
@@ -82,26 +82,6 @@ public static class FileHashTestFixtureExtensions
         return fixture;
     }
 
-    public static IFileInfo AddFile<TFixture>(this TFixture fixture, string fullName, string? fileContents = null)
-        where TFixture : FileHashTestFixture
-    {
-        IFileInfo createdFile;
-        fileContents ??= Guid.NewGuid().ToString();
-
-        if (fixture.FileSystem is MockFileSystem mockFileSystem)
-        {
-            createdFile = new MockFileInfo(mockFileSystem, fullName);
-            mockFileSystem.AddFile(createdFile, new MockFileData(fileContents));
-        }
-        else
-        {
-            fixture.FileSystem.File.WriteAllText(fullName, fileContents);
-            createdFile = fixture.FileSystem.FileInfo.New(fullName);
-        }
-
-        return createdFile;
-    }
-
     public static IFileInfo AsFileInfo<TFixture>(this TFixture fixture, BasicFileInfo file)
         where TFixture : FileHashTestFixture
     {
@@ -162,35 +142,23 @@ public static class FileHashTestFixtureExtensions
         return fixture.FileSystem.FileInfo.New(fullName);
     }
 
-    public static FileHashLookup CreateFileHashLookup<TFixture>(this TFixture fixture)
+    private static IFileInfo AddFile<TFixture>(this TFixture fixture, string fullName, string? fileContents = null)
         where TFixture : FileHashTestFixture
     {
-        var provider = fixture.CreateFileHashLookupWithProviderMockFileSystem();
+        IFileInfo createdFile;
+        fileContents ??= Guid.NewGuid().ToString();
 
-        return provider.FileHashLookup;
-    }
-
-    public static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProviderMockFileSystem<TFixture>(this TFixture fixture)
-        where TFixture : FileHashTestFixture
-    {
-        return fixture.CreateFileHashLookupWithProvider(settings =>
+        if (fixture.FileSystem is MockFileSystem mockFileSystem)
         {
-            settings.ReportPollingDelay = TimeSpan.Zero;
-            settings.ConfigureServices = (services, _) =>
-            {
-                services.AddSingleton(fixture.FileSystem);
-            };
-        });
-    }
+            createdFile = new MockFileInfo(mockFileSystem, fullName);
+            mockFileSystem.AddFile(createdFile, new MockFileData(fileContents));
+        }
+        else
+        {
+            fixture.FileSystem.File.WriteAllText(fullName, fileContents);
+            createdFile = fixture.FileSystem.FileInfo.New(fullName);
+        }
 
-    public static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider<TFixture>(this TFixture fixture, Action<FileHashLookupSettings>? configureSettings = null)
-        where TFixture : FileHashTestFixture
-    {
-        var settings = FileHashLookupSettings.Default;
-        configureSettings?.Invoke(settings);
-
-        var services = new ServiceCollection();
-
-        return FileHashLookup.Create(services, settings);
+        return createdFile;
     }
 }
