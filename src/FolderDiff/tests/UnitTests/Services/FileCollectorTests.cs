@@ -1,4 +1,5 @@
 ﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
@@ -152,14 +153,40 @@ public class FileCollectorTests
         fixture.AssertContainsFileNames(actual, [1, 4]);
     }
 
+    [Fact]
+    public void AddIncludeFolder_Can_collect_files_from_different_drives()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+        {
+            { @"c:\Temp\Folder1\1.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"c:\Temp\Folder1\2.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"d:\Temp\Folder2\3.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"d:\Temp\Folder2\4.txt", new MockFileData(Guid.NewGuid().ToString()) },
+        });
+
+        var fileCollector = new FileCollector(fileSystem);
+
+        // Act
+        fileCollector.AddIncludeFolder(@"c:\Temp\Folder1");
+        fileCollector.AddIncludeFolder(@"d:\Temp\Folder2");
+
+        // Assert
+        var actualFileNames = fileCollector.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
+
+        actualFileNames.Should().BeEquivalentTo([1, 2, 3, 4]);
+    }
+
     private class FileCollectorTestFixture : FileHashTestFixture
     {
-        private readonly IFileCollector _sut;
+        private readonly Lazy<FileCollector> _sut;
 
         public FileCollectorTestFixture()
         {
-            _sut = new FileCollector(FileSystem);
+            _sut = new Lazy<FileCollector>(() => new FileCollector(FileSystem));
         }
+
+        public FileCollector Sut => _sut.Value;
 
         public new string WorkingDirectory => base.WorkingDirectory.FullName;
 
@@ -167,26 +194,26 @@ public class FileCollectorTests
         {
             var fullName = FileSystem.Path.Combine(WorkingDirectory, path);
 
-            return _sut.AddIncludeFolder(fullName);
+            return Sut.AddIncludeFolder(fullName);
         }
 
         public List<IFileInfo> AddIncludePattern(string workingDirectory, string includePattern)
         {
             var path = FileSystem.Path.Combine(workingDirectory, includePattern);
 
-            return _sut.AddIncludePattern(path);
+            return Sut.AddIncludePattern(path);
         }
 
         public FileCollectorTestFixture AddExcludePattern(string pattern)
         {
-            _sut.AddExcludePattern(pattern);
+            Sut.AddExcludePattern(pattern);
 
             return this;
         }
 
         public List<IFileInfo> GetFiles()
         {
-            return _sut.GetFiles();
+            return Sut.GetFiles();
         }
 
         public void AssertContainsFileNames(List<IFileInfo> files, int[] expected)
@@ -201,7 +228,7 @@ public class FileCollectorTests
 
         public void AssertContainsFileNames(params int[] expected)
         {
-            AssertContainsFileNames(_sut.GetFiles(), expected);
+            AssertContainsFileNames(Sut.GetFiles(), expected);
         }
     }
 }

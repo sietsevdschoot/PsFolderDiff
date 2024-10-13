@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
+using System.IO.Abstractions.TestingHelpers;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
@@ -70,6 +71,36 @@ public class FileHashLookupTests
         fixture.AssertContainsFileNames([1, 2]);
         fixture.AssertContainsExcludesPattern(excludePattern);
     }
+
+    [Fact]
+    public async Task AddExcludePattern_Can_exclude_files_from_different_drives()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+        {
+            { @"c:\Temp\Folder1\1.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"c:\Temp\Folder1\2.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"d:\Temp\Folder2\3.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"d:\Temp\Folder2\4.txt", new MockFileData(Guid.NewGuid().ToString()) },
+        });
+
+        // Continue here.
+        fixture.CreateFileHashLookupWithProviderMockFileSystem()
+
+        var fileCollector = new FileCollector(fileSystem);
+
+        // Act
+        fileCollector.AddIncludeFolder(@"c:\Temp\Folder1");
+        fileCollector.AddIncludeFolder(@"d:\Temp\Folder2");
+
+        // Assert
+        var actualFileNames = fileCollector.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
+
+        actualFileNames.Should().BeEquivalentTo([1, 2, 3, 4]);
+    }
+
 
     [Fact]
     public async Task AddFiles_AddsFilesAndCalculatesHash()
