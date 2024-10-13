@@ -10,6 +10,8 @@ Todo:
 - Test Hash performance icm BufferedReader
 - Multi threaded hashing.
 
+- Create missing unitTests
+
 Nice to have.
 - Generic Duration decorator for Handlers?
 - Report duration for handlers, optionally via settings.
