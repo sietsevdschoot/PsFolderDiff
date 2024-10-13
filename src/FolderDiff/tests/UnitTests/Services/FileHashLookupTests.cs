@@ -458,7 +458,6 @@ public class FileHashLookupTests
                 {
                     services.AddSingleton(FileSystem);
                 };
-                settings.ReportProgress = new Progress<ProgressEventArgs>(_ => { /*Nothing*/ });
             });
 
             Sut = provider.FileHashLookup;
