@@ -1,0 +1,16 @@
+20241013
+
+Todo:
+
+- Relative paths for include / expclude paths.
+- Store absolute paths for basepath when retrieving relative path.
+- Create RefreshHandler
+- Create Load / Save handler
+- ToString override
+- Test Hash performance icm BufferedReader
+- Multi threaded hashing.
+
+Nice to have.
+- Generic Duration decorator for Handlers?
+- Report duration for handlers, optionally via settings.
+- New EventAggregator to collect verbose messages, like duration. Those can be written to  verbose stream.
