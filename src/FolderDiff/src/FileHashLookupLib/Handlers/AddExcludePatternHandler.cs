@@ -60,26 +60,40 @@ public class AddExcludePatternHandler : IRequestHandler<AddExcludePatternRequest
 
     private List<IFileInfo> CollectFilesToExclude(string excludePattern)
     {
+        var parsedPattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
+
         var inMemoryFileSystem = new MockFileSystem();
 
         var allFiles = _fileCollector.GetFiles();
         allFiles.ForEach(file => inMemoryFileSystem.AddFile(file, new MockFileData(string.Empty)));
 
         var matcher = new Matcher(StringComparison.OrdinalIgnoreCase)
-            .AddInclude(excludePattern);
+            .AddInclude(parsedPattern.RelativePattern);
 
-        // TODO: Can we add files from different drives?
-        var rootDirectory = inMemoryFileSystem.DriveInfo.GetDrives().First().RootDirectory;
-        var result = matcher.Execute(inMemoryFileSystem, rootDirectory.FullName);
+        List<IFileInfo> matchedFiles;
 
-        return result.HasMatches
-            ? result.Files.Select(file => CreateFileInfo(inMemoryFileSystem, rootDirectory, file)).ToList()
-            : new List<IFileInfo>();
+        if (!string.IsNullOrEmpty(parsedPattern.Directory))
+        {
+            matchedFiles = (
+                from file in matcher.Execute(inMemoryFileSystem, parsedPattern.Directory).Files
+                select CreateFileInfo(inMemoryFileSystem, parsedPattern.Directory, file))
+            .ToList();
+        }
+        else
+        {
+            matchedFiles = (
+                from drive in inMemoryFileSystem.AllDrives
+                from file in matcher.Execute(inMemoryFileSystem, drive).Files
+                select CreateFileInfo(inMemoryFileSystem, drive, file))
+            .ToList();
+        }
+
+        return matchedFiles;
     }
 
-    private IFileInfo CreateFileInfo(IFileSystem fileSystem, IDirectoryInfo directory, FilePatternMatch file)
+    private IFileInfo CreateFileInfo(IFileSystem fileSystem, string directory, FilePatternMatch file)
     {
-        var fullName = fileSystem.Path.Combine(directory.FullName, file.Path);
+        var fullName = fileSystem.Path.Combine(directory, file.Path);
         return fileSystem.FileInfo.New(fullName);
     }
 }

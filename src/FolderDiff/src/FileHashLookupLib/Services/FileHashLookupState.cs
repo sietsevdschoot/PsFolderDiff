@@ -10,9 +10,9 @@ namespace PsFolderDiff.FileHashLookupLib.Services;
 
 public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
 {
-    private readonly Dictionary<string, BasicFileInfo> _fileLookup = new();
-    private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new();
-    private IPeriodicalProgressReporter<ProgressEventArgs> _progress;
+    private readonly Dictionary<string, BasicFileInfo> _fileLookup = new(comparer: StringComparer.InvariantCultureIgnoreCase);
+    private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new(comparer: StringComparer.InvariantCultureIgnoreCase);
+    private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
 
     public FileHashLookupState(IPeriodicalProgressReporter<ProgressEventArgs> progress)
     {

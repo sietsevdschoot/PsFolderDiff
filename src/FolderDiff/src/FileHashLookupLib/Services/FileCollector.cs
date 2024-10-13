@@ -2,6 +2,7 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
+using PsFolderDiff.FileHashLookupLib.Utils;
 using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;
@@ -11,32 +12,32 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
     private readonly IFileSystem _fileSystem;
 
     private readonly List<(string Directory, string RelativePattern)> _includePatterns;
-    private readonly List<string> _excludePatterns;
+    private readonly List<(string Directory, string RelativePattern)> _excludePatterns;
 
     public FileCollector(IFileSystem fileSystem)
     {
         _fileSystem = fileSystem;
 
         _includePatterns = new List<(string Directory, string RelativePattern)>();
-        _excludePatterns = new List<string>();
+        _excludePatterns = new List<(string Directory, string RelativePattern)>();
     }
 
     public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns => _includePatterns.AsReadOnly();
 
-    public IReadOnlyCollection<string> ExcludePatterns => _excludePatterns.AsReadOnly();
+    public IReadOnlyCollection<(string Directory, string RelativePattern)> ExcludePatterns => _excludePatterns.AsReadOnly();
 
     public List<IFileInfo> AddIncludeFolder(string path)
     {
         ArgumentException.ThrowIfNullOrEmpty(path, nameof(path));
 
-        return AddIncludePattern($@"{path.Trim('\\')}\**\");
+        return AddIncludePattern(PathUtils.AddRecursiveDirectoryPattern(path));
     }
 
     public List<IFileInfo> AddIncludePattern(string includePattern)
     {
         EnsurePatternIsValid(includePattern);
 
-        var parsedIncludePattern = ParseFileGlobbingPattern(includePattern);
+        var parsedIncludePattern = PathUtils.ParseFileGlobbingPattern(includePattern);
 
         _includePatterns.Add(parsedIncludePattern);
 
@@ -51,9 +52,11 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 
     public IFileCollector AddExcludePattern(string excludePattern)
     {
-        ArgumentException.ThrowIfNullOrEmpty(excludePattern, nameof(excludePattern));
+        EnsurePatternIsValid(excludePattern);
 
-        _excludePatterns.Add(excludePattern);
+        var parsedExcludePattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
+
+        _excludePatterns.Add(parsedExcludePattern);
 
         return this;
     }
@@ -63,22 +66,13 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
         return GetFilesInternal();
     }
 
-    internal static (string Directory, string RelativePattern) ParseFileGlobbingPattern(string pattern)
-    {
-        var directory = pattern.Split("*", StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
-
-        var relativePattern = pattern.Replace(directory, null);
-
-        return (Directory: directory, RelativePattern: relativePattern);
-    }
-
     private void EnsurePatternIsValid(string pattern)
     {
         ArgumentException.ThrowIfNullOrEmpty(pattern, nameof(pattern));
 
-        var parsedPattern = ParseFileGlobbingPattern(pattern);
+        var parsedPattern = PathUtils.ParseFileGlobbingPattern(pattern);
 
-        if (!_fileSystem.Directory.Exists(parsedPattern.Directory))
+        if (!string.IsNullOrEmpty(parsedPattern.Directory) && !_fileSystem.Directory.Exists(parsedPattern.Directory))
         {
             throw new ArgumentException($"Folder '{parsedPattern.Directory}' does not exist");
         }
@@ -99,7 +93,7 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 
             foreach (var excludePattern in _excludePatterns)
             {
-                matcher.AddExclude(excludePattern);
+                matcher.AddExclude(excludePattern.RelativePattern);
             }
 
             var result = matcher.Execute(_fileSystem, pattern.Directory);

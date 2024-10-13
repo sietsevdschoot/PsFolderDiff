@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using PsFolderDiff.FileHashLookupLib.Services;
+using PsFolderDiff.FileHashLookupLib.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 
@@ -21,7 +22,7 @@ public static class FileHashLookupAssertExtensions
     {
         var expected = $@"{includeFolder.Trim(Path.DirectorySeparatorChar)}\**\";
 
-        var parsedPattern = FileCollector.ParseFileGlobbingPattern(expected);
+        var parsedPattern = PathUtils.ParseFileGlobbingPattern(expected);
 
         fileHashLookup.IncludePatterns.Should().Contain(parsedPattern);
     }

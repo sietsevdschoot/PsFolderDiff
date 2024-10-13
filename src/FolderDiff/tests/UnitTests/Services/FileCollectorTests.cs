@@ -107,7 +107,7 @@ public class FileCollectorTests
 
         // Act
         fixture.AddIncludeFolder(@"\Folder1\");
-        fixture.AddExcludePattern(@"\**\Sub1\**\*");
+        fixture.AddExcludePattern(fixture.WorkingDirectory, @"**\Sub1\**\*");
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 5]);
@@ -126,7 +126,7 @@ public class FileCollectorTests
 
         // Act
         fixture.AddIncludeFolder(@"Folder1\");
-        fixture.AddExcludePattern(@"\**\*.doc");
+        fixture.AddExcludePattern(fixture.WorkingDirectory, @"**\*.doc");
 
         // Assert
         fixture.AssertContainsFileNames([1, 5]);
@@ -144,7 +144,7 @@ public class FileCollectorTests
 
         fixture.AddIncludeFolder(@"Folder1\");
         fixture.AddIncludeFolder(@"Folder2\");
-        fixture.AddExcludePattern(@"**\Sub1\**\*");
+        fixture.AddExcludePattern(fixture.WorkingDirectory, @"**\Sub1\**\*");
 
         // Act
         var actual = fixture.GetFiles();
@@ -204,9 +204,11 @@ public class FileCollectorTests
             return Sut.AddIncludePattern(path);
         }
 
-        public FileCollectorTestFixture AddExcludePattern(string pattern)
+        public FileCollectorTestFixture AddExcludePattern(string workingDirectory, string excludePattern)
         {
-            Sut.AddExcludePattern(pattern);
+            var path = FileSystem.Path.Combine(workingDirectory, excludePattern);
+
+            Sut.AddExcludePattern(path);
 
             return this;
         }

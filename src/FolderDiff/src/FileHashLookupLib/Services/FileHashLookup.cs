@@ -33,7 +33,7 @@ public class FileHashLookup
 
     public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns => _filePatterns.IncludePatterns;
 
-    public IReadOnlyCollection<string> ExcludePatterns => _filePatterns.ExcludePatterns;
+    public IReadOnlyCollection<(string Directory, string RelativePattern)> ExcludePatterns => _filePatterns.ExcludePatterns;
 
     public static FileHashLookup Create() => Create(FileHashLookupSettings.Default);
 

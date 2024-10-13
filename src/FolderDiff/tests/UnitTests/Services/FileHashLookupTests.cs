@@ -2,9 +2,11 @@
 using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookupLib.Models;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
+using PsFolderDiff.FileHashLookupLib.Utils;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
@@ -62,10 +64,10 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
         fixture.WithNewFile(@"Folder2\5.txt");
 
-        var excludePattern = @"\**\Sub1\**\*";
+        var excludePattern = @$"**\Sub1\**\*";
 
         // Act
-        await fixture.Sut.AddFolder(@"Folder1\");
+        await fixture.Sut.AddFolder(@"Folder1");
         await fixture.Sut.AddExcludePattern(excludePattern);
 
         // Assert
@@ -89,7 +91,7 @@ public class FileHashLookupTests
 
         var provider = fixture.CreateFileHashLookupWithProvider(settings =>
         {
-            settings.ConfigureServices = (services, sp) =>
+            settings.ConfigureServices = (services, _) =>
             {
                 services.AddSingleton<IFileSystem>(fileSystem);
             };
@@ -107,6 +109,42 @@ public class FileHashLookupTests
         var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
 
         actualFileNames.Should().BeEquivalentTo([1, 2]);
+    }
+
+    [Fact]
+    public async Task AddExcludePattern_Can_exclude_pattern_over_different_drives()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+
+        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+        {
+            { @"c:\Temp\Folder1\1.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"c:\Temp\Folder1\2.doc", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"d:\Temp\Folder2\3.txt", new MockFileData(Guid.NewGuid().ToString()) },
+            { @"d:\Temp\Folder2\4.doc", new MockFileData(Guid.NewGuid().ToString()) },
+        });
+
+        var provider = fixture.CreateFileHashLookupWithProvider(settings =>
+        {
+            settings.ConfigureServices = (services, _) =>
+            {
+                services.AddSingleton<IFileSystem>(fileSystem);
+            };
+        });
+
+        var fileHashlookup = provider.FileHashLookup;
+
+        // Act
+        await fileHashlookup.AddFolder(@"c:\Temp\Folder1\");
+        await fileHashlookup.AddFolder(@"d:\Temp\Folder2\");
+
+        await fileHashlookup.AddExcludePattern("*.doc");
+
+        // Assert
+        var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
+
+        actualFileNames.Should().BeEquivalentTo([1, 3]);
     }
 
     [Fact]
@@ -420,6 +458,7 @@ public class FileHashLookupTests
                 {
                     services.AddSingleton(FileSystem);
                 };
+                settings.ReportProgress = new Progress<ProgressEventArgs>(_ => { /*Nothing*/ });
             });
 
             Sut = provider.FileHashLookup;
@@ -435,7 +474,9 @@ public class FileHashLookupTests
 
         public void AssertContainsExcludesPattern(string excludePattern)
         {
-            _fileCollector.ExcludePatterns.Contains(excludePattern).Should().BeTrue();
+            var parsedPattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
+
+            _fileCollector.ExcludePatterns.Contains(parsedPattern).Should().BeTrue();
         }
 
         public void AssertContainsIncludePath(string includeFolder)
@@ -445,7 +486,7 @@ public class FileHashLookupTests
 
         public void AssertContainsIncludePattern(string includePattern)
         {
-            var parsedPattern = FileCollector.ParseFileGlobbingPattern(includePattern);
+            var parsedPattern = PathUtils.ParseFileGlobbingPattern(includePattern);
 
             _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
         }
