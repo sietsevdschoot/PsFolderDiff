@@ -1,4 +1,5 @@
 ﻿using System.IO.Abstractions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
@@ -84,10 +85,24 @@ public static class FileHashTestFixtureFileExtensions
         return fixture.FileSystem.FileInfo.New(file.FullName);
     }
 
+    public static BasicFileInfo AsBasicFileInfo<TFixture>(this TFixture fixture, IFileInfo file)
+        where TFixture : FileHashTestFixture
+    {
+        return HashingUtil.CreateBasicFileInfo(file);
+    }
+
     public static IFileInfo WithNewFile<TFixture>(this TFixture fixture, int? fileIdentifier = null, string? contents = null)
         where TFixture : FileHashTestFixture
     {
         return fixture.WithNewFile($"{fileIdentifier ?? fixture.GetNextIdentifier()}.txt", contents);
+    }
+
+    public static void DeleteFile<TFixture>(this TFixture fixture, string relativePath)
+        where TFixture : FileHashTestFixture
+    {
+        var fullName = fixture.FileSystem.Path.Combine(fixture.WorkingDirectory.FullName, relativePath);
+
+        fixture.FileSystem.File.Delete(fullName);
     }
 
     public static IFileInfo WithNewFile<TFixture>(this TFixture fixture, string relativePath, string? contents = null)

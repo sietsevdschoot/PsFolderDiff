@@ -305,6 +305,60 @@ public class FileHashLookupTests
     }
 
     [Fact]
+    public async Task Refresh_Adds_New_Files()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        await fixture.Sut.AddFolder("Folder1");
+
+        // Act
+        fixture.WithNewFile(@"Folder1\2.txt");
+        await fixture.Sut.Refresh();
+
+        // Assert
+        fixture.AssertContainsFileNames([1, 2]);
+    }
+
+    [Fact]
+    public async Task Refresh_Removes_No_Longer_Existing_Files()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder1\3.txt");
+        await fixture.Sut.AddFolder("Folder1");
+
+        // Act
+        fixture.DeleteFile(@"Folder1\2.txt");
+        await fixture.Sut.Refresh();
+
+        // Assert
+        fixture.AssertContainsFileNames([1, 3]);
+    }
+
+    [Fact]
+    public async Task Refresh_Updated_Modified_Files()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        var file1 = fixture.WithNewFile(@"Folder1\1.txt");
+        await fixture.Sut.AddFolder("Folder1");
+
+        // Act
+        fixture.UpdateFile(file1);
+        await fixture.Sut.Refresh();
+
+        // Assert
+        var expected = fixture.GetBasicFileInfo(file1.FullName);
+        var actual = fixture.Sut.File[file1.FullName];
+
+        actual.Should().BeEquivalentTo(expected);
+        fixture.Sut.File.Should().HaveCount(1);
+    }
+
+    [Fact]
     public void GetDifferencesInOther_Doesnt_copy_include_and_exclude_paths()
     {
         // Arrange

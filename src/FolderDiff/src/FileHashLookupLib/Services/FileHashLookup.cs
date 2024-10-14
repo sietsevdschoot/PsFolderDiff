@@ -129,6 +129,13 @@ public class FileHashLookup
             cancellationToken);
     }
 
+    public async Task Refresh(CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(
+            new RefreshRequest(),
+            cancellationToken);
+    }
+
     public async Task<FileHashLookup> GetDifferencesInOther(FileHashLookup other, CancellationToken cancellationToken = default)
     {
         var compareResult = await _mediator.Send(
