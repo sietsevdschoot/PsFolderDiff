@@ -463,7 +463,7 @@ public class FileHashLookupTests
         {
             var provider = this.CreateFileHashLookupWithProvider(settings =>
             {
-                settings.ReportPollingDelay = TimeSpan.Zero;
+                settings.ReportProgressDelay = TimeSpan.Zero;
                 settings.ConfigureServices = (services, _) =>
                 {
                     services.AddSingleton(FileSystem);

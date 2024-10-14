@@ -7,7 +7,7 @@ public class FileHashLookupSettings
 {
     public static FileHashLookupSettings Default => new FileHashLookupSettings
     {
-        ReportPollingDelay = TimeSpan.FromMilliseconds(500),
+        ReportProgressDelay = TimeSpan.FromMilliseconds(500),
         ReportProgress = new Progress<ProgressEventArgs>(progress =>
         {
             var progressMessage = string.Format(
@@ -21,7 +21,7 @@ public class FileHashLookupSettings
         }),
     };
 
-    public TimeSpan ReportPollingDelay { get; set; }
+    public TimeSpan ReportProgressDelay { get; set; }
 
     public Action<IServiceCollection, IServiceProvider>? ConfigureServices { get; set; }
 

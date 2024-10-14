@@ -3,6 +3,7 @@
 Todo:
 
 - Relative paths for include / expclude paths.
+- Add Exclude path option in Request.
 - Store absolute paths for basepath when retrieving relative path.
 - Create RefreshHandler
 - Create Load / Save handler

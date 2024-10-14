@@ -22,7 +22,7 @@ public class PeriodicalProgressReporter<T> : IPeriodicalProgressReporter<T>
 
     public void Report(Func<T> getValue)
     {
-        if (_stopwatch.Elapsed > _settings.ReportPollingDelay)
+        if (_stopwatch.Elapsed > _settings.ReportProgressDelay)
         {
             var value = getValue();
 
@@ -34,7 +34,7 @@ public class PeriodicalProgressReporter<T> : IPeriodicalProgressReporter<T>
 
     public void Report(Func<long, T> getValue, long currentProgress)
     {
-        if (_stopwatch.Elapsed > _settings.ReportPollingDelay)
+        if (_stopwatch.Elapsed > _settings.ReportProgressDelay)
         {
             Report(() => getValue(currentProgress));
         }

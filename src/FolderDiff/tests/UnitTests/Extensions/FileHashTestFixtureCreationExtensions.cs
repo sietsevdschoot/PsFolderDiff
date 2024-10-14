@@ -19,7 +19,7 @@ public static class FileHashTestFixtureCreationExtensions
     {
         return CreateFileHashLookupWithProvider(fixture, settings =>
         {
-            settings.ReportPollingDelay = TimeSpan.Zero;
+            settings.ReportProgressDelay = TimeSpan.Zero;
             settings.ConfigureServices = (services, _) =>
             {
                 services.AddSingleton(fixture.FileSystem);

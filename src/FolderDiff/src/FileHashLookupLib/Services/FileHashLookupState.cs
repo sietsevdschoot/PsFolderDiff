@@ -10,8 +10,8 @@ namespace PsFolderDiff.FileHashLookupLib.Services;
 
 public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
 {
-    private readonly Dictionary<string, BasicFileInfo> _fileLookup = new(comparer: StringComparer.InvariantCultureIgnoreCase);
-    private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new(comparer: StringComparer.InvariantCultureIgnoreCase);
+    private readonly Dictionary<string, BasicFileInfo> _fileLookup = new(StringComparer.InvariantCultureIgnoreCase);
+    private readonly Dictionary<string, List<BasicFileInfo>> _hashLookup = new(StringComparer.InvariantCultureIgnoreCase);
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
 
     public FileHashLookupState(IPeriodicalProgressReporter<ProgressEventArgs> progress)
@@ -71,7 +71,9 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
     {
         if (_fileLookup.TryGetValue(file.FullName, out var foundFile))
         {
-            return foundFile.CreationTime == file.CreationTime && foundFile.Hash == file.Hash
+            return foundFile.CreationTime == file.CreationTime
+                   && foundFile.Length == file.Length
+                   && foundFile.Hash == file.Hash
                 ? FileContainsState.Match
                 : FileContainsState.Modified;
         }

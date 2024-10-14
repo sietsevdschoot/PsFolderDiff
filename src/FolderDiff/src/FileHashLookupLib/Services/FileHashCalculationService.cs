@@ -37,7 +37,7 @@ public class FileHashCalculationService : IFileHashCalculationService
         {
             var file = files[i];
 
-            if (updateStatusStopwatch.Elapsed > _settings.Value.ReportPollingDelay)
+            if (updateStatusStopwatch.Elapsed > _settings.Value.ReportProgressDelay)
             {
                 _progress.Report(new ProgressEventArgs(
                     activity: "Calculate file hashes.",
