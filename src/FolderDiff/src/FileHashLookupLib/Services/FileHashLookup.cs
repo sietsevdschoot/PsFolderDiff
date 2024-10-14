@@ -49,12 +49,12 @@ public class FileHashLookup
         await _mediator.Send(
             new AddIncludePatternRequest
             {
-                IncludePath = path,
+                IncludePattern = path,
             },
             cancellationToken);
     }
 
-    public async Task AddIncludePattern(string includePattern, CancellationToken cancellationToken = default)
+    public async Task IncludePattern(string includePattern, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
             new AddIncludePatternRequest
@@ -64,12 +64,22 @@ public class FileHashLookup
             cancellationToken);
     }
 
-    public async Task AddExcludePattern(string excludePattern, CancellationToken cancellationToken = default)
+    public async Task ExcludePattern(string excludePattern, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
             new AddExcludePatternRequest
             {
                 ExcludePattern = excludePattern,
+            },
+            cancellationToken);
+    }
+
+    public async Task ExcludeFolder(string path, CancellationToken cancellationToken = default)
+    {
+        await _mediator.Send(
+            new AddExcludePatternRequest
+            {
+                ExcludePattern = path,
             },
             cancellationToken);
     }

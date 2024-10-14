@@ -28,13 +28,13 @@ public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest
 
     public Task Handle(AddIncludePatternRequest request, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrEmpty(request.IncludePattern, nameof(request.IncludePattern));
+
         _progress.Report(() => new ProgressEventArgs(
             activity: "Including folders or patterns",
             currentOperation: "Collecting files to include"));
 
-        var collectedFiles = !string.IsNullOrEmpty(request.IncludePath)
-            ? _fileCollector.AddIncludeFolder(request.IncludePath)
-            : _fileCollector.AddIncludePattern(request.IncludePattern);
+        var collectedFiles = _fileCollector.AddIncludePattern(request.IncludePattern);
 
         var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles).ToList();
 

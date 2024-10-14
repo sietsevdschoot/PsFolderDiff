@@ -46,7 +46,7 @@ public class FileHashLookupTests
 
         // Act
         var includePattern = @"Folder1\**\Sub1\**\*";
-        await fixture.Sut.AddIncludePattern(includePattern);
+        await fixture.Sut.IncludePattern(includePattern);
 
         // Assert
         fixture.AssertContainsFileNames([3, 4]);
@@ -68,7 +68,7 @@ public class FileHashLookupTests
 
         // Act
         await fixture.Sut.AddFolder(@"Folder1");
-        await fixture.Sut.AddExcludePattern(excludePattern);
+        await fixture.Sut.ExcludePattern(excludePattern);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2]);
@@ -103,7 +103,7 @@ public class FileHashLookupTests
         await fileHashlookup.AddFolder(@"c:\Temp\Folder1\");
         await fileHashlookup.AddFolder(@"d:\Temp\Folder2\");
 
-        await fileHashlookup.AddExcludePattern(@"d:\Temp\");
+        await fileHashlookup.ExcludePattern(@"d:\Temp\");
 
         // Assert
         var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
@@ -139,7 +139,7 @@ public class FileHashLookupTests
         await fileHashlookup.AddFolder(@"c:\Temp\Folder1\");
         await fileHashlookup.AddFolder(@"d:\Temp\Folder2\");
 
-        await fileHashlookup.AddExcludePattern("*.doc");
+        await fileHashlookup.ExcludePattern("*.doc");
 
         // Assert
         var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
