@@ -223,23 +223,33 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public void Will_look_at_the_file_hash_to_determine_file_equality_or_difference()
+    public async Task Will_look_at_the_file_hash_to_determine_file_equality_or_difference()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
 
-        fixture.WithNewFile("Folder1\\File1.txt");
+        string content = "Identical file content";
+
+        fixture.WithNewFile(@"Folder1\1.txt", content);
+        fixture.WithNewFile(@"Folder1\2.txt", content);
+        fixture.WithNewFile(@"Folder1\3.txt", content);
+
+        var fileHashLookup1 = fixture.CreateFileHashLookup();
+        await fileHashLookup1.AddFolder(@"Folder1");
+
+        fixture.WithNewFile(@"Folder2\4.txt", content);
+        fixture.WithNewFile(@"Folder2\5.txt", content);
+
+        var fileHashLookup2 = fixture.CreateFileHashLookup();
+        await fileHashLookup2.AddFolder(@"Folder2");
 
         // Act
+        var actual = await fileHashLookup1.GetDifferencesInOther(fileHashLookup2);
 
         // Assert
-
-        ////    1..3 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder\$_.txt - Value "My Test Value" - Force  }
-        ////    $myHash = GetFileHashTable "$TestDrive\MyFolder"
-        ////    4..5 | ForEach - Object { New - Item - ItemType File Testdrive:\MyFolder2\$_.txt - Value "My Test Value" - Force  }
-        ////    $newHash = GetFileHashTable "$TestDrive\MyFolder2"
-        ////    $actual = $myHash.GetMatchesInOther($newHash)
-        ////    $actual.GetFiles() | ForEach - Object { [int]($_.Name - replace $_.Extension) } | Should - Be @(4, 5)
+        actual.GetFiles()
+            .Select(x => Convert.ToInt32(fixture.FileSystem.Path.GetFileNameWithoutExtension(x.FullName)))
+            .Should().BeEquivalentTo([4, 5]);
     }
 
     [Fact]

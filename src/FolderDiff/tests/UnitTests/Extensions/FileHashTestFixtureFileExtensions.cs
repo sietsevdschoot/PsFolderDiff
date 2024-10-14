@@ -1,9 +1,5 @@
 ﻿using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
-using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
-using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
@@ -145,19 +141,10 @@ public static class FileHashTestFixtureFileExtensions
     private static IFileInfo AddFile<TFixture>(this TFixture fixture, string fullName, string? fileContents = null)
         where TFixture : FileHashTestFixture
     {
-        IFileInfo createdFile;
         fileContents ??= Guid.NewGuid().ToString();
 
-        if (fixture.FileSystem is MockFileSystem mockFileSystem)
-        {
-            createdFile = new MockFileInfo(mockFileSystem, fullName);
-            mockFileSystem.AddFile(createdFile, new MockFileData(fileContents));
-        }
-        else
-        {
-            fixture.FileSystem.File.WriteAllText(fullName, fileContents);
-            createdFile = fixture.FileSystem.FileInfo.New(fullName);
-        }
+        fixture.FileSystem.File.WriteAllText(fullName, fileContents);
+        var createdFile = fixture.FileSystem.FileInfo.New(fullName);
 
         return createdFile;
     }

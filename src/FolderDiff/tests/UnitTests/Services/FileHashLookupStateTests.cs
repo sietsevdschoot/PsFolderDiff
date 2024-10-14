@@ -202,56 +202,6 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void Can_exclude_file_patterns()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Can_exclude_folders()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Can_include_file_patterns()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Will_remove_already_added_files_which_match_excludeFilePatterns()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Will_remove_already_added_files_which_match_excluded_folders_()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
     public void GetFiles_returns_all_files()
     {
         // Arrange
