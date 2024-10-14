@@ -30,7 +30,7 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
     {
         ArgumentException.ThrowIfNullOrEmpty(path, nameof(path));
 
-        return AddIncludePattern(PathUtils.AddRecursiveDirectoryPattern(path));
+        return AddIncludePattern(path);
     }
 
     public List<IFileInfo> AddIncludePattern(string includePattern)

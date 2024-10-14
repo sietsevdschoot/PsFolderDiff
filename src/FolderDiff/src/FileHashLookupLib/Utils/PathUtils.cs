@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace PsFolderDiff.FileHashLookupLib.Utils;
+﻿namespace PsFolderDiff.FileHashLookupLib.Utils;
 
 public static class PathUtils
 {
@@ -31,10 +29,5 @@ public static class PathUtils
         }
 
         return (Directory: directory, RelativePattern: relativePattern);
-    }
-
-    public static string AddRecursiveDirectoryPattern(string directory)
-    {
-        return $@"{directory.Trim('\\')}\**\";
     }
 }
