@@ -35,15 +35,15 @@ public static class FileHashTestFixtureFileExtensions
         return file;
     }
 
-    public static BasicFileInfo GetBasicFileInfo<TFixture>(this TFixture fixture, string name)
+    public static BasicFileInfo GetBasicFileInfo<TFixture>(this TFixture fixture, string path)
         where TFixture : FileHashTestFixture
     {
         var file = fixture.AllFiles.SingleOrDefault(x =>
-            string.Equals(fixture.FileSystem.Path.GetFileName(x.FullName), name, StringComparison.InvariantCultureIgnoreCase));
+            string.Equals(x.FullName, path, StringComparison.InvariantCultureIgnoreCase));
 
         if (file == null)
         {
-            throw new FileNotFoundException($"Not found", name);
+            throw new FileNotFoundException($"Not found", path);
         }
 
         return file;

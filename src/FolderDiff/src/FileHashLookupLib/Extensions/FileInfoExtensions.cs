@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using System.Security.Cryptography;
+using PsFolderDiff.FileHashLookupLib.Domain;
 
 namespace PsFolderDiff.FileHashLookupLib.Extensions;
 
@@ -23,5 +24,10 @@ public static class FileInfoExtensions
         using var bufferedStream = new BufferedStream(fileStream, 1200000);
 
         return Convert.ToHexString(MD5.ComputeHash(bufferedStream));
+    }
+
+    public static IFileInfo AsFileInfo(this BasicFileInfo file, IFileSystem fileSystem)
+    {
+        return fileSystem.FileInfo.New(file.FullName);
     }
 }

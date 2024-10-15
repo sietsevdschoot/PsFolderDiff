@@ -83,13 +83,24 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
         }
     }
 
-    public bool Contains(IFileInfo file)
+    public FileContainsState Contains(IFileInfo file)
     {
-        var basicFileInfo = new BasicFileInfo(file, file.CalculateMD5Hash());
+        if (_fileLookup.TryGetValue(file.FullName, out var foundFile))
+        {
+            return foundFile.CreationTime == file.CreationTime
+                   && foundFile.Length == file.Length
+                ? FileContainsState.Match
+                : FileContainsState.Modified;
+        }
+        else
+        {
+            return FileContainsState.NoMatch;
+        }
+    }
 
-        var fileState = Contains(basicFileInfo);
-
-        return fileState == FileContainsState.Match || fileState == FileContainsState.Modified;
+    public List<BasicFileInfo> GetFiles()
+    {
+        return File.Values.ToList();
     }
 
     public void Remove(IFileInfo file)

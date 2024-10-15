@@ -16,14 +16,17 @@ public class FileHashLookup
     private readonly IMediator _mediator;
     private readonly IHasReadOnlyFilePatterns _filePatterns;
     private readonly IHasReadonlyLookups _fileHashLookups;
+    private readonly IFileHashLookupState _fileHashLookupState;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
         IHasReadonlyLookups fileHashLookups,
+        IFileHashLookupState fileHashLookupState,
         IMediator mediator)
     {
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
+        _fileHashLookupState = fileHashLookupState;
         _mediator = mediator;
     }
 
@@ -44,7 +47,7 @@ public class FileHashLookup
         return provider.FileHashLookup;
     }
 
-    public async Task AddFolder(string path, CancellationToken cancellationToken = default)
+    public async Task IncludeFolder(string path, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
             new AddIncludePatternRequest
@@ -86,7 +89,7 @@ public class FileHashLookup
 
     public List<BasicFileInfo> GetFiles()
     {
-        return _fileHashLookups.File.Values.ToList();
+        return _fileHashLookupState.GetFiles();
     }
 
     public async Task AddFile(IFileInfo file, CancellationToken cancellationToken = default)

@@ -11,9 +11,11 @@ public interface IFileHashLookupState
 
     FileContainsState Contains(BasicFileInfo file);
 
-    bool Contains(IFileInfo file);
+    FileContainsState Contains(IFileInfo file);
 
     void Remove(IFileInfo file);
 
     void Remove(BasicFileInfo file);
+
+    List<BasicFileInfo> GetFiles();
 }

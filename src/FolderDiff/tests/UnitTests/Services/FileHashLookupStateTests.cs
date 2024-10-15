@@ -179,19 +179,6 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void Contains_returns_true_if_file_matches()
-    {
-        // Arrange
-        var fixture = new FileHashLookupStateTestsFixture()
-            .WithAddedFiles(Enumerable.Range(1, 3).ToList());
-
-        var file1 = fixture.GetFileInfo("1.txt");
-
-        // Act && Assert
-        fixture.Sut.Contains(file1).Should().BeTrue();
-    }
-
-    [Fact]
     public void Exposes_the_paths_which_were_used()
     {
         // Arrange
