@@ -47,42 +47,22 @@ public class FileHashLookup
         return provider.FileHashLookup;
     }
 
-    public async Task IncludeFolder(string path, CancellationToken cancellationToken = default)
+    public async Task Include(string includeFolderOrPattern, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
             new AddIncludePatternRequest
             {
-                IncludePattern = path,
+                IncludePattern = includeFolderOrPattern,
             },
             cancellationToken);
     }
 
-    public async Task IncludePattern(string includePattern, CancellationToken cancellationToken = default)
-    {
-        await _mediator.Send(
-            new AddIncludePatternRequest
-            {
-                IncludePattern = includePattern,
-            },
-            cancellationToken);
-    }
-
-    public async Task ExcludePattern(string excludePattern, CancellationToken cancellationToken = default)
+    public async Task Exclude(string excludeFolderOrPattern, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
             new AddExcludePatternRequest
             {
-                ExcludePattern = excludePattern,
-            },
-            cancellationToken);
-    }
-
-    public async Task ExcludeFolder(string path, CancellationToken cancellationToken = default)
-    {
-        await _mediator.Send(
-            new AddExcludePatternRequest
-            {
-                ExcludePattern = path,
+                ExcludePattern = excludeFolderOrPattern,
             },
             cancellationToken);
     }

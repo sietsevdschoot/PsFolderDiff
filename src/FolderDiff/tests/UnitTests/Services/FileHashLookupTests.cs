@@ -25,7 +25,7 @@ public class FileHashLookupTests
 
         // Act
         var includeFolder = @"Folder1\";
-        await fixture.Sut.IncludeFolder(includeFolder);
+        await fixture.Sut.Include(includeFolder);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4]);
@@ -45,7 +45,7 @@ public class FileHashLookupTests
 
         // Act
         var includePattern = @"Folder1\**\Sub1\**\*";
-        await fixture.Sut.IncludePattern(includePattern);
+        await fixture.Sut.Include(includePattern);
 
         // Assert
         fixture.AssertContainsFileNames([3, 4]);
@@ -66,8 +66,8 @@ public class FileHashLookupTests
         var excludePattern = @$"**\Sub1\**\*";
 
         // Act
-        await fixture.Sut.IncludeFolder(@"Folder1");
-        await fixture.Sut.ExcludePattern(excludePattern);
+        await fixture.Sut.Include(@"Folder1");
+        await fixture.Sut.Exclude(excludePattern);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2]);
@@ -99,10 +99,10 @@ public class FileHashLookupTests
         var fileHashlookup = provider.FileHashLookup;
 
         // Act
-        await fileHashlookup.IncludeFolder(@"c:\Temp\Folder1\");
-        await fileHashlookup.IncludeFolder(@"d:\Temp\Folder2\");
+        await fileHashlookup.Include(@"c:\Temp\Folder1\");
+        await fileHashlookup.Include(@"d:\Temp\Folder2\");
 
-        await fileHashlookup.ExcludePattern(@"d:\Temp\");
+        await fileHashlookup.Exclude(@"d:\Temp\");
 
         // Assert
         var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
@@ -135,10 +135,10 @@ public class FileHashLookupTests
         var fileHashlookup = provider.FileHashLookup;
 
         // Act
-        await fileHashlookup.IncludeFolder(@"c:\Temp\Folder1\");
-        await fileHashlookup.IncludeFolder(@"d:\Temp\Folder2\");
+        await fileHashlookup.Include(@"c:\Temp\Folder1\");
+        await fileHashlookup.Include(@"d:\Temp\Folder2\");
 
-        await fileHashlookup.ExcludePattern("*.doc");
+        await fileHashlookup.Exclude("*.doc");
 
         // Assert
         var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
@@ -202,10 +202,10 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder3\5.txt");
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.IncludeFolder("Folder1");
+        await fileHashLookup1.Include("Folder1");
 
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.IncludeFolder("Folder2");
+        await fileHashLookup2.Include("Folder2");
 
         // Act
         var fileHashLookup = fixture.CreateFileHashLookup();
@@ -234,13 +234,13 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\3.txt", content);
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.IncludeFolder(@"Folder1");
+        await fileHashLookup1.Include(@"Folder1");
 
         fixture.WithNewFile(@"Folder2\4.txt", content);
         fixture.WithNewFile(@"Folder2\5.txt", content);
 
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.IncludeFolder(@"Folder2");
+        await fileHashLookup2.Include(@"Folder2");
 
         // Act
         var actual = await fileHashLookup1.GetDifferencesInOther(fileHashLookup2);
@@ -260,13 +260,13 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\2.txt");
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.IncludeFolder("Folder1");
+        await fileHashLookup1.Include("Folder1");
 
         // Update
         fixture.WithNewFile(@"Folder1\3.txt");
         fixture.WithNewFile(@"Folder1\4.txt");
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.IncludeFolder("Folder1");
+        await fileHashLookup2.Include("Folder1");
 
         // Act
         var diffInOther = await fileHashLookup1.GetMatchesInOther(fileHashLookup2);
@@ -286,13 +286,13 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\2.txt");
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.IncludeFolder("Folder1");
+        await fileHashLookup1.Include("Folder1");
 
         // Update
         fixture.WithNewFile(@"Folder1\3.txt");
         fixture.WithNewFile(@"Folder1\4.txt");
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.IncludeFolder("Folder1");
+        await fileHashLookup2.Include("Folder1");
 
         // Act
         var diffInOther = await fileHashLookup1.GetDifferencesInOther(fileHashLookup2);
@@ -309,7 +309,7 @@ public class FileHashLookupTests
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
-        await fixture.Sut.IncludeFolder("Folder1");
+        await fixture.Sut.Include("Folder1");
 
         // Act
         fixture.WithNewFile(@"Folder1\2.txt");
@@ -327,7 +327,7 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
         fixture.WithNewFile(@"Folder1\3.txt");
-        await fixture.Sut.IncludeFolder("Folder1");
+        await fixture.Sut.Include("Folder1");
 
         // Act
         fixture.DeleteFile(@"Folder1\2.txt");
@@ -343,7 +343,7 @@ public class FileHashLookupTests
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         var file1 = fixture.WithNewFile(@"Folder1\1.txt");
-        await fixture.Sut.IncludeFolder("Folder1");
+        await fixture.Sut.Include("Folder1");
 
         // Act
         fixture.UpdateFile(file1);
