@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using PsFolderDiff.FileHashLookupLib.Domain;
-using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Models;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;
@@ -40,6 +39,31 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
             : [file];
 
         _hashLookup[file.Hash] = items;
+    }
+
+    public void Remove(BasicFileInfo file)
+    {
+        if (_fileLookup.ContainsKey(file.FullName))
+        {
+            _fileLookup.Remove(file.FullName);
+
+            var entriesWithSameHash = _hashLookup[file.Hash];
+
+            entriesWithSameHash.Remove(file);
+
+            if (!entriesWithSameHash.Any())
+            {
+                _hashLookup.Remove(file.Hash);
+            }
+        }
+    }
+
+    public void Remove(IFileInfo file)
+    {
+        if (_fileLookup.TryGetValue(file.FullName, out var basicFileInfo))
+        {
+            Remove(basicFileInfo);
+        }
     }
 
     public void AddFileHashLookup(FileHashLookup other)
@@ -101,30 +125,5 @@ public class FileHashLookupState : IHasReadonlyLookups, IFileHashLookupState
     public List<BasicFileInfo> GetFiles()
     {
         return File.Values.ToList();
-    }
-
-    public void Remove(IFileInfo file)
-    {
-        if (_fileLookup.TryGetValue(file.FullName, out var basicFileInfo))
-        {
-            Remove(basicFileInfo);
-        }
-    }
-
-    public void Remove(BasicFileInfo file)
-    {
-        if (_fileLookup.ContainsKey(file.FullName))
-        {
-            _fileLookup.Remove(file.FullName);
-
-            var entriesWithSameHash = _hashLookup[file.Hash];
-
-            entriesWithSameHash.Remove(file);
-
-            if (!entriesWithSameHash.Any())
-            {
-                _hashLookup.Remove(file.Hash);
-            }
-        }
     }
 }
