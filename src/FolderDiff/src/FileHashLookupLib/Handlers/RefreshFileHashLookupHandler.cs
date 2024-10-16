@@ -15,7 +15,7 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IFileSystem _fileSystem;
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
-    private IFileHashCalculationService _fileHashCalculationService;
+    private readonly IFileHashCalculationService _fileHashCalculationService;
 
     public RefreshFileHashLookupHandler(
         IFileCollector fileCollector,
@@ -33,13 +33,6 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
 
     public Task Handle(RefreshRequest request, CancellationToken cancellationToken)
     {
-        //// check exist on files in Hash
-        //// Collect files from globs
-        //// Check if new or updated
-        //// calculate hash
-        //// new -> add
-        //// updated -> remove, add
-
         _progress.Report(() => new ProgressEventArgs(
             activity: "Refresh FileHashLookup",
             currentOperation: "Collecting files..."));
@@ -51,15 +44,11 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
             activity: "Refresh FileHashLookup",
             currentOperation: "Detecting changes..."));
 
-        var matchedFiles = allCollectedFiles.Select(file => new
-        {
-            File = file,
-            FileStatus = _fileHashLookupState.Contains(file),
-        })
-        .ToList();
+        var matchedFiles = allCollectedFiles
+            .ToLookup(file => _fileHashLookupState.Contains(file), v => v);
 
-        var addedFiles = matchedFiles.Where(x => x.FileStatus == FileContainsState.NoMatch).Select(x => x.File).ToList();
-        var modifiedFiles = matchedFiles.Where(x => x.FileStatus == FileContainsState.Modified).Select(x => x.File).ToList();
+        var addedFiles = matchedFiles[FileContainsState.NoMatch];
+        var modifiedFiles = matchedFiles[FileContainsState.Modified];
         var removedFiles = filesInFileHashLookup.Where(x => !x.Exists).ToList();
 
         var newAndUpdatedFiles = _fileHashCalculationService.CalculateHash(addedFiles.Concat(modifiedFiles).ToList())
@@ -72,6 +61,10 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
 
         newAndUpdatedFiles.ForEach(_fileHashLookupState.Add);
         removedFiles.ForEach(_fileHashLookupState.Remove);
+
+        _progress.Report(() => new ProgressEventArgs(
+            activity: "Refresh FileHashLookup",
+            currentOperation: "Done."));
 
         return Task.CompletedTask;
     }
