@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
+using System.Threading;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -159,5 +160,18 @@ public class FileHashLookup
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
             ServiceProvider: sp);
+    }
+
+    public async Task Save(CancellationToken cancellationToken = default)
+    {
+        ////$absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
+
+        ////    $replaceableChars = ([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach - Object { [Regex]::Escape($_) }) -join "|"
+        ////    $fileName = "$($absolutePath.FullName -replace $replaceableChars, "_").xml"
+
+        ////    $this.SavedAsFile = (GetAbsolutePath $fileName)
+
+
+
     }
 }

@@ -1,4 +1,8 @@
-﻿namespace PsFolderDiff.FileHashLookupLib.Utils;
+﻿using System.IO.Abstractions;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace PsFolderDiff.FileHashLookupLib.Utils;
 
 public static class PathUtils
 {
@@ -29,5 +33,15 @@ public static class PathUtils
         }
 
         return (Directory: directory, RelativePattern: relativePattern);
+    }
+
+    public static string CreateFilenameFromPath(IDirectoryInfo directory)
+    {
+        var replaceableChars = string.Join("|", 
+            Path.GetInvalidFileNameChars().Concat([' ']).Select(x => Regex.Escape(x.ToString())));
+
+        var filename = $"{Regex.Replace(directory.FullName, replaceableChars, "_")}.json";
+
+        return filename;
     }
 }

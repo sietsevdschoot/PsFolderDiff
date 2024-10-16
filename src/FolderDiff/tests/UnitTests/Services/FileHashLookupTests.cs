@@ -302,7 +302,7 @@ public class FileHashLookupTests
         diffInOther.AssertIncludePatternsAreEmpty();
         diffInOther.AssertExcludePatternsAreEmpty();
     }
-
+ 
     [Fact]
     public async Task Refresh_Adds_New_Files()
     {
@@ -358,16 +358,6 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public void GetDifferencesInOther_Doesnt_copy_include_and_exclude_paths()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
     public void Creates_a_file_containing_the_HashTable()
     {
         // Arrange
@@ -378,28 +368,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-
-    public void Refresh_Removes_folders_and_files_from_paths_which_do_no_longer_exists()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
     public void Refresh_updated_the_LastUpdated_date()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Refresh_updates_the_hash_of_changed_files()
     {
         // Arrange
 
@@ -422,10 +391,14 @@ public class FileHashLookupTests
     public void Save_without_filename_will_pick_tempfile_name()
     {
         // Arrange
+        var fixture = new FileHashLookupTestFixture();
 
         // Act
+        fixture.Sut.Save();
 
         // Assert
+        fixture.AllFiles.Should().HaveCount(1);
+
     }
 
     [Fact]
