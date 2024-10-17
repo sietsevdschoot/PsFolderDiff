@@ -18,16 +18,19 @@ public class FileHashLookup
     private readonly IHasReadOnlyFilePatterns _filePatterns;
     private readonly IHasReadonlyLookups _fileHashLookups;
     private readonly IFileHashLookupState _fileHashLookupState;
+    private readonly IPersistenceService _persistenceService;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
         IHasReadonlyLookups fileHashLookups,
         IFileHashLookupState fileHashLookupState,
+        IPersistenceService persistenceService,
         IMediator mediator)
     {
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
         _fileHashLookupState = fileHashLookupState;
+        _persistenceService = persistenceService;
         _mediator = mediator;
     }
 
@@ -39,6 +42,8 @@ public class FileHashLookup
 
     public IReadOnlyCollection<(string Directory, string RelativePattern)> ExcludePatterns => _filePatterns.ExcludePatterns;
 
+    public string? SavedAsFile => _persistenceService.SavedAsFile;
+
     public static FileHashLookup Create() => Create(FileHashLookupSettings.Default);
 
     public static FileHashLookup Create(FileHashLookupSettings settings)
@@ -46,6 +51,16 @@ public class FileHashLookup
         var provider = Create(new ServiceCollection(), settings);
 
         return provider.FileHashLookup;
+    }
+
+    public static FileHashLookup Load(string path)
+    {
+        return PersistenceService.LoadFileHashLookup(path);
+    }
+
+    public void Save(string? path = null)
+    {
+        _persistenceService.Save(this, path ?? SavedAsFile);
     }
 
     public async Task Include(string includeFolderOrPattern, CancellationToken cancellationToken = default)
@@ -160,18 +175,5 @@ public class FileHashLookup
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
             ServiceProvider: sp);
-    }
-
-    public async Task Save(CancellationToken cancellationToken = default)
-    {
-        ////$absolutePath = [IO.DirectoryInfo](GetAbsolutePath $path)
-
-        ////    $replaceableChars = ([IO.Path]::GetInvalidFileNameChars() + ' ' | Foreach - Object { [Regex]::Escape($_) }) -join "|"
-        ////    $fileName = "$($absolutePath.FullName -replace $replaceableChars, "_").xml"
-
-        ////    $this.SavedAsFile = (GetAbsolutePath $fileName)
-
-
-
     }
 }

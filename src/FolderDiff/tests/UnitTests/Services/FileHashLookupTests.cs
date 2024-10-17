@@ -302,7 +302,7 @@ public class FileHashLookupTests
         diffInOther.AssertIncludePatternsAreEmpty();
         diffInOther.AssertExcludePatternsAreEmpty();
     }
- 
+
     [Fact]
     public async Task Refresh_Adds_New_Files()
     {
@@ -398,7 +398,6 @@ public class FileHashLookupTests
 
         // Assert
         fixture.AllFiles.Should().HaveCount(1);
-
     }
 
     [Fact]

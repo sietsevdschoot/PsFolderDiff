@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IEventAggregator, EventAggregator>();
         services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
+        services.AddSingleton<IPersistenceService, PersistenceService>();
         services.AddSingleton(typeof(IProgress<>), typeof(Progress<>));
         services.AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
