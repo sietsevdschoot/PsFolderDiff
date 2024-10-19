@@ -446,7 +446,6 @@ public class FileHashLookupTests
         description.Should().Match($"*{nameof(FileHashLookup)}*");
     }
 
-
     private class FileHashLookupTestFixture : FileHashTestFixture
     {
         private readonly Lazy<(FileHashLookup FileHashLookup, IServiceProvider ServiceProvider)> _provider;
