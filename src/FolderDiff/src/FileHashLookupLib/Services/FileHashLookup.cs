@@ -18,19 +18,25 @@ public class FileHashLookup
     private readonly IHasReadonlyLookups _fileHashLookups;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPersistenceService _persistenceService;
+    private readonly IHasReadonlySaveInformation _readonlySaveInformation;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
         IHasReadonlyLookups fileHashLookups,
         IFileHashLookupState fileHashLookupState,
         IPersistenceService persistenceService,
+        IHasLastUpdateInformation lastUpdateInformation,
+        IHasReadonlySaveInformation readonlySaveInformation,
         IMediator mediator)
     {
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
         _fileHashLookupState = fileHashLookupState;
+        _readonlySaveInformation = readonlySaveInformation;
         _persistenceService = persistenceService;
         _mediator = mediator;
+
+        lastUpdateInformation.LastUpdated = DateTime.Now;
     }
 
     public IReadOnlyDictionary<string, BasicFileInfo> File => _fileHashLookups.File;
@@ -41,7 +47,9 @@ public class FileHashLookup
 
     public IReadOnlyCollection<string> ExcludePatterns => _filePatterns.ExcludePatterns.Select(x => x.Value).ToList();
 
-    public string SavedAsFile => _persistenceService.SavedAsFile;
+    public string SavedAsFile => _readonlySaveInformation.SavedAsFile;
+
+    public DateTime LastUpdated => _readonlySaveInformation.LastUpdated;
 
     public static FileHashLookup Create() => Create(FileHashLookupSettings.Default);
 

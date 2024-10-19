@@ -1,7 +1,7 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
-using PsFolderDiff.FileHashLookupLib.Domain;
+using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using Xunit;
@@ -129,7 +129,7 @@ public class FileCollectorTests
 
         // Act
         fixture.AddIncludePattern(@"\Folder1\");
-        fixture.AddExcludePattern(@"**\Sub1\**\*");
+        fixture.ExcludePattern(@"**\Sub1\**\*");
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 5]);
@@ -148,7 +148,7 @@ public class FileCollectorTests
 
         // Act
         fixture.AddIncludePattern(@"Folder1\");
-        fixture.AddExcludePattern(@"**\*.doc");
+        fixture.ExcludePattern(@"**\*.doc");
 
         // Assert
         fixture.AssertContainsFileNames([1, 5]);
@@ -212,7 +212,7 @@ public class FileCollectorTests
 
         fixture.AddIncludePattern(@"Folder1\");
         fixture.AddIncludePattern(@"Folder2\");
-        fixture.AddExcludePattern(@"**\Sub1\**\*");
+        fixture.ExcludePattern(@"**\Sub1\**\*");
 
         // Act
         var actual = fixture.GetFiles();
@@ -248,7 +248,7 @@ public class FileCollectorTests
 
         public FileCollectorTestFixture()
         {
-            _sut = new Lazy<FileCollector>(() => new FileCollector(new StorageModel(), FileSystem));
+            _sut = new Lazy<FileCollector>(() => ServiceProvider.GetRequiredService<FileCollector>());
         }
 
         public FileCollector Sut => _sut.Value;
@@ -267,11 +267,9 @@ public class FileCollectorTests
             return Sut.IncludePattern(path);
         }
 
-        public FileCollectorTestFixture AddExcludePattern(string excludePattern)
+        public void ExcludePattern(string excludePattern)
         {
             Sut.ExcludePattern(excludePattern);
-
-            return this;
         }
 
         public List<IFileInfo> GetFiles()

@@ -1,6 +1,8 @@
 ﻿namespace PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 
-public interface IHasReadonlySavePath
+public interface IHasReadonlySaveInformation
 {
     string SavedAsFile { get; }
+
+    DateTime LastUpdated { get; }
 }

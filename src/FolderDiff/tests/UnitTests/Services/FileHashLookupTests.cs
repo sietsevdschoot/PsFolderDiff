@@ -347,6 +347,35 @@ public class FileHashLookupTests
     }
 
     [Fact]
+    public async Task Refresh_updated_the_LastUpdated_date()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        var file1 = fixture.WithNewFile(@"Folder1\1.txt");
+        await fixture.Sut.Include("Folder1");
+
+        // Act
+        fixture.UpdateFile(file1);
+
+        var lastUpdateBeforeRefresh = fixture.Sut.LastUpdated;
+        await fixture.Sut.Refresh();
+
+        // Assert
+        fixture.Sut.LastUpdated.Should().BeAfter(lastUpdateBeforeRefresh);
+        fixture.Sut.LastUpdated.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(4));
+    }
+
+    [Fact]
+    public void Sets_the_LastUpdated_time_when_FileHashTable_on_instantiation()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+
+        // Assert
+        fixture.Sut.LastUpdated.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(4));
+    }
+
+    [Fact]
     public async Task Creates_a_file_containing_the_HashTable()
     {
         // Arrange
@@ -362,27 +391,7 @@ public class FileHashLookupTests
         var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
 
         // Assert
-        actual.Should().BeEquivalentTo(expected);
-    }
-
-    [Fact]
-    public void Refresh_updated_the_LastUpdated_date()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Returns_unique_items_from_other_object_it_is_compared_to()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
+        actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
     }
 
     [Fact]
@@ -396,16 +405,7 @@ public class FileHashLookupTests
 
         // Assert
         fixture.FileSystem.File.Exists(fixture.Sut.SavedAsFile).Should().BeTrue();
-    }
-
-    [Fact]
-    public void Sets_the_LastUpdated_time_when_FileHashTable_on_instantiation()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
+        fixture.Sut.SavedAsFile.Should().StartWith(fixture.FileSystem.Path.GetTempPath());
     }
 
     [Fact]

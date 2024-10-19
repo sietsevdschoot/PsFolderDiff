@@ -2,6 +2,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests;
@@ -12,6 +13,7 @@ public abstract class FileHashTestFixture
 
     private readonly string _workingDirectory;
     private readonly Lazy<FileHashLookupSettings> _fileHashLookupSettings;
+    private readonly Lazy<IServiceProvider> _provider;
     private int _i = 1;
 
     protected FileHashTestFixture()
@@ -32,7 +34,11 @@ public abstract class FileHashTestFixture
 
         FileSystem.Directory.CreateDirectory(_workingDirectory);
         FileSystem.Directory.SetCurrentDirectory(_workingDirectory);
+
+        _provider = new Lazy<IServiceProvider>(() => this.CreateFileHashLookupWithProvider(FileHashLookupSettings).ServiceProvider);
     }
+
+    public IServiceProvider ServiceProvider => _provider.Value;
 
     public IFileSystem FileSystem { get; set; }
 

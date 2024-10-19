@@ -35,10 +35,16 @@ public static class ServiceCollectionExtensions
             .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
         services
+            .AddSingleton<PersistenceService>()
+            .AddSingleton<IPersistenceService>(sp => sp.GetRequiredService<PersistenceService>())
+            .AddSingleton<IHasReadonlySaveInformation>(sp => sp.GetRequiredService<PersistenceService>())
+            .AddSingleton<IHasLastUpdateInformation>(sp => sp.GetRequiredService<PersistenceService>());
+
+        services
             .AddSingleton<StorageModel>()
             .AddSingleton<ISupportFileHashLookups>(sp => sp.GetRequiredService<StorageModel>())
             .AddSingleton<ISupportFilePatterns>(sp => sp.GetRequiredService<StorageModel>())
-            .AddSingleton<ISupportSavePath>(sp => sp.GetRequiredService<StorageModel>());
+            .AddSingleton<ISupportSaveInformation>(sp => sp.GetRequiredService<StorageModel>());
 
         services
             .AddSingleton<FileCollector>()

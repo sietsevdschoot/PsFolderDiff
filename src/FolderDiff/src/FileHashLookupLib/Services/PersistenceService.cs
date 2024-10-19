@@ -9,7 +9,7 @@ using PsFolderDiff.FileHashLookupLib.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;
 
-public class PersistenceService : IPersistenceService
+public class PersistenceService : IPersistenceService, IHasReadonlySaveInformation, IHasLastUpdateInformation
 {
     private readonly StorageModel _storageModel;
     private readonly IFileSystem _fileSystem;
@@ -26,6 +26,12 @@ public class PersistenceService : IPersistenceService
     }
 
     public string SavedAsFile => _storageModel.SavedAsFile;
+
+    public DateTime LastUpdated
+    {
+        get => _storageModel.LastUpdated;
+        set => _storageModel.LastUpdated = value;
+    }
 
     public static FileHashLookup LoadFileHashLookup(string path, FileHashLookupSettings settings)
     {

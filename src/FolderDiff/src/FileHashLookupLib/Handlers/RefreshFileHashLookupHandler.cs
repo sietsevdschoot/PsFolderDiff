@@ -15,19 +15,22 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
     private readonly IFileSystem _fileSystem;
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
     private readonly IFileHashCalculationService _fileHashCalculationService;
+    private readonly IHasLastUpdateInformation _persistenceService;
 
     public RefreshFileHashLookupHandler(
         IFileCollector fileCollector,
         IFileHashLookupState fileHashLookupState,
         IFileSystem fileSystem,
         IFileHashCalculationService fileHashCalculationService,
-        IPeriodicalProgressReporter<ProgressEventArgs> progress)
+        IPeriodicalProgressReporter<ProgressEventArgs> progress,
+        IHasLastUpdateInformation persistenceService)
     {
         _fileHashLookupState = fileHashLookupState;
         _fileCollector = fileCollector;
         _fileSystem = fileSystem;
         _fileHashCalculationService = fileHashCalculationService;
         _progress = progress;
+        _persistenceService = persistenceService;
     }
 
     public Task Handle(RefreshRequest request, CancellationToken cancellationToken)
@@ -65,6 +68,7 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
             activity: "Refresh FileHashLookup",
             currentOperation: "Done."));
 
+        _persistenceService.LastUpdated = DateTime.Now;
         return Task.CompletedTask;
     }
 }

@@ -13,12 +13,15 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 {
     private readonly IFileSystem _fileSystem;
     private readonly ISupportFilePatterns _storageModel;
+    private readonly IHasLastUpdateInformation _lastUpdateInformation;
 
     public FileCollector(
         ISupportFilePatterns storageModel,
+        IHasLastUpdateInformation lastUpdateInformation,
         IFileSystem fileSystem)
     {
         _storageModel = storageModel;
+        _lastUpdateInformation = lastUpdateInformation;
         _fileSystem = fileSystem;
     }
 
@@ -40,6 +43,8 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 
         var filesToInclude = GetFilesInternal(parsedIncludePattern);
 
+        _lastUpdateInformation.LastUpdated = DateTime.Now;
+
         return filesToInclude;
     }
 
@@ -50,6 +55,8 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
         var getFilesToExclude = GetFilesToExclude(parsedExcludePattern);
 
         _storageModel.ExcludePatterns.Add(parsedExcludePattern);
+
+        _lastUpdateInformation.LastUpdated = DateTime.Now;
 
         return getFilesToExclude;
     }

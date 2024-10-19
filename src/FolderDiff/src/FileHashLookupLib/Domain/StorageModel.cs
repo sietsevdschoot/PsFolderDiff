@@ -5,7 +5,7 @@ namespace PsFolderDiff.FileHashLookupLib.Domain;
 public class StorageModel
     : ISupportFileHashLookups,
       ISupportFilePatterns,
-      ISupportSavePath
+      ISupportSaveInformation
 {
     public Dictionary<string, BasicFileInfo> File { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
 
@@ -16,4 +16,6 @@ public class StorageModel
     public List<FilePattern> ExcludePatterns { get; set; } = new();
 
     public string SavedAsFile { get; set; } = string.Empty;
+
+    public DateTime LastUpdated { get; set; } = DateTime.MinValue;
 }
