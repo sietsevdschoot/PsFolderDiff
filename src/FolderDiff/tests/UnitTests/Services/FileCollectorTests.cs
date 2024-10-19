@@ -1,6 +1,7 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
+using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
@@ -165,7 +166,7 @@ public class FileCollectorTests
             { @"d:\Temp\Folder2\4.txt", new MockFileData(Guid.NewGuid().ToString()) },
         });
 
-        var fileCollector = new FileCollector(fileSystem);
+        var fileCollector = new FileCollector(new StorageModel(), fileSystem);
 
         // Act
         fileCollector.AddIncludeFolder(@"c:\Temp\Folder1");
@@ -183,7 +184,7 @@ public class FileCollectorTests
 
         public FileCollectorTestFixture()
         {
-            _sut = new Lazy<FileCollector>(() => new FileCollector(FileSystem));
+            _sut = new Lazy<FileCollector>(() => new FileCollector(new StorageModel(), FileSystem));
         }
 
         public FileCollector Sut => _sut.Value;

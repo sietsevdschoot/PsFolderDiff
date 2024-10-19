@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using Newtonsoft.Json;
+using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 using Xunit;
@@ -54,5 +56,34 @@ public class BasicFileInfoTests
         basicFile1.CompareTo(updatedBasicFile).Should().Be(-1);
     }
 
-    private class BasicFileInfoFixture : FileHashTestFixture;
+    [Fact]
+    public void CanSerializeAndDeserialize()
+    {
+        // Arrange
+        var fixture = new BasicFileInfoFixture();
+        var file = fixture.WithNewFile();
+
+        var basicFileInfo = HashingUtil.CreateBasicFileInfo(file);
+
+        // Act
+        var deserialized = fixture.SerializeAndDeserialize(basicFileInfo);
+
+        // Assert
+        deserialized.Should().BeEquivalentTo(basicFileInfo);
+    }
+
+    private class BasicFileInfoFixture : FileHashTestFixture
+    {
+        public BasicFileInfo SerializeAndDeserialize(BasicFileInfo basicFileInfo)
+        {
+            var json = JsonConvert.SerializeObject(basicFileInfo);
+
+            var deserialized = JsonConvert.DeserializeObject<BasicFileInfo>(json, new JsonSerializerSettings
+            {
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+            })!;
+
+            return deserialized;
+        }
+    }
 }

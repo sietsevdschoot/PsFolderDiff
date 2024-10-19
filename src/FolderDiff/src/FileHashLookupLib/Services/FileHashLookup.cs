@@ -42,7 +42,7 @@ public class FileHashLookup
 
     public IReadOnlyCollection<(string Directory, string RelativePattern)> ExcludePatterns => _filePatterns.ExcludePatterns;
 
-    public string? SavedAsFile => _persistenceService.SavedAsFile;
+    public string SavedAsFile => _persistenceService.SavedAsFile;
 
     public static FileHashLookup Create() => Create(FileHashLookupSettings.Default);
 
@@ -55,7 +55,12 @@ public class FileHashLookup
 
     public static FileHashLookup Load(string path)
     {
-        return PersistenceService.LoadFileHashLookup(path);
+        return Load(path, FileHashLookupSettings.Default);
+    }
+
+    public static FileHashLookup Load(string path, FileHashLookupSettings settings)
+    {
+        return PersistenceService.LoadFileHashLookup(path, settings);
     }
 
     public void Save(string? path = null)
@@ -163,9 +168,14 @@ public class FileHashLookup
     {
         services
             .AddSingleton(Options.Create(settings))
-            .AddFileHashLookup();
+            .AddFileHashLookup()
+            .AddSingleton(settings.FileSystem);
 
-        settings.ConfigureServices?.Invoke(services, services.BuildServiceProvider());
+        foreach (var configure in settings.ConfigureServices)
+        {
+            var serviceProvider = services.BuildServiceProvider();
+            configure(services, serviceProvider);
+        }
 
         var sp = services.BuildServiceProvider();
 

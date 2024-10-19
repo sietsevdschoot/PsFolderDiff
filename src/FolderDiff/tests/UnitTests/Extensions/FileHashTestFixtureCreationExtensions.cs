@@ -20,11 +20,20 @@ public static class FileHashTestFixtureCreationExtensions
         return CreateFileHashLookupWithProvider(fixture, settings =>
         {
             settings.ReportProgressDelay = TimeSpan.Zero;
-            settings.ConfigureServices = (services, _) =>
+            settings.ConfigureServices.Add((services, _) =>
             {
                 services.AddSingleton(fixture.FileSystem);
-            };
+            });
         });
+    }
+
+    public static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider<TFixture>(
+        this TFixture fixture, FileHashLookupSettings settings)
+        where TFixture : FileHashTestFixture
+    {
+        var services = new ServiceCollection();
+
+        return FileHashLookup.Create(services, settings);
     }
 
     public static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) CreateFileHashLookupWithProvider<TFixture>(
@@ -34,8 +43,6 @@ public static class FileHashTestFixtureCreationExtensions
         var settings = FileHashLookupSettings.Default;
         configureSettings?.Invoke(settings);
 
-        var services = new ServiceCollection();
-
-        return FileHashLookup.Create(services, settings);
+        return fixture.CreateFileHashLookupWithProvider(settings);
     }
 }

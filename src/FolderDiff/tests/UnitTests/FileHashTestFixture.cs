@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
@@ -16,6 +17,9 @@ public abstract class FileHashTestFixture
     {
         FileSystem = new MockFileSystem();
 
+        FileHashLookupSettings = FileHashLookupSettings.Default;
+        FileHashLookupSettings.FileSystem = FileSystem;
+
         _workingDirectory = FileSystem.Path
             .Combine(FileSystem.Path.GetTempPath(), "FolderDiff", $"{DateTime.Now:yyyy-MM-dd}-{Guid.NewGuid()}");
 
@@ -24,6 +28,8 @@ public abstract class FileHashTestFixture
     }
 
     public IFileSystem FileSystem { get; }
+
+    public FileHashLookupSettings FileHashLookupSettings { get; }
 
     public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
 

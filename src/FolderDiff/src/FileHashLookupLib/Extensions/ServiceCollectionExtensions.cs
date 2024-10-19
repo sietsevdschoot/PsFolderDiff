@@ -1,6 +1,8 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Models;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
@@ -26,6 +28,11 @@ public static class ServiceCollectionExtensions
                 var eventAggregator = sp.GetRequiredService<IEventAggregator>();
                 eventAggregator.Publish(message);
             }));
+
+        services.AddSingleton<StorageModel>();
+        services.AddSingleton<ISupportFileHashLookups, StorageModel>(sp => sp.GetRequiredService<StorageModel>());
+        services.AddSingleton<ISupportFilePatterns, StorageModel>(sp => sp.GetRequiredService<StorageModel>());
+        services.AddSingleton<ISupportSavePath, StorageModel>(sp => sp.GetRequiredService<StorageModel>());
 
         services.AddSingleton<FileCollector>();
         services.AddSingleton<IFileCollector, IFileCollector>(sp => sp.GetRequiredService<FileCollector>());

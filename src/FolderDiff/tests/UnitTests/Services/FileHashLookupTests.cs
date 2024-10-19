@@ -2,6 +2,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
@@ -90,10 +91,10 @@ public class FileHashLookupTests
 
         var provider = fixture.CreateFileHashLookupWithProvider(settings =>
         {
-            settings.ConfigureServices = (services, _) =>
+            settings.ConfigureServices.Add((services, _) =>
             {
                 services.AddSingleton<IFileSystem>(fileSystem);
-            };
+            });
         });
 
         var fileHashlookup = provider.FileHashLookup;
@@ -126,10 +127,10 @@ public class FileHashLookupTests
 
         var provider = fixture.CreateFileHashLookupWithProvider(settings =>
         {
-            settings.ConfigureServices = (services, _) =>
+            settings.ConfigureServices.Add((services, _) =>
             {
                 services.AddSingleton<IFileSystem>(fileSystem);
-            };
+            });
         });
 
         var fileHashlookup = provider.FileHashLookup;
@@ -358,13 +359,22 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public void Creates_a_file_containing_the_HashTable()
+    public async Task Creates_a_file_containing_the_HashTable()
     {
         // Arrange
+        var fixture = new FileHashLookupTestFixture()
+            .WithAddedFiles();
+
+        await fixture.Sut.Include(fixture.WorkingDirectory.FullName);
+
+        var expected = fixture.Sut;
 
         // Act
+        fixture.Sut.Save();
+        var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
 
         // Assert
+        actual.Should().BeEquivalentTo(expected);
     }
 
     [Fact]
@@ -397,7 +407,7 @@ public class FileHashLookupTests
         fixture.Sut.Save();
 
         // Assert
-        fixture.AllFiles.Should().HaveCount(1);
+        fixture.FileSystem.File.Exists(fixture.Sut.SavedAsFile).Should().BeTrue();
     }
 
     [Fact]
@@ -482,24 +492,18 @@ public class FileHashLookupTests
 
     private class FileHashLookupTestFixture : FileHashTestFixture
     {
-        private readonly IHasReadOnlyFilePatterns _fileCollector;
+        private readonly Lazy<(FileHashLookup FileHashLookup, IServiceProvider ServiceProvider)> _provider;
 
         public FileHashLookupTestFixture()
         {
-            var provider = this.CreateFileHashLookupWithProvider(settings =>
-            {
-                settings.ReportProgressDelay = TimeSpan.Zero;
-                settings.ConfigureServices = (services, _) =>
-                {
-                    services.AddSingleton(FileSystem);
-                };
-            });
-
-            Sut = provider.FileHashLookup;
-            _fileCollector = provider.ServiceProvider.GetRequiredService<IHasReadOnlyFilePatterns>();
+            _provider = new Lazy<(FileHashLookup FileHashLookup, IServiceProvider ServiceProvider)>(
+                () => this.CreateFileHashLookupWithProvider(FileHashLookupSettings));
         }
 
-        public FileHashLookup Sut { get; }
+        public FileHashLookup Sut => _provider.Value.FileHashLookup;
+
+        private IHasReadOnlyFilePatterns FileCollector =>
+            _provider.Value.ServiceProvider.GetRequiredService<IHasReadOnlyFilePatterns>();
 
         public void AssertContainsFileNames(params int[] expected)
         {
@@ -510,7 +514,7 @@ public class FileHashLookupTests
         {
             var parsedPattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
 
-            _fileCollector.ExcludePatterns.Contains(parsedPattern).Should().BeTrue();
+            FileCollector.ExcludePatterns.Contains(parsedPattern).Should().BeTrue();
         }
 
         public void AssertContainsIncludePath(string includeFolder)
@@ -522,7 +526,7 @@ public class FileHashLookupTests
         {
             var parsedPattern = PathUtils.ParseFileGlobbingPattern(includePattern);
 
-            _fileCollector.IncludePatterns.Should().Contain(parsedPattern);
+            FileCollector.IncludePatterns.Should().Contain(parsedPattern);
         }
 
         public void AssertIncludePatternsAreEmpty()

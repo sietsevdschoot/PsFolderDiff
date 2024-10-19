@@ -21,7 +21,14 @@ public sealed record BasicFileInfo
         Hash = hash;
     }
 
-    public string FullName { get; init; }
+    /// <summary>
+    /// Used for json deserialization
+    /// </summary>
+    private BasicFileInfo()
+    {
+    }
+
+    public string FullName { get; init; } = default!;
 
     public DateTime CreationTime { get; init; }
 
@@ -29,7 +36,7 @@ public sealed record BasicFileInfo
 
     public long Length { get; init; }
 
-    public string Hash { get; init; }
+    public string Hash { get; init; } = default!;
 
     public int CompareTo(BasicFileInfo? other)
     {

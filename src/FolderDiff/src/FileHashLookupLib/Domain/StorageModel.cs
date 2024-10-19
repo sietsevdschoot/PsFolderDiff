@@ -1,0 +1,19 @@
+﻿using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
+
+namespace PsFolderDiff.FileHashLookupLib.Domain;
+
+public class StorageModel
+    : ISupportFileHashLookups,
+      ISupportFilePatterns,
+      ISupportSavePath
+{
+    public Dictionary<string, BasicFileInfo> File { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
+
+    public Dictionary<string, List<BasicFileInfo>> Hash { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
+
+    public List<(string Directory, string RelativePattern)> IncludePatterns { get; set; } = new();
+
+    public List<(string Directory, string RelativePattern)> ExcludePatterns { get; set; } = new();
+
+    public string SavedAsFile { get; set; } = string.Empty;
+}
