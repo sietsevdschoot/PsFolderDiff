@@ -12,17 +12,14 @@ public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
     private readonly IFileCollector _fileCollector;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
-    private readonly IFileSystem _fileSystem;
 
     public ExcludePatternHandler(
         IFileCollector fileCollector,
         IFileHashLookupState fileHashLookupState,
-        IFileSystem fileSystem,
         IPeriodicalProgressReporter<ProgressEventArgs> progress)
     {
         _fileCollector = fileCollector;
         _fileHashLookupState = fileHashLookupState;
-        _fileSystem = fileSystem;
         _progress = progress;
     }
 
