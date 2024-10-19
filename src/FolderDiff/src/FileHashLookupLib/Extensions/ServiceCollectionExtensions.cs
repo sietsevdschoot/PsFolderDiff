@@ -14,13 +14,42 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFileHashLookup(this IServiceCollection services)
     {
-        services.AddOptions();
-        services.AddSingleton<IFileSystem, FileSystem>();
-        services.AddSingleton<IEventAggregator, EventAggregator>();
-        services.AddSingleton<IFileHashCalculationService, FileHashCalculationService>();
-        services.AddSingleton<IPersistenceService, PersistenceService>();
-        services.AddSingleton(typeof(IProgress<>), typeof(Progress<>));
-        services.AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
+        services
+            .AddOptions()
+            .AddLogging(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddConsole();
+            })
+            .AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(typeof(FileHashLookup).Assembly);
+            });
+
+        services
+            .AddSingleton<FileHashLookup>()
+            .AddSingleton<IFileSystem, FileSystem>()
+            .AddSingleton<IEventAggregator, EventAggregator>()
+            .AddSingleton<IFileHashCalculationService, FileHashCalculationService>()
+            .AddSingleton<IPersistenceService, PersistenceService>()
+            .AddSingleton(typeof(IProgress<>), typeof(Progress<>))
+            .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
+
+        services
+            .AddSingleton<StorageModel>()
+            .AddSingleton<ISupportFileHashLookups>(sp => sp.GetRequiredService<StorageModel>())
+            .AddSingleton<ISupportFilePatterns>(sp => sp.GetRequiredService<StorageModel>())
+            .AddSingleton<ISupportSavePath>(sp => sp.GetRequiredService<StorageModel>());
+
+        services
+            .AddSingleton<FileCollector>()
+            .AddSingleton<IFileCollector>(sp => sp.GetRequiredService<FileCollector>())
+            .AddSingleton<IHasReadOnlyFilePatterns>(sp => sp.GetRequiredService<FileCollector>());
+
+        services
+            .AddSingleton<FileHashLookupState>()
+            .AddSingleton<IFileHashLookupState>(sp => sp.GetRequiredService<FileHashLookupState>())
+            .AddSingleton<IHasReadonlyLookups>(sp => sp.GetRequiredService<FileHashLookupState>());
 
         services.AddTransient<IProgress<ProgressEventArgs>>(
             sp => new Progress<ProgressEventArgs>(message =>
@@ -28,32 +57,6 @@ public static class ServiceCollectionExtensions
                 var eventAggregator = sp.GetRequiredService<IEventAggregator>();
                 eventAggregator.Publish(message);
             }));
-
-        services.AddSingleton<StorageModel>();
-        services.AddSingleton<ISupportFileHashLookups, StorageModel>(sp => sp.GetRequiredService<StorageModel>());
-        services.AddSingleton<ISupportFilePatterns, StorageModel>(sp => sp.GetRequiredService<StorageModel>());
-        services.AddSingleton<ISupportSavePath, StorageModel>(sp => sp.GetRequiredService<StorageModel>());
-
-        services.AddSingleton<FileCollector>();
-        services.AddSingleton<IFileCollector, IFileCollector>(sp => sp.GetRequiredService<FileCollector>());
-        services.AddSingleton<IHasReadOnlyFilePatterns, FileCollector>(sp => sp.GetRequiredService<FileCollector>());
-
-        services.AddSingleton<FileHashLookupState>();
-        services.AddSingleton<IFileHashLookupState, IFileHashLookupState>(sp => sp.GetRequiredService<FileHashLookupState>());
-        services.AddSingleton<IHasReadonlyLookups, FileHashLookupState>(sp => sp.GetRequiredService<FileHashLookupState>());
-
-        services.AddSingleton<Services.FileHashLookup>();
-
-        services.AddLogging(builder =>
-        {
-            builder.SetMinimumLevel(LogLevel.Information);
-            builder.AddConsole();
-        });
-
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssembly(typeof(Services.FileHashLookup).Assembly);
-        });
 
         return services;
     }
