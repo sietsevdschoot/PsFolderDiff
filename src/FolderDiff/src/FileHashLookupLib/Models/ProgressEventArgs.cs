@@ -1,13 +1,5 @@
 ﻿namespace PsFolderDiff.FileHashLookupLib.Models;
 
-////	Write-Progress
-////        -Activity "Adding or updating files" `
-////		-Status "Analyzing differences..." `
-////		-CurrentOperation "($i of $($files.Count)) $($currentFile.FullName)" `
-////		-PercentComplete (($i / $files.Count) * 100) `
-////		-SecondsRemaining ([int](([double]$durationTimer.Elapsed.TotalSeconds / [Math]::Max($i, 1)) * ($files.Count - $i)))
-////
-////
 public class ProgressEventArgs : EventArgs
 {
     public ProgressEventArgs(

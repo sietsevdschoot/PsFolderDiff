@@ -10,13 +10,13 @@ using Vipentti.IO.Abstractions.FileSystemGlobbing;
 
 namespace PsFolderDiff.FileHashLookupLib.Handlers;
 
-public class AddExcludePatternHandler : IRequestHandler<AddExcludePatternRequest>
+public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
 {
     private readonly IFileCollector _fileCollector;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
 
-    public AddExcludePatternHandler(
+    public ExcludePatternHandler(
         IFileCollector fileCollector,
         IFileHashLookupState fileHashLookupState,
         IPeriodicalProgressReporter<ProgressEventArgs> progress)
@@ -26,7 +26,7 @@ public class AddExcludePatternHandler : IRequestHandler<AddExcludePatternRequest
         _progress = progress;
     }
 
-    public Task Handle(AddExcludePatternRequest request, CancellationToken cancellationToken)
+    public Task Handle(ExcludePatternRequest request, CancellationToken cancellationToken)
     {
         _progress.Report(() => new ProgressEventArgs(
             activity: "Excluding files or patterns",

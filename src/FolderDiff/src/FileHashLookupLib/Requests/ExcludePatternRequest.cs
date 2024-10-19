@@ -2,7 +2,7 @@
 
 namespace PsFolderDiff.FileHashLookupLib.Requests;
 
-public class AddExcludePatternRequest : IRequest
+public class ExcludePatternRequest : IRequest
 {
     public string ExcludePattern { get; set; } = default!;
 }

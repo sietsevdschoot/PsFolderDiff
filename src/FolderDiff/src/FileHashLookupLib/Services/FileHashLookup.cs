@@ -71,7 +71,7 @@ public class FileHashLookup
     public async Task Include(string includeFolderOrPattern, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
-            new AddIncludePatternRequest
+            new IncludePatternRequest
             {
                 IncludePattern = includeFolderOrPattern,
             },
@@ -81,7 +81,7 @@ public class FileHashLookup
     public async Task Exclude(string excludeFolderOrPattern, CancellationToken cancellationToken = default)
     {
         await _mediator.Send(
-            new AddExcludePatternRequest
+            new ExcludePatternRequest
             {
                 ExcludePattern = excludeFolderOrPattern,
             },

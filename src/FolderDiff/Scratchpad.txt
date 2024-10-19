@@ -2,15 +2,15 @@
 
 Todo:
 
-- FileHashLookupState, needs to contain all state.
-- Intermediate object with all FileHashLookup props, with getters and setters for serializing / deseralizing
-- Copy contructor on FileHashLookupState to load from Intermediate object.
+- DONE StorageModel, needs to contain all state.
+- DONE Intermediate object with all FileHashLookup props, with getters and setters for serializing / deseralizing
+- DONE Copy contructor on FileHashLookupState to load from Intermediate object.
 - Refresh: Check if directories for include -exclude still exists
 
 - Relative paths for include / expclude paths.
 - Store absolute paths for basepath when retrieving relative path.
 - DONE Create RefreshHandler
-- Create Load / Save handler
+- DONE Create Load / Save handler
 - ToString override
 - Test Hash performance icm BufferedReader
 - Multi threaded hashing.

@@ -7,14 +7,14 @@ using PsFolderDiff.FileHashLookupLib.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.Handlers;
 
-public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest>
+public class IncludePatternHandler : IRequestHandler<IncludePatternRequest>
 {
     private readonly IFileCollector _fileCollector;
     private readonly IFileHashCalculationService _fileHashCalculationService;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
 
-    public AddIncludePatternHandler(
+    public IncludePatternHandler(
         IFileCollector fileCollector,
         IFileHashCalculationService fileHashCalculationService,
         IFileHashLookupState fileHashLookupState,
@@ -26,7 +26,7 @@ public class AddIncludePatternHandler : IRequestHandler<AddIncludePatternRequest
         _progress = progress;
     }
 
-    public Task Handle(AddIncludePatternRequest request, CancellationToken cancellationToken)
+    public Task Handle(IncludePatternRequest request, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(request.IncludePattern, nameof(request.IncludePattern));
 
