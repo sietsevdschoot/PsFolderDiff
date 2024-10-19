@@ -45,11 +45,11 @@ public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLooku
 
             if (_fileHashLookupState.Contains(currentFile) == FileContainsState.Match)
             {
-                await matchesLookup.AddFile(currentFile, cancellationToken);
+                await matchesLookup.AddFileAsync(currentFile, cancellationToken);
             }
             else
             {
-                await differencesLookup.AddFile(currentFile, cancellationToken);
+                await differencesLookup.AddFileAsync(currentFile, cancellationToken);
             }
         }
 

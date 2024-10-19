@@ -13,7 +13,7 @@ namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
 public class FileHashLookupTests
 {
     [Fact]
-    public async Task IncludeFolder_Adds_Folder_And_Collects_Files_Recursively()
+    public async Task IncludeAsync_Adds_Folder_And_Collects_Files_Recursively()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -25,7 +25,7 @@ public class FileHashLookupTests
 
         // Act
         var includeFolder = @"Folder1\";
-        await fixture.Sut.Include(includeFolder);
+        await fixture.Sut.IncludeAsync(includeFolder);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4]);
@@ -33,7 +33,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task IncludePattern_Adds_Folder_And_Collects_Files_Recursively()
+    public async Task IncludeAsync_Adds_Folder_With_Pattern_And_Collects_Files_Recursively()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -45,7 +45,7 @@ public class FileHashLookupTests
 
         // Act
         var includePattern = @"Folder1\**\Sub1\**\*";
-        await fixture.Sut.Include(includePattern);
+        await fixture.Sut.IncludeAsync(includePattern);
 
         // Assert
         fixture.AssertContainsFileNames([3, 4]);
@@ -53,7 +53,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task ExcludePattern_ExcludesPatternFromAlreadyCollectedFiles()
+    public async Task ExcludeAsync_ExcludesPatternFromAlreadyCollectedFiles()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -66,8 +66,8 @@ public class FileHashLookupTests
         var excludePattern = @$"**\Sub1\**\*";
 
         // Act
-        await fixture.Sut.Include(@"Folder1");
-        await fixture.Sut.Exclude(excludePattern);
+        await fixture.Sut.IncludeAsync(@"Folder1");
+        await fixture.Sut.ExcludeAsync(excludePattern);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2]);
@@ -75,7 +75,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task ExcludePattern_Can_exclude_files_from_different_drives()
+    public async Task ExcludeAsync_Can_exclude_files_from_different_drives()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -99,10 +99,10 @@ public class FileHashLookupTests
         var fileHashlookup = provider.FileHashLookup;
 
         // Act
-        await fileHashlookup.Include(@"c:\Temp\Folder1\");
-        await fileHashlookup.Include(@"d:\Temp\Folder2\");
+        await fileHashlookup.IncludeAsync(@"c:\Temp\Folder1\");
+        await fileHashlookup.IncludeAsync(@"d:\Temp\Folder2\");
 
-        await fileHashlookup.Exclude(@"d:\Temp\");
+        await fileHashlookup.ExcludeAsync(@"d:\Temp\");
 
         // Assert
         var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
@@ -111,7 +111,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task ExcludePattern_Can_exclude_pattern_over_different_drives()
+    public async Task ExcludeAsync_Can_exclude_pattern_over_different_drives()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture()
@@ -124,17 +124,17 @@ public class FileHashLookupTests
             }));
 
         // Act
-        await fixture.Sut.Include(@"c:\Temp\Folder1\");
-        await fixture.Sut.Include(@"d:\Temp\Folder2\");
+        await fixture.Sut.IncludeAsync(@"c:\Temp\Folder1\");
+        await fixture.Sut.IncludeAsync(@"d:\Temp\Folder2\");
 
-        await fixture.Sut.Exclude("*.doc");
+        await fixture.Sut.ExcludeAsync("*.doc");
 
         // Assert
         fixture.AssertContainsFileNames([1, 3]);
     }
 
     [Fact]
-    public async Task AddFiles_AddsFilesAndCalculatesHash()
+    public async Task AddFilesAsync_AddsFilesAndCalculatesHash()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -150,7 +150,7 @@ public class FileHashLookupTests
             .ToArray();
 
         // Act
-        await fixture.Sut.AddFiles(files);
+        await fixture.Sut.AddFilesAsync(files);
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4, 5]);
@@ -158,7 +158,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task AddFile_AddsFileAndCalculatesHash()
+    public async Task AddFileAsync_AddsFileAndCalculatesHash()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -170,7 +170,7 @@ public class FileHashLookupTests
             .Single();
 
         // Act
-        await fixture.Sut.AddFile(file);
+        await fixture.Sut.AddFileAsync(file);
 
         // Assert
         fixture.AssertContainsFileNames([1]);
@@ -178,7 +178,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task AddFileHashLookup_CopiesFileAndPathPatternsFromOther()
+    public async Task AddFileHashLookupAsync_CopiesFileAndPathPatternsFromOther()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -189,15 +189,15 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder3\5.txt");
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.Include("Folder1");
+        await fileHashLookup1.IncludeAsync("Folder1");
 
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.Include("Folder2");
+        await fileHashLookup2.IncludeAsync("Folder2");
 
         // Act
         var fileHashLookup = fixture.CreateFileHashLookup();
-        await fileHashLookup.AddFileHashLookup(fileHashLookup1);
-        await fileHashLookup.AddFileHashLookup(fileHashLookup2);
+        await fileHashLookup.AddFileHashLookupAsync(fileHashLookup1);
+        await fileHashLookup.AddFileHashLookupAsync(fileHashLookup2);
 
         // Assert
         fileHashLookup.AssertContainsFileNames([1, 2, 3, 4]);
@@ -223,16 +223,16 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\3.txt", content);
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.Include(@"Folder1");
+        await fileHashLookup1.IncludeAsync(@"Folder1");
 
         fixture.WithNewFile(@"Folder2\4.txt", content);
         fixture.WithNewFile(@"Folder2\5.txt", content);
 
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.Include(@"Folder2");
+        await fileHashLookup2.IncludeAsync(@"Folder2");
 
         // Act
-        var actual = await fileHashLookup1.GetDifferencesInOther(fileHashLookup2);
+        var actual = await fileHashLookup1.GetDifferencesInOtherAsync(fileHashLookup2);
 
         // Assert
         actual.GetFiles()
@@ -241,7 +241,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task GetMatchesInOther_Returns_file_only_found_in_other()
+    public async Task GetMatchesInOtherAsync_Returns_file_only_found_in_other()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -249,16 +249,16 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\2.txt");
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.Include("Folder1");
+        await fileHashLookup1.IncludeAsync("Folder1");
 
         // Update
         fixture.WithNewFile(@"Folder1\3.txt");
         fixture.WithNewFile(@"Folder1\4.txt");
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.Include("Folder1");
+        await fileHashLookup2.IncludeAsync("Folder1");
 
         // Act
-        var diffInOther = await fileHashLookup1.GetMatchesInOther(fileHashLookup2);
+        var diffInOther = await fileHashLookup1.GetMatchesInOtherAsync(fileHashLookup2);
 
         // Assert
         diffInOther.AssertContainsFileNames([1, 2]);
@@ -267,7 +267,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task GetDifferencesInOther_Returns_file_only_found_in_other()
+    public async Task GetDifferencesInOtherAsync_Returns_file_only_found_in_other()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
@@ -275,16 +275,16 @@ public class FileHashLookupTests
         fixture.WithNewFile(@"Folder1\2.txt");
 
         var fileHashLookup1 = fixture.CreateFileHashLookup();
-        await fileHashLookup1.Include("Folder1");
+        await fileHashLookup1.IncludeAsync("Folder1");
 
         // Update
         fixture.WithNewFile(@"Folder1\3.txt");
         fixture.WithNewFile(@"Folder1\4.txt");
         var fileHashLookup2 = fixture.CreateFileHashLookup();
-        await fileHashLookup2.Include("Folder1");
+        await fileHashLookup2.IncludeAsync("Folder1");
 
         // Act
-        var diffInOther = await fileHashLookup1.GetDifferencesInOther(fileHashLookup2);
+        var diffInOther = await fileHashLookup1.GetDifferencesInOtherAsync(fileHashLookup2);
 
         // Assert
         diffInOther.AssertContainsFileNames([3, 4]);
@@ -293,50 +293,50 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task Refresh_Adds_New_Files()
+    public async Task RefreshAsync_Adds_New_Files()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
-        await fixture.Sut.Include("Folder1");
+        await fixture.Sut.IncludeAsync("Folder1");
 
         // Act
         fixture.WithNewFile(@"Folder1\2.txt");
-        await fixture.Sut.Refresh();
+        await fixture.Sut.RefreshAsync();
 
         // Assert
         fixture.AssertContainsFileNames([1, 2]);
     }
 
     [Fact]
-    public async Task Refresh_Removes_No_Longer_Existing_Files()
+    public async Task RefreshAsync_Removes_No_Longer_Existing_Files()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         fixture.WithNewFile(@"Folder1\1.txt");
         fixture.WithNewFile(@"Folder1\2.txt");
         fixture.WithNewFile(@"Folder1\3.txt");
-        await fixture.Sut.Include("Folder1");
+        await fixture.Sut.IncludeAsync("Folder1");
 
         // Act
         fixture.DeleteFile(@"Folder1\2.txt");
-        await fixture.Sut.Refresh();
+        await fixture.Sut.RefreshAsync();
 
         // Assert
         fixture.AssertContainsFileNames([1, 3]);
     }
 
     [Fact]
-    public async Task Refresh_Updated_Modified_Files()
+    public async Task RefreshAsync_Updated_Modified_Files()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         var file1 = fixture.WithNewFile(@"Folder1\1.txt");
-        await fixture.Sut.Include("Folder1");
+        await fixture.Sut.IncludeAsync("Folder1");
 
         // Act
         fixture.UpdateFile(file1);
-        await fixture.Sut.Refresh();
+        await fixture.Sut.RefreshAsync();
 
         // Assert
         var expected = fixture.GetBasicFileInfo(file1.FullName);
@@ -347,18 +347,18 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task Refresh_updated_the_LastUpdated_date()
+    public async Task RefreshAsync_updated_the_LastUpdated_date()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         var file1 = fixture.WithNewFile(@"Folder1\1.txt");
-        await fixture.Sut.Include("Folder1");
+        await fixture.Sut.IncludeAsync("Folder1");
 
         // Act
         fixture.UpdateFile(file1);
 
         var lastUpdateBeforeRefresh = fixture.Sut.LastUpdated;
-        await fixture.Sut.Refresh();
+        await fixture.Sut.RefreshAsync();
 
         // Assert
         fixture.Sut.LastUpdated.Should().BeAfter(lastUpdateBeforeRefresh);
@@ -382,7 +382,7 @@ public class FileHashLookupTests
         var fixture = new FileHashLookupTestFixture()
             .WithAddedFiles();
 
-        await fixture.Sut.Include(fixture.WorkingDirectory.FullName);
+        await fixture.Sut.IncludeAsync(fixture.WorkingDirectory.FullName);
 
         var expected = fixture.Sut;
 
@@ -434,8 +434,8 @@ public class FileHashLookupTests
         // Arrange
         var fixture = new FileHashLookupTestFixture();
         var file1 = fixture.WithNewFile(@"Folder1\1.txt");
-        await fixture.Sut.Include("Folder1");
-        await fixture.Sut.Exclude("*.doc");
+        await fixture.Sut.IncludeAsync("Folder1");
+        await fixture.Sut.ExcludeAsync("*.doc");
 
         fixture.Sut.Save();
 
