@@ -29,7 +29,7 @@ public class FileHashLookup
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
         _fileHashLookupState = fileHashLookupState;
-        _persistenceService = persistenceService;
+        _persistenceService = persistenceService;  
         _mediator = mediator;
     }
 

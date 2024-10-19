@@ -2,7 +2,6 @@
 using MediatR;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
-using PsFolderDiff.FileHashLookupLib.Models;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;

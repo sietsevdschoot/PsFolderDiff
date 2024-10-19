@@ -1,4 +1,4 @@
-﻿namespace PsFolderDiff.FileHashLookupLib.Models;
+﻿namespace PsFolderDiff.FileHashLookupLib.Domain;
 
 public class ProgressEventArgs : EventArgs
 {

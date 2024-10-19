@@ -2,6 +2,4 @@
 
 namespace PsFolderDiff.FileHashLookupLib.Requests;
 
-public class RefreshRequest : IRequest
-{
-}
+public class RefreshRequest : IRequest;

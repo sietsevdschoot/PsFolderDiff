@@ -2,7 +2,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using MediatR;
 using Microsoft.Extensions.FileSystemGlobbing;
-using PsFolderDiff.FileHashLookupLib.Models;
+using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;

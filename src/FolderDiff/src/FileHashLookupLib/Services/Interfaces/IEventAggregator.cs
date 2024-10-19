@@ -1,4 +1,4 @@
-﻿using PsFolderDiff.FileHashLookupLib.Models;
+﻿using PsFolderDiff.FileHashLookupLib.Domain;
 
 namespace PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 

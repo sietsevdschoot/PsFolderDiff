@@ -2,7 +2,6 @@
 using System.IO.Abstractions;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
-using PsFolderDiff.FileHashLookupLib.Models;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;
 
@@ -127,6 +126,6 @@ public class FileHashLookupState : IFileHashLookupState, IHasReadonlyLookups
 
     public List<BasicFileInfo> GetFiles()
     {
-        return File.Values.ToList();
+        return _storageModel.File.Values.ToList();
     }
 }

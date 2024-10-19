@@ -2,8 +2,8 @@
 using System.IO.Abstractions;
 using Microsoft.Extensions.Options;
 using PsFolderDiff.FileHashLookupLib.Configuration;
+using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
-using PsFolderDiff.FileHashLookupLib.Models;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;

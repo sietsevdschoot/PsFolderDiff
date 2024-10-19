@@ -1,6 +1,6 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookupLib.Models;
+using PsFolderDiff.FileHashLookupLib.Domain;
 
 namespace PsFolderDiff.FileHashLookupLib.Configuration;
 
