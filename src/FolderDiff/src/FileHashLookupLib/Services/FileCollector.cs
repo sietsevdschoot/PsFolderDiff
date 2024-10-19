@@ -21,39 +21,32 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
         _fileSystem = fileSystem;
     }
 
-    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns => _storageModel.IncludePatterns.AsReadOnly();
+    public IReadOnlyCollection<string> IncludePatterns => _storageModel.IncludePatterns.AsReadOnly();
 
-    public IReadOnlyCollection<(string Directory, string RelativePattern)> ExcludePatterns => _storageModel.ExcludePatterns.AsReadOnly();
+    public IReadOnlyCollection<string> ExcludePatterns => _storageModel.ExcludePatterns.AsReadOnly();
 
-    public List<IFileInfo> AddIncludeFolder(string path)
+    public void AddFileHashLookup(FileHashLookup other)
     {
-        ArgumentException.ThrowIfNullOrEmpty(path, nameof(path));
-
-        return AddIncludePattern(path);
+        _storageModel.IncludePatterns.InsertNewItems(other.IncludePatterns.ToList());
+        _storageModel.ExcludePatterns.InsertNewItems(other.ExcludePatterns.ToList());
     }
 
-    public List<IFileInfo> AddIncludePattern(string includePattern)
+    public List<IFileInfo> IncludePattern(string includePattern)
     {
         EnsurePatternIsValid(includePattern);
 
-        var parsedIncludePattern = PathUtils.ParseFileGlobbingPattern(includePattern);
+        var parsedIncludePattern = PathUtils.ParseFileGlobbingPatternAsString(includePattern);
 
         _storageModel.IncludePatterns.Add(parsedIncludePattern);
 
         return GetFilesInternal(parsedIncludePattern);
     }
 
-    public void AddFileHashLookup(FileHashLookup other)
-    {
-        _storageModel.IncludePatterns.InsertNewItems(other.IncludePatterns.ToList());
-        _storageModel.ExcludePatterns.InsertNewItems(other.ExcludePatterns.ToList());
-     }
-
-    public IFileCollector AddExcludePattern(string excludePattern)
+    public IFileCollector ExcludePattern(string excludePattern)
     {
         EnsurePatternIsValid(excludePattern);
 
-        var parsedExcludePattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
+        var parsedExcludePattern = PathUtils.ParseFileGlobbingPatternAsString(excludePattern);
 
         _storageModel.ExcludePatterns.Add(parsedExcludePattern);
 
@@ -77,20 +70,23 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
         }
     }
 
-    private List<IFileInfo> GetFilesInternal((string Directory, string RelativePattern) includePattern = default)
+    private List<IFileInfo> GetFilesInternal(string? includePattern = null)
     {
         var collectedFiles = new List<IFileInfo>();
 
-        var patternsToRetrieve = !includePattern.Equals(default)
+        var patternsToRetrieve = !string.IsNullOrEmpty(includePattern)
             ? [includePattern]
             : _storageModel.IncludePatterns;
 
-        foreach (var pattern in patternsToRetrieve)
+        var parsedIncludePatterns = patternsToRetrieve.Select(PathUtils.ParseFileGlobbingPattern).ToList();
+        var parsedExcludePatterns = _storageModel.ExcludePatterns.Select(PathUtils.ParseFileGlobbingPattern).ToList();
+
+        foreach (var pattern in parsedIncludePatterns)
         {
             var matcher = new Matcher(StringComparison.OrdinalIgnoreCase)
                 .AddInclude(pattern.RelativePattern);
 
-            foreach (var excludePattern in _storageModel.ExcludePatterns)
+            foreach (var excludePattern in parsedExcludePatterns)
             {
                 matcher.AddExclude(excludePattern.RelativePattern);
             }

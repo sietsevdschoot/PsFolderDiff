@@ -53,7 +53,7 @@ public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
             }
         }
 
-        _fileCollector.AddExcludePattern(request.ExcludePattern);
+        _fileCollector.ExcludePattern(request.ExcludePattern);
 
         return Task.CompletedTask;
     }

@@ -4,13 +4,11 @@ namespace PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 
 public interface IFileCollector
 {
-    List<IFileInfo> AddIncludeFolder(string path);
-
-    List<IFileInfo> AddIncludePattern(string includePattern);
+    List<IFileInfo> IncludePattern(string includePattern);
 
     void AddFileHashLookup(FileHashLookup other);
 
-    IFileCollector AddExcludePattern(string excludePattern);
+    IFileCollector ExcludePattern(string excludePattern);
 
     List<IFileInfo> GetFiles();
 }

@@ -35,6 +35,12 @@ public static class PathUtils
         return (Directory: directory, RelativePattern: relativePattern);
     }
 
+    public static string ParseFileGlobbingPatternAsString(string pattern)
+    {
+        var parsedPattern = ParseFileGlobbingPattern(pattern);
+        return $"{parsedPattern.Directory}{parsedPattern.RelativePattern}";
+    }
+
     public static string CreateFilenameFromPath(IDirectoryInfo directory)
     {
         var replaceableChars = string.Join(

@@ -20,7 +20,7 @@ public static class FileHashLookupAssertExtensions
 
     public static void AssertContainsIncludePath(this FileHashLookup fileHashLookup, string includeFolder)
     {
-        var parsedPattern = PathUtils.ParseFileGlobbingPattern(includeFolder);
+        var parsedPattern = PathUtils.ParseFileGlobbingPatternAsString(includeFolder);
 
         fileHashLookup.IncludePatterns.Should().Contain(parsedPattern);
     }

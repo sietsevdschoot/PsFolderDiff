@@ -155,7 +155,7 @@ public class FileCollectorTests
     }
 
     [Fact]
-    public void AddIncludeFolder_Can_collect_files_from_different_drives()
+    public void IncludePattern_Can_collect_files_from_different_drives()
     {
         // Arrange
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
@@ -169,8 +169,8 @@ public class FileCollectorTests
         var fileCollector = new FileCollector(new StorageModel(), fileSystem);
 
         // Act
-        fileCollector.AddIncludeFolder(@"c:\Temp\Folder1");
-        fileCollector.AddIncludeFolder(@"d:\Temp\Folder2");
+        fileCollector.IncludePattern(@"c:\Temp\Folder1");
+        fileCollector.IncludePattern(@"d:\Temp\Folder2");
 
         // Assert
         var actualFileNames = fileCollector.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
@@ -195,19 +195,19 @@ public class FileCollectorTests
         {
             var fullName = FileSystem.Path.Combine(WorkingDirectory, path);
 
-            return Sut.AddIncludeFolder(fullName);
+            return Sut.IncludePattern(fullName);
         }
 
         public List<IFileInfo> AddIncludePattern(string workingDirectory, string includePattern)
         {
             var path = FileSystem.Path.Combine(workingDirectory, includePattern);
 
-            return Sut.AddIncludePattern(path);
+            return Sut.IncludePattern(path);
         }
 
         public FileCollectorTestFixture AddExcludePattern(string excludePattern)
         {
-            Sut.AddExcludePattern(excludePattern);
+            Sut.ExcludePattern(excludePattern);
 
             return this;
         }

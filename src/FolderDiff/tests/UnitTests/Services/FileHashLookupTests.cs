@@ -215,7 +215,7 @@ public class FileHashLookupTests
 
         // Assert
         fileHashLookup.AssertContainsFileNames([1, 2, 3, 4]);
-        fileHashLookup.IncludePatterns.Select(x => x.Directory).Should().BeEquivalentTo(new[]
+        fileHashLookup.IncludePatterns.Select(x => PathUtils.ParseFileGlobbingPattern(x).Directory).Should().BeEquivalentTo(new[]
         {
             "Folder1\\",
             "Folder2\\",
@@ -512,7 +512,7 @@ public class FileHashLookupTests
 
         public void AssertContainsExcludesPattern(string excludePattern)
         {
-            var parsedPattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
+            var parsedPattern = PathUtils.ParseFileGlobbingPatternAsString(excludePattern);
 
             FileCollector.ExcludePatterns.Contains(parsedPattern).Should().BeTrue();
         }
@@ -524,7 +524,7 @@ public class FileHashLookupTests
 
         public void AssertContainsIncludePattern(string includePattern)
         {
-            var parsedPattern = PathUtils.ParseFileGlobbingPattern(includePattern);
+            var parsedPattern = PathUtils.ParseFileGlobbingPatternAsString(includePattern);
 
             FileCollector.IncludePatterns.Should().Contain(parsedPattern);
         }

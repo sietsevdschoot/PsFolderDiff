@@ -56,7 +56,10 @@ public class PersistenceService : IPersistenceService
     {
         if (string.IsNullOrEmpty(path))
         {
-            var directory = fileHashLookup.IncludePatterns.FirstOrDefault(x => !string.IsNullOrEmpty(x.Directory)).Directory;
+            var directory = fileHashLookup.IncludePatterns
+                .Select(PathUtils.ParseFileGlobbingPattern)
+                .FirstOrDefault(x => !string.IsNullOrEmpty(x.Directory))
+                .Directory;
 
             var filename = !string.IsNullOrEmpty(directory)
                 ? PathUtils.CreateFilenameFromPath(_fileSystem.DirectoryInfo.New(directory))

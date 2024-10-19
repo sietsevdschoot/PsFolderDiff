@@ -38,9 +38,9 @@ public class FileHashLookup
 
     public ReadOnlyDictionary<string, ReadOnlyCollection<BasicFileInfo>> Hash => _fileHashLookups.Hash;
 
-    public IReadOnlyCollection<(string Directory, string RelativePattern)> IncludePatterns => _filePatterns.IncludePatterns;
+    public IReadOnlyCollection<string> IncludePatterns => _filePatterns.IncludePatterns;
 
-    public IReadOnlyCollection<(string Directory, string RelativePattern)> ExcludePatterns => _filePatterns.ExcludePatterns;
+    public IReadOnlyCollection<string> ExcludePatterns => _filePatterns.ExcludePatterns;
 
     public string SavedAsFile => _persistenceService.SavedAsFile;
 

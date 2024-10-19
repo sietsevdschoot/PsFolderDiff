@@ -34,7 +34,7 @@ public class IncludePatternHandler : IRequestHandler<IncludePatternRequest>
             activity: "Including folders or patterns",
             currentOperation: "Collecting files to include"));
 
-        var collectedFiles = _fileCollector.AddIncludePattern(request.IncludePattern);
+        var collectedFiles = _fileCollector.IncludePattern(request.IncludePattern);
 
         var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles).ToList();
 
