@@ -1,8 +1,10 @@
-﻿namespace PsFolderDiff.FileHashLookupLib.Services.Interfaces;
+﻿using PsFolderDiff.FileHashLookupLib.Domain;
+
+namespace PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 
 public interface IHasReadOnlyFilePatterns
 {
-    IReadOnlyCollection<string> IncludePatterns { get; }
+    IReadOnlyCollection<FilePattern> IncludePatterns { get; }
 
-    IReadOnlyCollection<string> ExcludePatterns { get; }
+    IReadOnlyCollection<FilePattern> ExcludePatterns { get; }
 }

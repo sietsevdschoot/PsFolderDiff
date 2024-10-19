@@ -11,9 +11,9 @@ public class StorageModel
 
     public Dictionary<string, List<BasicFileInfo>> Hash { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
 
-    public List<string> IncludePatterns { get; set; } = new();
+    public List<FilePattern> IncludePatterns { get; set; } = new();
 
-    public List<string> ExcludePatterns { get; set; } = new();
+    public List<FilePattern> ExcludePatterns { get; set; } = new();
 
     public string SavedAsFile { get; set; } = string.Empty;
 }

@@ -29,7 +29,7 @@ public class FileHashLookup
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
         _fileHashLookupState = fileHashLookupState;
-        _persistenceService = persistenceService;  
+        _persistenceService = persistenceService;
         _mediator = mediator;
     }
 
@@ -37,9 +37,9 @@ public class FileHashLookup
 
     public ReadOnlyDictionary<string, ReadOnlyCollection<BasicFileInfo>> Hash => _fileHashLookups.Hash;
 
-    public IReadOnlyCollection<string> IncludePatterns => _filePatterns.IncludePatterns;
+    public IReadOnlyCollection<FilePattern> IncludePatterns => _filePatterns.IncludePatterns;
 
-    public IReadOnlyCollection<string> ExcludePatterns => _filePatterns.ExcludePatterns;
+    public IReadOnlyCollection<FilePattern> ExcludePatterns => _filePatterns.ExcludePatterns;
 
     public string SavedAsFile => _persistenceService.SavedAsFile;
 

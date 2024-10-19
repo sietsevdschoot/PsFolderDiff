@@ -3,6 +3,7 @@ using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookupLib.Configuration;
+using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
@@ -215,7 +216,7 @@ public class FileHashLookupTests
 
         // Assert
         fileHashLookup.AssertContainsFileNames([1, 2, 3, 4]);
-        fileHashLookup.IncludePatterns.Select(x => PathUtils.ParseFileGlobbingPattern(x).Directory).Should().BeEquivalentTo(new[]
+        fileHashLookup.IncludePatterns.Select(x => x.Directory).Should().BeEquivalentTo(new[]
         {
             "Folder1\\",
             "Folder2\\",
@@ -512,21 +513,23 @@ public class FileHashLookupTests
 
         public void AssertContainsExcludesPattern(string excludePattern)
         {
-            var parsedPattern = PathUtils.ParseFileGlobbingPatternAsString(excludePattern);
+            var parsedPattern = FilePattern.Create(FileSystem, excludePattern);
 
-            FileCollector.ExcludePatterns.Contains(parsedPattern).Should().BeTrue();
+            FileCollector.ExcludePatterns.Should().ContainEquivalentOf(parsedPattern);
         }
 
         public void AssertContainsIncludePath(string includeFolder)
         {
-            Sut.AssertContainsIncludePath(includeFolder);
+            var parsedPattern = FilePattern.Create(FileSystem, includeFolder);
+
+            Sut.AssertContainsIncludePath(parsedPattern);
         }
 
         public void AssertContainsIncludePattern(string includePattern)
         {
-            var parsedPattern = PathUtils.ParseFileGlobbingPatternAsString(includePattern);
+            var parsedPattern = FilePattern.Create(FileSystem, includePattern);
 
-            FileCollector.IncludePatterns.Should().Contain(parsedPattern);
+            FileCollector.IncludePatterns.Should().ContainEquivalentOf(parsedPattern);
         }
 
         public void AssertIncludePatternsAreEmpty()

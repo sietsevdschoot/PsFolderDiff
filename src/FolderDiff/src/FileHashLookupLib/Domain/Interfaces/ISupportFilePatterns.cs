@@ -2,7 +2,7 @@
 
 public interface ISupportFilePatterns
 {
-    List<string> IncludePatterns { get; set; }
+    List<FilePattern> IncludePatterns { get; set; }
 
-    List<string> ExcludePatterns { get; set; }
+    List<FilePattern> ExcludePatterns { get; set; }
 }

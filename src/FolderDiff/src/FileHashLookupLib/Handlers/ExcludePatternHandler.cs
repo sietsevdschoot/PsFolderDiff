@@ -15,14 +15,17 @@ public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
     private readonly IFileCollector _fileCollector;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
+    private readonly IFileSystem _fileSystem;
 
     public ExcludePatternHandler(
         IFileCollector fileCollector,
         IFileHashLookupState fileHashLookupState,
+        IFileSystem fileSystem,
         IPeriodicalProgressReporter<ProgressEventArgs> progress)
     {
         _fileCollector = fileCollector;
         _fileHashLookupState = fileHashLookupState;
+        _fileSystem = fileSystem;
         _progress = progress;
     }
 
@@ -32,7 +35,7 @@ public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
             activity: "Excluding files or patterns",
             currentOperation: "Collecting files to remove"));
 
-        var files = CollectFilesToExclude(request.ExcludePattern);
+        var files = CollectFilesToExclude(FilePattern.Create(_fileSystem, request.ExcludePattern));
 
         if (files.Any())
         {
@@ -58,25 +61,23 @@ public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
         return Task.CompletedTask;
     }
 
-    private List<IFileInfo> CollectFilesToExclude(string excludePattern)
+    private List<IFileInfo> CollectFilesToExclude(FilePattern excludePattern)
     {
-        var parsedPattern = PathUtils.ParseFileGlobbingPattern(excludePattern);
-
         var inMemoryFileSystem = new MockFileSystem();
 
         var allFiles = _fileCollector.GetFiles();
         allFiles.ForEach(file => inMemoryFileSystem.AddFile(file, new MockFileData(string.Empty)));
 
         var matcher = new Matcher(StringComparison.OrdinalIgnoreCase)
-            .AddInclude(parsedPattern.RelativePattern);
+            .AddInclude(excludePattern.RelativePattern);
 
         List<IFileInfo> matchedFiles;
 
-        if (!string.IsNullOrEmpty(parsedPattern.Directory))
+        if (!string.IsNullOrEmpty(excludePattern.Directory))
         {
             matchedFiles = (
-                from file in matcher.Execute(inMemoryFileSystem, parsedPattern.Directory).Files
-                select CreateFileInfo(inMemoryFileSystem, parsedPattern.Directory, file))
+                from file in matcher.Execute(inMemoryFileSystem, excludePattern.Directory).Files
+                select CreateFileInfo(inMemoryFileSystem, excludePattern.Directory, file))
             .ToList();
         }
         else
