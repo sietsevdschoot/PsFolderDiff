@@ -179,26 +179,6 @@ public class FileHashLookupStateTests
     }
 
     [Fact]
-    public void Exposes_the_paths_which_were_used()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void GetFiles_returns_all_files()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
     public void GetFilesByHash_returns_all_files_matching_the_hash()
     {
         // Arrange

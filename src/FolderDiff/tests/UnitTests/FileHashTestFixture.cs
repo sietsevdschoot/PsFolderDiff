@@ -11,8 +11,8 @@ public abstract class FileHashTestFixture
     #pragma warning disable SA1401 // Field is used by other private fixtures.
 
     private readonly string _workingDirectory;
+    private readonly Lazy<FileHashLookupSettings> _fileHashLookupSettings;
     private int _i = 1;
-    private Lazy<FileHashLookupSettings> _fileHashLookupSettings;
 
     protected FileHashTestFixture()
     {

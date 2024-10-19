@@ -2,12 +2,10 @@
 using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
-using PsFolderDiff.FileHashLookupLib.Utils;
 using Xunit;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
@@ -422,56 +420,6 @@ public class FileHashLookupTests
 
     [Fact]
     public void When_Save_is_called_without_filename_uses_last_known_filename()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Can_load_new_instance_from_filename()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Can_refresh_itself_By_adding_new_files_and_removing_no_longer_existing_files()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Returns_matching_items_from_other_object_it_is_compared_to()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void After_load_can_use_all_properties()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [Fact]
-    public void Can_add_relative_folders()
     {
         // Arrange
 

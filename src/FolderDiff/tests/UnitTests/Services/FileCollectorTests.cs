@@ -199,7 +199,7 @@ public class FileCollectorTests
         // Assert
         fixture.AssertContainsFileNames([1, 4]);
     }
-    
+
     [Fact]
     public void GetFiles_Returns_All_Collected_Files()
     {
