@@ -1,5 +1,5 @@
 ﻿using System.IO.Abstractions;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.IO.Abstractions.TestingHelpers;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
 
@@ -77,6 +77,20 @@ public static class FileHashTestFixtureFileExtensions
         files.ForEach(file => fixture.AddFile(file.FullName, fileContents));
 
         return fixture;
+    }
+
+    public static TFixture WithFileSystem<TFixture>(this TFixture fixture, MockFileSystem fileSystem)
+        where TFixture : FileHashTestFixture
+    {
+        fixture.FileSystem = fileSystem;
+
+        return fixture;
+    }
+
+    public static string GetFullPath<TFixture>(this TFixture fixture, string relativePath)
+        where TFixture : FileHashTestFixture
+    {
+        return fixture.FileSystem.Path.Combine(fixture.WorkingDirectory.FullName, relativePath);
     }
 
     public static IFileInfo AsFileInfo<TFixture>(this TFixture fixture, BasicFileInfo file)

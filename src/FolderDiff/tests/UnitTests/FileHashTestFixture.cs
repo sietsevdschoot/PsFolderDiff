@@ -12,13 +12,20 @@ public abstract class FileHashTestFixture
 
     private readonly string _workingDirectory;
     private int _i = 1;
+    private Lazy<FileHashLookupSettings> _fileHashLookupSettings;
 
     protected FileHashTestFixture()
     {
         FileSystem = new MockFileSystem();
 
-        FileHashLookupSettings = FileHashLookupSettings.Default;
-        FileHashLookupSettings.FileSystem = FileSystem;
+        _fileHashLookupSettings = new Lazy<FileHashLookupSettings>(() =>
+        {
+            var settings = FileHashLookupSettings.Default;
+            settings.FileSystem = FileSystem;
+            settings.ReportProgressDelay = TimeSpan.MaxValue;
+
+            return settings;
+        });
 
         _workingDirectory = FileSystem.Path
             .Combine(FileSystem.Path.GetTempPath(), "FolderDiff", $"{DateTime.Now:yyyy-MM-dd}-{Guid.NewGuid()}");
@@ -27,9 +34,9 @@ public abstract class FileHashTestFixture
         FileSystem.Directory.SetCurrentDirectory(_workingDirectory);
     }
 
-    public IFileSystem FileSystem { get; }
+    public IFileSystem FileSystem { get; set; }
 
-    public FileHashLookupSettings FileHashLookupSettings { get; }
+    public FileHashLookupSettings FileHashLookupSettings => _fileHashLookupSettings.Value;
 
     public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
 

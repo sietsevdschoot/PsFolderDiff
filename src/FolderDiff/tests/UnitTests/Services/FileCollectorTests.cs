@@ -3,7 +3,6 @@ using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
-using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using Xunit;
 
@@ -12,13 +11,13 @@ namespace PsFolderDiff.FileHashLookupLib.UnitTests.Services;
 public class FileCollectorTests
 {
     [Fact]
-    public void AddIncludeFolder_Adding_NonExisting_Folder_Throws()
+    public void AddIncludePattern_Adding_NonExisting_Folder_Throws()
     {
         // Arrange
         var fixture = new FileCollectorTestFixture();
 
         // Act
-        var act = () => fixture.AddIncludeFolder("NonExistingFolder");
+        var act = () => fixture.AddIncludePattern("NonExistingFolder");
 
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -36,14 +35,14 @@ public class FileCollectorTests
         fixture.WithNewFile(@"Folder2\5.txt");
 
         // Act
-        fixture.AddIncludeFolder(@"Folder1\");
+        fixture.AddIncludePattern(@"Folder1\");
 
         // Assert
         fixture.AssertContainsFileNames([1, 2, 3, 4]);
     }
 
     [Fact]
-    public void AddIncludeFolder_Returns_Collected_Files_For_This_Include_Pattern()
+    public void AddIncludePattern_Returns_Collected_Files_For_This_Include_Pattern()
     {
         // Arrange
         var fixture = new FileCollectorTestFixture();
@@ -53,8 +52,8 @@ public class FileCollectorTests
         fixture.WithNewFile(@"Folder2\4.txt");
 
         // Act
-        fixture.AddIncludeFolder(@"Folder1\");
-        var actual = fixture.AddIncludeFolder(@"Folder2\");
+        fixture.AddIncludePattern(@"Folder1\");
+        var actual = fixture.AddIncludePattern(@"Folder2\");
 
         // Assert
         fixture.AssertContainsFileNames(actual, [3, 4]);
@@ -95,6 +94,28 @@ public class FileCollectorTests
     }
 
     [Fact]
+    public void AddIncludePattern_Can_Include_RelativeFolder()
+    {
+        // Arrange
+        var fixture = new FileCollectorTestFixture()
+            .WithFileSystem(new MockFileSystem(
+                new Dictionary<string, MockFileData>
+                {
+                    { @"c:\Temp\Folder1\1.txt", new MockFileData(string.Empty) },
+                    { @"c:\Temp\Folder2\2.txt", new MockFileData(string.Empty) },
+                    { @"c:\Temp\Folder2\3.txt", new MockFileData(string.Empty) },
+                },
+                currentDirectory: @"c:\Temp\Folder1\"));
+
+        // Act
+        fixture.Sut.IncludePattern(@"..\Folder2\");
+
+        // Assert
+        fixture.AssertContainsFileNames([2, 3]);
+        fixture.Sut.IncludePatterns.Select(x => x.Value).Should().Contain(@"c:\Temp\Folder2\**\*");
+    }
+
+    [Fact]
     public void AddExcludePattern_ExcludesFolderInCollectedFileResults()
     {
         // Arrange
@@ -107,7 +128,7 @@ public class FileCollectorTests
         fixture.WithNewFile(@"Folder2\6.txt");
 
         // Act
-        fixture.AddIncludeFolder(@"\Folder1\");
+        fixture.AddIncludePattern(@"\Folder1\");
         fixture.AddExcludePattern(@"**\Sub1\**\*");
 
         // Assert
@@ -126,13 +147,59 @@ public class FileCollectorTests
         fixture.WithNewFile(@"Folder1\5.txt");
 
         // Act
-        fixture.AddIncludeFolder(@"Folder1\");
+        fixture.AddIncludePattern(@"Folder1\");
         fixture.AddExcludePattern(@"**\*.doc");
 
         // Assert
         fixture.AssertContainsFileNames([1, 5]);
     }
 
+    [Fact]
+    public void AddExcludePattern_Can_Exclude_RelativeFolder()
+    {
+        // Arrange
+        var fixture = new FileCollectorTestFixture()
+            .WithFileSystem(new MockFileSystem(
+                new Dictionary<string, MockFileData>
+                {
+                    { @"c:\Temp\Folder1\1.txt", new MockFileData(string.Empty) },
+                    { @"c:\Temp\Folder2\2.txt", new MockFileData(string.Empty) },
+                    { @"c:\Temp\Folder2\3.txt", new MockFileData(string.Empty) },
+                },
+                currentDirectory: @"c:\Temp\Folder2\"));
+
+        // Act
+        fixture.Sut.IncludePattern(@"c:\Temp\Folder1\");
+        fixture.Sut.IncludePattern(@"c:\Temp\Folder2\");
+        fixture.Sut.ExcludePattern(@"..\Folder1\");
+
+        // Assert
+        fixture.AssertContainsFileNames([2, 3]);
+        fixture.Sut.ExcludePatterns.Select(x => x.Value).Should().Contain(@"c:\Temp\Folder1\**\*");
+    }
+
+    [Fact]
+    public void ExcludePattern_Can_exclude_pattern_over_multiple_drives()
+    {
+        // Arrange
+        var fixture = new FileCollectorTestFixture()
+            .WithFileSystem(new MockFileSystem(new Dictionary<string, MockFileData>
+            {
+                { @"c:\Temp\Folder1\1.txt", new MockFileData(string.Empty) },
+                { @"c:\Temp\Folder1\2.doc", new MockFileData(string.Empty) },
+                { @"d:\Temp\Folder2\3.doc", new MockFileData(string.Empty) },
+                { @"d:\Temp\Folder2\4.txt", new MockFileData(string.Empty) },
+            }));
+
+        // Act
+        fixture.Sut.IncludePattern(@"c:\Temp\Folder1");
+        fixture.Sut.IncludePattern(@"d:\Temp\Folder2");
+        fixture.Sut.ExcludePattern(@"*.doc");
+
+        // Assert
+        fixture.AssertContainsFileNames([1, 4]);
+    }
+    
     [Fact]
     public void GetFiles_Returns_All_Collected_Files()
     {
@@ -143,8 +210,8 @@ public class FileCollectorTests
         fixture.WithNewFile(@"Folder2\Sub1\3.txt");
         fixture.WithNewFile(@"Folder2\4.txt");
 
-        fixture.AddIncludeFolder(@"Folder1\");
-        fixture.AddIncludeFolder(@"Folder2\");
+        fixture.AddIncludePattern(@"Folder1\");
+        fixture.AddIncludePattern(@"Folder2\");
         fixture.AddExcludePattern(@"**\Sub1\**\*");
 
         // Act
@@ -158,24 +225,21 @@ public class FileCollectorTests
     public void IncludePattern_Can_collect_files_from_different_drives()
     {
         // Arrange
-        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { @"c:\Temp\Folder1\1.txt", new MockFileData(Guid.NewGuid().ToString()) },
-            { @"c:\Temp\Folder1\2.txt", new MockFileData(Guid.NewGuid().ToString()) },
-            { @"d:\Temp\Folder2\3.txt", new MockFileData(Guid.NewGuid().ToString()) },
-            { @"d:\Temp\Folder2\4.txt", new MockFileData(Guid.NewGuid().ToString()) },
-        });
-
-        var fileCollector = new FileCollector(new StorageModel(), fileSystem);
+        var fixture = new FileCollectorTestFixture()
+            .WithFileSystem(new MockFileSystem(new Dictionary<string, MockFileData>
+            {
+                { @"c:\Temp\Folder1\1.txt", new MockFileData(string.Empty) },
+                { @"c:\Temp\Folder1\2.txt", new MockFileData(string.Empty) },
+                { @"d:\Temp\Folder2\3.txt", new MockFileData(string.Empty) },
+                { @"d:\Temp\Folder2\4.txt", new MockFileData(string.Empty) },
+            }));
 
         // Act
-        fileCollector.IncludePattern(@"c:\Temp\Folder1");
-        fileCollector.IncludePattern(@"d:\Temp\Folder2");
+        fixture.Sut.IncludePattern(@"c:\Temp\Folder1");
+        fixture.Sut.IncludePattern(@"d:\Temp\Folder2");
 
         // Assert
-        var actualFileNames = fileCollector.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
-
-        actualFileNames.Should().BeEquivalentTo([1, 2, 3, 4]);
+        fixture.AssertContainsFileNames([1, 2, 3, 4]);
     }
 
     private class FileCollectorTestFixture : FileHashTestFixture
@@ -191,11 +255,9 @@ public class FileCollectorTests
 
         public new string WorkingDirectory => base.WorkingDirectory.FullName;
 
-        public List<IFileInfo> AddIncludeFolder(string path)
+        public List<IFileInfo> AddIncludePattern(string path)
         {
-            var fullName = FileSystem.Path.Combine(WorkingDirectory, path);
-
-            return Sut.IncludePattern(fullName);
+            return AddIncludePattern(WorkingDirectory, path);
         }
 
         public List<IFileInfo> AddIncludePattern(string workingDirectory, string includePattern)

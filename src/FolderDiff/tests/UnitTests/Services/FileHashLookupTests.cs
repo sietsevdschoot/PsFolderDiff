@@ -116,36 +116,23 @@ public class FileHashLookupTests
     public async Task ExcludePattern_Can_exclude_pattern_over_different_drives()
     {
         // Arrange
-        var fixture = new FileHashLookupTestFixture();
-
-        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            { @"c:\Temp\Folder1\1.txt", new MockFileData(Guid.NewGuid().ToString()) },
-            { @"c:\Temp\Folder1\2.doc", new MockFileData(Guid.NewGuid().ToString()) },
-            { @"d:\Temp\Folder2\3.txt", new MockFileData(Guid.NewGuid().ToString()) },
-            { @"d:\Temp\Folder2\4.doc", new MockFileData(Guid.NewGuid().ToString()) },
-        });
-
-        var provider = fixture.CreateFileHashLookupWithProvider(settings =>
-        {
-            settings.ConfigureServices.Add((services, _) =>
+        var fixture = new FileHashLookupTestFixture()
+            .WithFileSystem(new MockFileSystem(new Dictionary<string, MockFileData>
             {
-                services.AddSingleton<IFileSystem>(fileSystem);
-            });
-        });
-
-        var fileHashlookup = provider.FileHashLookup;
+                { @"c:\Temp\Folder1\1.txt", new MockFileData(Guid.NewGuid().ToString()) },
+                { @"c:\Temp\Folder1\2.doc", new MockFileData(Guid.NewGuid().ToString()) },
+                { @"d:\Temp\Folder2\3.txt", new MockFileData(Guid.NewGuid().ToString()) },
+                { @"d:\Temp\Folder2\4.doc", new MockFileData(Guid.NewGuid().ToString()) },
+            }));
 
         // Act
-        await fileHashlookup.Include(@"c:\Temp\Folder1\");
-        await fileHashlookup.Include(@"d:\Temp\Folder2\");
+        await fixture.Sut.Include(@"c:\Temp\Folder1\");
+        await fixture.Sut.Include(@"d:\Temp\Folder2\");
 
-        await fileHashlookup.Exclude("*.doc");
+        await fixture.Sut.Exclude("*.doc");
 
         // Assert
-        var actualFileNames = fileHashlookup.GetFiles().Select(x => Convert.ToInt32(fileSystem.Path.GetFileNameWithoutExtension(x.FullName)));
-
-        actualFileNames.Should().BeEquivalentTo([1, 3]);
+        fixture.AssertContainsFileNames([1, 3]);
     }
 
     [Fact]
@@ -220,8 +207,8 @@ public class FileHashLookupTests
             .Select(x => FilePattern.Create(fixture.FileSystem, x))
             .Select(x => x.Directory).Should().BeEquivalentTo(new[]
         {
-            "Folder1\\",
-            "Folder2\\",
+            fixture.GetFullPath(@"Folder1\"),
+            fixture.GetFullPath(@"Folder2\"),
         });
     }
 

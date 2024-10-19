@@ -30,6 +30,7 @@ public class PersistenceService : IPersistenceService
     public static FileHashLookup LoadFileHashLookup(string path, FileHashLookupSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings, nameof(settings));
+
         if (!settings.FileSystem.File.Exists(path))
         {
             throw new ArgumentException($"Can't find '{path}'", nameof(path));

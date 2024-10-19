@@ -23,6 +23,10 @@ public class FilePattern
         if (!string.IsNullOrWhiteSpace(directory))
         {
             directory = $@"{directory.Trim('\\')}\";
+
+            directory = fileSystem.Path.IsPathRooted(directory)
+                ? fileSystem.Path.GetFullPath(directory)
+                : fileSystem.Path.GetFullPath(directory, fileSystem.Directory.GetCurrentDirectory());
         }
 
         if (!string.IsNullOrEmpty(relativePattern))

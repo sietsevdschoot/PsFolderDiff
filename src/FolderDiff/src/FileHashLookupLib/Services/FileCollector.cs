@@ -74,7 +74,10 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 
             foreach (var excludePattern in ExcludePatterns)
             {
-                matcher.AddExclude(excludePattern.RelativePattern);
+                if (string.IsNullOrEmpty(excludePattern.Directory) || excludePattern.Directory.StartsWith(pattern.Directory))
+                {
+                    matcher.AddExclude(excludePattern.RelativePattern);
+                }
             }
 
             var result = matcher.Execute(_fileSystem, pattern.Directory);
