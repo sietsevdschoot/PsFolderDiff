@@ -1,4 +1,5 @@
 ﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using Microsoft.Extensions.FileSystemGlobbing;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
@@ -37,14 +38,20 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 
         _storageModel.IncludePatterns.Add(parsedIncludePattern);
 
-        return GetFilesInternal(parsedIncludePattern);
+        var filesToInclude = GetFilesInternal(parsedIncludePattern);
+
+        return filesToInclude;
     }
 
-    public void ExcludePattern(string excludePattern)
+    public List<IFileInfo> ExcludePattern(string excludePattern)
     {
         var parsedExcludePattern = FilePattern.Create(_fileSystem, excludePattern);
 
+        var getFilesToExclude = GetFilesToExclude(parsedExcludePattern);
+
         _storageModel.ExcludePatterns.Add(parsedExcludePattern);
+
+        return getFilesToExclude;
     }
 
     public List<IFileInfo> GetFiles()
@@ -85,5 +92,42 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
         }
 
         return collectedFiles;
+    }
+
+    private List<IFileInfo> GetFilesToExclude(FilePattern excludePattern)
+    {
+        var inMemoryFileSystem = new MockFileSystem();
+
+        var allFiles = GetFilesInternal();
+        allFiles.ForEach(file => inMemoryFileSystem.AddFile(file, new MockFileData(string.Empty)));
+
+        var matcher = new Matcher(StringComparison.OrdinalIgnoreCase)
+            .AddInclude(excludePattern.RelativePattern);
+
+        List<IFileInfo> matchedFiles;
+
+        if (!string.IsNullOrEmpty(excludePattern.Directory))
+        {
+            matchedFiles = (
+                from file in matcher.Execute(inMemoryFileSystem, excludePattern.Directory).Files
+                select CreateFileInfo(inMemoryFileSystem, excludePattern.Directory, file))
+            .ToList();
+        }
+        else
+        {
+            matchedFiles = (
+                from drive in inMemoryFileSystem.AllDrives
+                from file in matcher.Execute(inMemoryFileSystem, drive).Files
+                select CreateFileInfo(inMemoryFileSystem, drive, file))
+            .ToList();
+        }
+
+        return matchedFiles;
+    }
+
+    private IFileInfo CreateFileInfo(IFileSystem fileSystem, string directory, FilePatternMatch file)
+    {
+        var fullName = fileSystem.Path.Combine(directory, file.Path);
+        return fileSystem.FileInfo.New(fullName);
     }
 }

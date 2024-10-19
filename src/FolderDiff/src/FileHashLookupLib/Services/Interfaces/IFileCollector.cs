@@ -8,7 +8,7 @@ public interface IFileCollector
 
     List<IFileInfo> IncludePattern(string includePattern);
 
-    void ExcludePattern(string excludePattern);
+    List<IFileInfo> ExcludePattern(string excludePattern);
 
     List<IFileInfo> GetFiles();
 }
