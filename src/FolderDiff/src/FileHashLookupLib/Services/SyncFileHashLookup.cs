@@ -10,7 +10,7 @@ public class SyncFileHashLookup
 {
     private readonly FileHashLookup _fileHashLookup;
 
-    public SyncFileHashLookup(FileHashLookup fileHashLookup)
+    private SyncFileHashLookup(FileHashLookup fileHashLookup)
     {
         _fileHashLookup = fileHashLookup;
     }
