@@ -27,6 +27,8 @@ public class SyncFileHashLookup
 
     public DateTime LastUpdated => _fileHashLookup.LastUpdated;
 
+    public FileHashLookup FileHashLookup => _fileHashLookup;
+
     public static SyncFileHashLookup Create() => Create(FileHashLookupSettings.Default);
 
     public static SyncFileHashLookup Create(FileHashLookupSettings settings)
@@ -81,9 +83,9 @@ public class SyncFileHashLookup
         _fileHashLookup.AddFilesAsync(files).GetAwaiter().GetResult();
     }
 
-    public void AddFileHashLookup(FileHashLookup other)
+    public void AddFileHashLookup(SyncFileHashLookup other)
     {
-        _fileHashLookup.AddFileHashLookupAsync(other).GetAwaiter().GetResult();
+        _fileHashLookup.AddFileHashLookupAsync(other.FileHashLookup).GetAwaiter().GetResult();
     }
 
     public void Refresh()
@@ -91,14 +93,14 @@ public class SyncFileHashLookup
         _fileHashLookup.RefreshAsync().GetAwaiter().GetResult();
     }
 
-    public FileHashLookup GetDifferencesInOther(FileHashLookup other)
+    public SyncFileHashLookup GetDifferencesInOther(SyncFileHashLookup other)
     {
-        return _fileHashLookup.GetDifferencesInOtherAsync(other).GetAwaiter().GetResult();
+        return new SyncFileHashLookup(_fileHashLookup.GetDifferencesInOtherAsync(other.FileHashLookup).GetAwaiter().GetResult());
     }
 
-    public FileHashLookup GetMatchesInOther(FileHashLookup other)
+    public SyncFileHashLookup GetMatchesInOther(SyncFileHashLookup other)
     {
-        return _fileHashLookup.GetMatchesInOtherAsync(other).GetAwaiter().GetResult();
+        return new SyncFileHashLookup(_fileHashLookup.GetMatchesInOtherAsync(other.FileHashLookup).GetAwaiter().GetResult());
     }
 
     public override string ToString() => _fileHashLookup.ToString();
