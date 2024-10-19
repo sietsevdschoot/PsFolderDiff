@@ -171,6 +171,8 @@ public class FileHashLookup
         return compareResult.MatchesInOther;
     }
 
+    public override string ToString() => this.GetFileHashLookupDescription();
+
     internal static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) Create(IServiceCollection services, FileHashLookupSettings settings)
     {
         services

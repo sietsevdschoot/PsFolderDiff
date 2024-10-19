@@ -376,7 +376,7 @@ public class FileHashLookupTests
     }
 
     [Fact]
-    public async Task Creates_a_file_containing_the_HashTable()
+    public async Task Can_Save_And_Load_Identical_FileHashLookup()
     {
         // Arrange
         var fixture = new FileHashLookupTestFixture()
@@ -427,6 +427,25 @@ public class FileHashLookupTests
 
         // Assert
     }
+
+    [Fact]
+    public async Task Can_display_contents_by_using_ToString()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+        var file1 = fixture.WithNewFile(@"Folder1\1.txt");
+        await fixture.Sut.Include("Folder1");
+        await fixture.Sut.Exclude("*.doc");
+
+        fixture.Sut.Save();
+
+        // Act
+        var description = fixture.Sut.ToString();
+
+        // Assert
+        description.Should().Match($"*{nameof(FileHashLookup)}*");
+    }
+
 
     private class FileHashLookupTestFixture : FileHashTestFixture
     {
