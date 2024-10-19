@@ -8,6 +8,7 @@ public class FileHashLookupSettings
 {
     public static FileHashLookupSettings Default => new FileHashLookupSettings
     {
+        FileSystem = new FileSystem(),
         ReportProgressDelay = TimeSpan.FromMilliseconds(500),
         ReportProgress = new Progress<ProgressEventArgs>(progress =>
         {
@@ -20,7 +21,6 @@ public class FileHashLookupSettings
 
             Console.WriteLine(progressMessage);
         }),
-        FileSystem = new FileSystem(),
     };
 
     public IFileSystem FileSystem { get; set; } = default!;
@@ -31,6 +31,6 @@ public class FileHashLookupSettings
 
     public IProgress<ProgressEventArgs> ReportProgress { get; set; } = new Progress<ProgressEventArgs>(_ =>
     {
-        Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(FileHashLookupSettings.ReportProgress)} to display progress.");
+        Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(ReportProgress)} to display progress.");
     });
 }
