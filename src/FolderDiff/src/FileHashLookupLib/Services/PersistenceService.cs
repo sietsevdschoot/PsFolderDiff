@@ -56,6 +56,7 @@ public class PersistenceService : IPersistenceService
         if (string.IsNullOrEmpty(path))
         {
             var directory = fileHashLookup.IncludePatterns
+                .Select(x => FilePattern.Create(_fileSystem, x))
                 .FirstOrDefault(x => !string.IsNullOrEmpty(x.Directory))
                 ?.Directory;
 

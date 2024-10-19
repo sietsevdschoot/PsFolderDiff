@@ -216,7 +216,9 @@ public class FileHashLookupTests
 
         // Assert
         fileHashLookup.AssertContainsFileNames([1, 2, 3, 4]);
-        fileHashLookup.IncludePatterns.Select(x => x.Directory).Should().BeEquivalentTo(new[]
+        fileHashLookup.IncludePatterns
+            .Select(x => FilePattern.Create(fixture.FileSystem, x))
+            .Select(x => x.Directory).Should().BeEquivalentTo(new[]
         {
             "Folder1\\",
             "Folder2\\",

@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
-using PsFolderDiff.FileHashLookupLib.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 
@@ -21,7 +20,7 @@ public static class FileHashLookupAssertExtensions
 
     public static void AssertContainsIncludePath(this FileHashLookup fileHashLookup, FilePattern includeFolderPattern)
     {
-        fileHashLookup.IncludePatterns.Should().ContainEquivalentOf(includeFolderPattern);
+        fileHashLookup.IncludePatterns.Should().Contain(includeFolderPattern.Value);
     }
 
     public static void AssertIncludePatternsAreEmpty(this FileHashLookup fileHashLookup)

@@ -10,7 +10,7 @@ public static class EnumerableExtensions
         }
     }
 
-    public static void InsertNewItems<T>(this List<T> @this, List<T> other, IEqualityComparer<T>? comparer = null)
+    public static void InsertNewItems<T>(this List<T> @this, IEnumerable<T> other, IEqualityComparer<T>? comparer = null)
     {
         foreach (var otherEntry in other)
         {

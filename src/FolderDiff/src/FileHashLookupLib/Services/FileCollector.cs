@@ -27,8 +27,8 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
 
     public void AddFileHashLookup(FileHashLookup other)
     {
-        _storageModel.IncludePatterns.InsertNewItems(other.IncludePatterns.ToList());
-        _storageModel.ExcludePatterns.InsertNewItems(other.ExcludePatterns.ToList());
+        _storageModel.IncludePatterns.InsertNewItems(other.IncludePatterns.Select(x => FilePattern.Create(_fileSystem, x)).ToList());
+        _storageModel.ExcludePatterns.InsertNewItems(other.ExcludePatterns.Select(x => FilePattern.Create(_fileSystem, x)).ToList());
     }
 
     public List<IFileInfo> IncludePattern(string includePattern)
