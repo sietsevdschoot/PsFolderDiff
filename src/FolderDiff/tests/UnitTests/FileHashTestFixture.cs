@@ -1,0 +1,55 @@
+﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
+using PsFolderDiff.FileHashLookupLib.Configuration;
+using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
+using PsFolderDiff.FileHashLookupLib.UnitTests.Utils;
+
+namespace PsFolderDiff.FileHashLookupLib.UnitTests;
+
+public abstract class FileHashTestFixture
+{
+    #pragma warning disable SA1401 // Field is used by other private fixtures.
+
+    private readonly string _workingDirectory;
+    private readonly Lazy<FileHashLookupSettings> _fileHashLookupSettings;
+    private readonly Lazy<IServiceProvider> _provider;
+    private int _i = 1;
+
+    protected FileHashTestFixture()
+    {
+        FileSystem = new MockFileSystem();
+
+        _fileHashLookupSettings = new Lazy<FileHashLookupSettings>(() =>
+        {
+            var settings = FileHashLookupSettings.Default;
+            settings.FileSystem = FileSystem;
+            settings.ReportProgressDelay = TimeSpan.MaxValue;
+
+            return settings;
+        });
+
+        _workingDirectory = FileSystem.Path
+            .Combine(FileSystem.Path.GetTempPath(), "FolderDiff", $"{DateTime.Now:yyyy-MM-dd}-{Guid.NewGuid()}");
+
+        FileSystem.Directory.CreateDirectory(_workingDirectory);
+        FileSystem.Directory.SetCurrentDirectory(_workingDirectory);
+
+        _provider = new Lazy<IServiceProvider>(() => this.CreateFileHashLookupWithProvider(FileHashLookupSettings).ServiceProvider);
+    }
+
+    public IServiceProvider ServiceProvider => _provider.Value;
+
+    public IFileSystem FileSystem { get; set; }
+
+    public FileHashLookupSettings FileHashLookupSettings => _fileHashLookupSettings.Value;
+
+    public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
+
+    public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(HashingUtil.CreateBasicFileInfo).ToArray();
+
+    public int GetNextIdentifier()
+    {
+        return _i++;
+    }
+}
