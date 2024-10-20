@@ -8,4 +8,4 @@ if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet
  . ([ScriptBlock]::Create("using module $PSScriptRoot\..\src\BasicFileInfo.psm1"))
  . ([ScriptBlock]::Create("using module $PSScriptRoot\..\src\FileHashLookup.Impl.psm1"))
 
- 
+ & (Join-Path $PSScriptRoot ..\tests\CheckNugetDependencies.ps1) -Verify

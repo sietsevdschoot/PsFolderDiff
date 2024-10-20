@@ -9,6 +9,8 @@
 *NCrunch*
 *.ncrunch*
 
+src/lib/
+
 # Build results
 [Dd]ebug/
 [Rr]elease/
