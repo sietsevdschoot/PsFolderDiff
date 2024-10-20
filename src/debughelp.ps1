@@ -5,7 +5,11 @@ param()
 
 if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
 
- . ([ScriptBlock]::Create("using module $PSScriptRoot\..\src\BasicFileInfo.psm1"))
- . ([ScriptBlock]::Create("using module $PSScriptRoot\..\src\FileHashLookup.Impl.psm1"))
+#  . ([ScriptBlock]::Create("using module $PSScriptRoot\..\src\BasicFileInfo.psm1"))
+#  . ([ScriptBlock]::Create("using module $PSScriptRoot\..\src\FileHashLookup.Impl.psm1"))
 
- & (Join-Path $PSScriptRoot ..\tests\CheckNugetDependencies.ps1) -Verify
+ & import-module (Join-Path $PSScriptRoot ..\src\MyFileHashLookup.psm1) -Force -Verbose
+
+ Get-FileHashTable $PSScriptRoot
+
+
