@@ -1,6 +1,6 @@
 ﻿namespace PsFolderDiff.FileHashLookupLib.Extensions;
 
-public static class FiileSizeExtensions
+public static class FileSizeExtensions
 {
     private static readonly string[] Suffixes = ["bytes", "KB", "MB", "GB", "TB", "PB"];
 
