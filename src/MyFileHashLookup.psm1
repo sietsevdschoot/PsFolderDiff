@@ -1,3 +1,6 @@
+using namespace PsFolderDiff.FileHashLookupLib.Services
+using namespace PsFolderDiff.FileHashLookupLib.Domain
+using namespace PsFolderDiff.FileHashLookupLib.Configuration
 
 
 <#
@@ -21,7 +24,7 @@ function Get-FileHashTable {
 
   $settings = Get-FileHashLookupSettings
 
-  $fileHashLookup = [PsFolderDiff.FileHashLookupLib.Services.SyncFileHashLookup]::Create($settings)
+  $fileHashLookup = [SyncFileHashLookup]::Create($settings)
 
   if ($path) {
     
@@ -50,17 +53,31 @@ function Import-FileHashTable {
   )
   $settings = Get-FileHashLookupSettings
 
-  [PsFolderDiff.FileHashLookupLib.Services.SyncFileHashLookup]::Load($file.FullName, $settings)    
+  [SyncFileHashLookup]::Load($file.FullName, $settings)    
 }
 
 Function Get-FileHashLookupSettings {
 
-  [Management.Automation.Runspaces.Runspace]::DefaultRunspace = [RunspaceFactory]::CreateRunspace()
-  # $settings = [PsFolderDiff.FileHashLookupLib.Configuration.FileHashLookupSettings]::new()
-  $settings = [PsFolderDiff.FileHashLookupLib.Configuration.FileHashLookupSettings]::Default
+  $settings = [FileHashLookupSettings]::Default
 
-  # $settings.ReportProgress = [System.Progress[PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs]]::new({param($progress) Write-Progress @progress })
-  $settings.ReportProgress = [System.Progress[PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs]]::new({param($progress) Write-Host "hoi" })
+  # Create a new runspace for the PowerShell script to execute on
+  $runspace = [powershell]::Create().Runspace
+  $runspace.Open()
+  
+  $settings.ReportProgress = [System.Progress[ProgressEventArgs]]::new({
+    param($progress) 
+
+    [System.Management.Automation.Runspaces.Runspace]::DefaultRunspace = $runspace
+
+    $powershell = [powershell]::Create().AddScript({
+      Write-Host "Hello world: Progress is $($progress.CurrentOperation)"
+    })
+
+    # Run the script
+    $powershell.Invoke()
+    $powershell.Dispose()
+  })
+
   $settings.ReportProgressDelay = [TimeSpan]::Zero
 
   $settings
@@ -68,7 +85,7 @@ Function Get-FileHashLookupSettings {
 
 Function Import-RequiredDependencies {
 
-  $hasLoadedDependencies = try { [PsFolderDiff.FileHashLookupLib.Services.SyncFileHashLookup] > $null; $true } catch { $false }
+  $hasLoadedDependencies = try { [SyncFileHashLookup] > $null; $true } catch { $false }
   
   if (!$hasLoadedDependencies) {
 
