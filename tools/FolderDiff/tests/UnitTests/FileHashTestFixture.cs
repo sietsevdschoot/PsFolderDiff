@@ -46,7 +46,10 @@ public abstract class FileHashTestFixture
 
     public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
 
-    public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(HashingUtil.CreateBasicFileInfo).ToArray();
+    public BasicFileInfo[] AllFiles => WorkingDirectory
+        .GetFiles("*.*", SearchOption.AllDirectories)
+        .Select(HashingUtil.CreateBasicFileInfo)
+        .ToArray();
 
     public int GetNextIdentifier()
     {

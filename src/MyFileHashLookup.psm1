@@ -62,9 +62,11 @@ Function Get-FileHashLookupSettings {
 
   # Create a new runspace for the PowerShell script to execute on
   $runspace = [powershell]::Create().Runspace
+  $runspace.ApartmentState = [System.Threading.ApartmentState]::DefaultRunspace
   $runspace.Open()
   
   $settings.ReportProgress = [System.Progress[ProgressEventArgs]]::new({
+
     param($progress) 
 
     [System.Management.Automation.Runspaces.Runspace]::DefaultRunspace = $runspace

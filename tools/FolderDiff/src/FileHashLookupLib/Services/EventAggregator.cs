@@ -6,11 +6,11 @@ namespace PsFolderDiff.FileHashLookupLib.Services;
 public class EventAggregator : IEventAggregator
 {
     private readonly List<IProgress<ProgressEventArgs>> _subscribers = new();
-    private readonly SynchronizationContext _synchronizationContext;
+    ////private readonly SynchronizationContext _synchronizationContext;
 
     public EventAggregator()
     {
-        _synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
+        ////_synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
     }
 
     public void Subscribe(IProgress<ProgressEventArgs> progress)
@@ -24,8 +24,8 @@ public class EventAggregator : IEventAggregator
 
         foreach (var subscriber in _subscribers)
         {
-            _synchronizationContext.Post(state => subscriber.Report((ProgressEventArgs)state!), progressEvent);
-            ////subscriber.Report(progressEvent);
+            ////_synchronizationContext.Post(state => subscriber.Report((ProgressEventArgs)state!), progressEvent);
+            subscriber.Report(progressEvent);
         }
     }
 }

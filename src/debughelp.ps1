@@ -13,4 +13,4 @@ if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet
 #  Get-FileHashTable $PSScriptRoot
 
 
-& (Join-Path $PSScriptRoot "\..\tests\CheckNugetDependencies.ps1") -Verify
+& (Join-Path $PSScriptRoot "\..\tests\MySample.ps1")
