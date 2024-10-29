@@ -13,4 +13,4 @@ if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet
 #  Get-FileHashTable $PSScriptRoot
 
 
-& (Join-Path $PSScriptRoot "\..\tests\MySample.ps1")
+& (Join-Path $PSScriptRoot "\..\tests\MySample3.ps1")

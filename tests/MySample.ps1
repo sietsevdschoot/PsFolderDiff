@@ -17,10 +17,14 @@ Add-Type `
         $service = [PsFolderDiff.FileHashLookupLib.UnitTests.InlineSampleService2]::new()
 
         $myAction = ([Action[string]]{ param([string] $name) Write-Host "Hello $name" })
-                
+        
+        $myProgress = [Progress[string]]::new
+
+        $myAction.Invoke("Test")
+
         $service.Execute($null);    
         # $service.Execute({ param([string] $name) Write-Host "Hello $name" });    
-        # $service.Execute($myAction);    
+        $service.Execute($myAction);    
     }
     catch {
 
