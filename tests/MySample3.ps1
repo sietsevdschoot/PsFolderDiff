@@ -1,6 +1,6 @@
 Add-Type -TypeDefinition (Get-Content $PSScriptRoot\Code\ProgressAction.cs -raw) 
 
-$myState = @{}
+$myState = @{ MyFoo = "Sietse" }
 
 $myDelegate = [ProgressAction]::new($host, $myState, {
     param($name, $state)

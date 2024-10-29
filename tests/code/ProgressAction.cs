@@ -4,22 +4,21 @@ using System.Management.Automation;
 using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
 
-public class ProgressAction
+public class ProgressAction<TProgress>
+    where TProgress : class
 {
     private PSHost _host;
-    private IDictionary _state;
     private string _script;
 
-    public ProgressAction(PSHost host, IDictionary state, ScriptBlock sbk)
+    public ProgressAction(PSHost host, ScriptBlock sbk)
     {
         // Store the current host and script, the host is used
         // so that Write-Host will work.
         _host = host;
-        _state = state;
         _script = sbk.ToString();
     }
 
-    public void Action(string name)
+    public void Action(TProgress progress)
     {
         // When the delegate is invoked, create the Runspace
         // to run our script and pass in the argument;
@@ -29,12 +28,20 @@ public class ProgressAction
 
             PowerShell ps = PowerShell.Create();
             ps.Runspace = rs;
-            ps.AddScript(_script).AddArgument(name).AddArgument(_state);
+
+            ps.AddScript(_script).AddArgument(progress);
 
             // This discards any output and does no error
             // handling, you may want to change this
 
-            ps.Invoke();
+            try {
+
+                ps.Invoke();
+            }
+            catch {
+
+                throw
+            }
         }
     }
 }
