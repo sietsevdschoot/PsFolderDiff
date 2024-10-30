@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using PsFolderDiff.FileHashLookupLib.Configuration;
+using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Utils;
 

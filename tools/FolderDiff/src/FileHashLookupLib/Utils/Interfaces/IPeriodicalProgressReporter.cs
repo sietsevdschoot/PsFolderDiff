@@ -1,4 +1,4 @@
-﻿namespace PsFolderDiff.FileHashLookupLib.Utils;
+﻿namespace PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 public interface IPeriodicalProgressReporter<T>
 {

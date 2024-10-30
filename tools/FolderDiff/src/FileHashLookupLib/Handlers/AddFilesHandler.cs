@@ -2,7 +2,7 @@
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
-using PsFolderDiff.FileHashLookupLib.Utils;
+using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Handlers;
 

@@ -189,7 +189,7 @@ public class FileHashLookup
         var sp = services.BuildServiceProvider();
 
         sp.GetRequiredService<IEventAggregator>()
-            .Subscribe(settings.ReportProgress);
+            .Subscribe(new Progress<ProgressEventArgs>(settings.ReportProgress.Action));
 
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),

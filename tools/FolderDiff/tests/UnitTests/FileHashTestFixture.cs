@@ -24,7 +24,7 @@ public abstract class FileHashTestFixture
         {
             var settings = FileHashLookupSettings.Default;
             settings.FileSystem = FileSystem;
-            settings.ReportProgressDelay = TimeSpan.MaxValue;
+            settings.ReportProgressDelay = TimeSpan.MinValue;
 
             return settings;
         });

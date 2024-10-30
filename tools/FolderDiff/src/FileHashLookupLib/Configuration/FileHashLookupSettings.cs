@@ -1,6 +1,8 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookupLib.Domain;
+using PsFolderDiff.FileHashLookupLib.Utils;
+using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Configuration;
 
@@ -10,7 +12,7 @@ public class FileHashLookupSettings
     {
         FileSystem = new FileSystem(),
         ReportProgressDelay = TimeSpan.FromMilliseconds(500),
-        ReportProgress = new Progress<ProgressEventArgs>(progress =>
+        ReportProgress = new ConsoleProgressAction<ProgressEventArgs>(progress =>
         {
             var progressMessage = string.Format(
                 "{0,4}{1}{2}{3}",
@@ -29,7 +31,7 @@ public class FileHashLookupSettings
 
     public List<Action<IServiceCollection, IServiceProvider>> ConfigureServices { get; set; } = new();
 
-    public IProgress<ProgressEventArgs> ReportProgress { get; set; } = new Progress<ProgressEventArgs>(_ =>
+    public IProgressAction<ProgressEventArgs> ReportProgress { get; set; } = new ConsoleProgressAction<ProgressEventArgs>(_ =>
     {
         Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(ReportProgress)} to display progress.");
     });
