@@ -62,11 +62,12 @@ Function Get-FileHashLookupSettings {
   $settings.ReportProgress = [PowershellProgressAction[PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs]]::new($Host, { 
     param ([PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs] $progressArgs) 
     
-    # Write-Host $progressArgs.Activity -fore Green
+    # Write-Host "$($progressArgs.Activity) - $($progressArgs.Status)" -fore Green
+
+    $progressArgs | Get-Member | Out-String | Write-Host -ForegroundColor Green
+
     Write-Progress @progressArgs 
   })
- 
-  $settings.ReportProgressDelay = [TimeSpan]::Zero
 
   $settings
 }
@@ -109,6 +110,7 @@ Function Import-RequiredDependencies {
 }
 
 Import-RequiredDependencies
+ 
 
 Set-Alias GetFileHashTable Get-FileHashTable
 Set-Alias Get-HashTable Get-FileHashTable

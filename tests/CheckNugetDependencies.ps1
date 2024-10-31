@@ -36,4 +36,6 @@ if ($Verify) {
   $fileHashLookup = Get-FileHashTable
 
   $fileHashLookup.Include((Join-Path $PSScriptRoot ..\src\lib\))
+
+  $fileHashLookup
 }
