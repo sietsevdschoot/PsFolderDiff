@@ -44,7 +44,7 @@ public class PowershellProgressAction<TProgress> : IProgressAction<TProgress>
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.FormatException());
+            Console.WriteLine($"[{ex.GetType().Name}: {ex.Message}]\n{ex.StackTrace}");
         }
     }
 }

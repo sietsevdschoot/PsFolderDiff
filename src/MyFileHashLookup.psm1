@@ -1,7 +1,7 @@
 using namespace PsFolderDiff.FileHashLookupLib.Services
 using namespace PsFolderDiff.FileHashLookupLib.Domain
 using namespace PsFolderDiff.FileHashLookupLib.Configuration
-
+using namespace PsFolderDiff.FileHashLookupLib.Utils
 
 <#
     .SYNOPSIS
@@ -59,25 +59,13 @@ function Import-FileHashTable {
 Function Get-FileHashLookupSettings {
 
   $settings = [FileHashLookupSettings]::Default
-
-  # Create a new runspace for the PowerShell script to execute on
-  $runspace = [powershell]::Create().Runspace
-  $runspace.Open()
-  
-  $settings.ReportProgress = [System.Progress[ProgressEventArgs]]::new({
-    param($progress) 
-
-    [System.Management.Automation.Runspaces.Runspace]::DefaultRunspace = $runspace
-
-    $powershell = [powershell]::Create().AddScript({
-      Write-Host "Hello world: Progress is $($progress.CurrentOperation)"
-    })
-
-    # Run the script
-    $powershell.Invoke()
-    $powershell.Dispose()
+  $settings.ReportProgress = [PowershellProgressAction[PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs]]::new($Host, { 
+    param ([PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs] $progressArgs) 
+    
+    # Write-Host $progressArgs.Activity -fore Green
+    Write-Progress @progressArgs 
   })
-
+ 
   $settings.ReportProgressDelay = [TimeSpan]::Zero
 
   $settings

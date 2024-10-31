@@ -11,7 +11,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="ExceptionFormatter" Version="1.0.0.14" />
 	  <PackageReference Include="MediatR" Version="12.4.1" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />

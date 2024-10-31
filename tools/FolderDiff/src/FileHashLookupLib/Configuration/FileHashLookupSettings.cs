@@ -14,7 +14,8 @@ public class FileHashLookupSettings
         ReportProgressDelay = TimeSpan.FromMilliseconds(500),
         ReportProgress = new ConsoleProgressAction<ProgressEventArgs>(progress =>
         {
-            var progressMessage = string.Format("{0,4}{1}{2}{3}",
+            var progressMessage = string.Format(
+                "{0,4}{1}{2}{3}",
                 progress.PercentComplete.HasValue ? $"{progress.PercentComplete}% " : null,
                 $"{progress.Activity} - {progress.CurrentOperation}",
                 !string.IsNullOrEmpty(progress.Status) ? $" | {progress.Status}" : null,

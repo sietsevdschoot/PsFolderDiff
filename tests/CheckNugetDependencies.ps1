@@ -18,12 +18,15 @@ if ($GenerateNugetStatements.IsPresent) {
 
   if (!$LASTEXITCODE -or $LASTEXITCODE -eq 0) {
 
-    $csProjectArgs = @{
-      CsProjectFile = (Join-Path $PSScriptRoot "..\tools\FolderDiff\src\FileHashLookupLib\FileHashLookupLib.csproj");
-      PackagesToIgnore = @("SecurityCodeScan.VS2019", "StyleCop.Analyzers");
-    }
-  
-    Find-RequiredNugetPackagesForProject @csProjectArgs
+    $projects = @(
+      @{
+        CsProjectFile = (Join-Path $PSScriptRoot "..\tools\FolderDiff\src\FileHashLookupLib\FileHashLookupLib.csproj");
+        PackagesToIgnore = @("SecurityCodeScan.VS2019", "StyleCop.Analyzers");
+      })
+
+    $dependencies = $projects | ForEach-Object { $entry = $_; Find-RequiredNugetPackagesForProject @entry }
+
+    $dependencies 
   }
 }
 
