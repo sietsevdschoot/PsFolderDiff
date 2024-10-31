@@ -24,8 +24,7 @@ public class EventAggregator : IEventAggregator
 
         foreach (var subscriber in _subscribers)
         {
-            _synchronizationContext.Post(state => subscriber.Report((ProgressEventArgs)state!), progressEvent);
-            ////subscriber.Report(progressEvent);
+            subscriber.Report(progressEvent);
         }
     }
 }

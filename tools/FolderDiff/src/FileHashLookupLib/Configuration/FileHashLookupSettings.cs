@@ -8,18 +8,17 @@ namespace PsFolderDiff.FileHashLookupLib.Configuration;
 
 public class FileHashLookupSettings
 {
-    public static FileHashLookupSettings Default => new FileHashLookupSettings
+    public static FileHashLookupSettings Default => new()
     {
         FileSystem = new FileSystem(),
         ReportProgressDelay = TimeSpan.FromMilliseconds(500),
         ReportProgress = new ConsoleProgressAction<ProgressEventArgs>(progress =>
         {
-            var progressMessage = string.Format(
-                "{0,4}{1}{2}{3}",
+            var progressMessage = string.Format("{0,4}{1}{2}{3}",
                 progress.PercentComplete.HasValue ? $"{progress.PercentComplete}% " : null,
                 $"{progress.Activity} - {progress.CurrentOperation}",
                 !string.IsNullOrEmpty(progress.Status) ? $" | {progress.Status}" : null,
-                progress.SecondsRemaining is > 0 ? $" ({progress.SecondsRemaining} remaining)" : null);
+                progress.SecondsRemaining > 0 ? $" ({progress.SecondsRemaining} remaining)" : null);
 
             Console.WriteLine(progressMessage);
         }),
