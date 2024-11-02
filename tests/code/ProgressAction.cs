@@ -40,7 +40,12 @@ public class ProgressAction<TProgress>
             }
             catch {
 
-                throw
+                throw;
+            }
+            finally {
+
+                ps.Stop();
+                rs.Close();
             }
         }
     }
