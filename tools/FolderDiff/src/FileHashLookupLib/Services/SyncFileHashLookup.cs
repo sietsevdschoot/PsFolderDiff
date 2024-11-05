@@ -59,8 +59,6 @@ public class SyncFileHashLookup
 
     public void Include(string includeFolderOrPattern)
     {
-        ////Debugger.Launch();
-
         _fileHashLookup.IncludeAsync(includeFolderOrPattern, _cts.Token).GetAwaiter().GetResult();
     }
 
