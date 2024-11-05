@@ -2,6 +2,7 @@
 using System.IO.Abstractions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
@@ -19,6 +20,7 @@ public class FileHashLookup
     private readonly IPersistenceService _persistenceService;
     private readonly IHasReadonlySaveInformation _readonlySaveInformation;
     private readonly CancellationTokenSource _cts;
+    private readonly ILogger<FileHashLookup> _logger;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
@@ -28,8 +30,10 @@ public class FileHashLookup
         IHasLastUpdateInformation lastUpdateInformation,
         IHasReadonlySaveInformation readonlySaveInformation,
         IMediator mediator,
+        ILogger<FileHashLookup> logger,
         CancellationTokenSource cts)
     {
+        _logger = logger;
         _cts = cts;
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
@@ -81,6 +85,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new IncludePatternRequest
             {
                 IncludePattern = includeFolderOrPattern,
@@ -92,6 +97,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new ExcludePatternRequest
             {
                 ExcludePattern = excludeFolderOrPattern,
@@ -108,6 +114,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new AddFilesRequest
             {
                 Files = [file],
@@ -119,6 +126,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new AddFilesRequest
             {
                 BasicFiles = [file],
@@ -130,6 +138,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new AddFilesRequest
             {
                 Files = files,
@@ -141,6 +150,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new AddFileHashLookupRequest
             {
                 FileHashLookup = other,
@@ -152,6 +162,7 @@ public class FileHashLookup
     {
         await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new RefreshRequest(),
             cancellationToken);
     }
@@ -160,6 +171,7 @@ public class FileHashLookup
     {
         var compareResult = await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new CompareFileHashLookupRequest
             {
                 FileHashLookup = other,
@@ -173,6 +185,7 @@ public class FileHashLookup
     {
         var compareResult = await _mediator.SendAsyncWithCancellation(
             _cts,
+            _logger,
             new CompareFileHashLookupRequest
             {
                 FileHashLookup = other,

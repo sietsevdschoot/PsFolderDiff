@@ -14,21 +14,18 @@ namespace PsFolderDiff.FileHashLookupLib.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddFileHashLookup(this IServiceCollection services, FileHashLookupSettings settings)
+    public static IServiceCollection AddFileHashLookup(
+        this IServiceCollection services,
+        FileHashLookupSettings settings)
     {
         services
-            .AddSingleton(Options.Create(settings));
-
-        services
             .AddOptions()
+            .AddSingleton(Options.Create(settings))
+            .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(FileHashLookup).Assembly))
             .AddLogging(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
-            })
-            .AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssembly(typeof(FileHashLookup).Assembly);
             });
 
         services

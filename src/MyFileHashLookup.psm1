@@ -62,8 +62,7 @@ Function Get-FileHashLookupSettings {
   $settings.ReportProgress = [PowershellProgressAction[PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs]]::new($Host, { 
     param ([PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs] $progressArgs) 
     
-    $progress = @{}; 
-    
+    $progress = @{}
     $progressArgs.psobject.properties | Where-Object { $_.Value } | ForEach-Object { $progress[$_.Name] = $_.Value  }; 
 
     Write-Progress @progress

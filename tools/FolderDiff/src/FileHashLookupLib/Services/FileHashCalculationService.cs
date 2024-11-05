@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
@@ -12,13 +13,16 @@ public class FileHashCalculationService : IFileHashCalculationService
 {
     private readonly IProgress<ProgressEventArgs> _progress;
     private readonly IOptions<FileHashLookupSettings> _settings;
+    private readonly ILogger<FileHashCalculationService> _logger;
 
     public FileHashCalculationService(
         IProgress<ProgressEventArgs> progress,
-        IOptions<FileHashLookupSettings> settings)
+        IOptions<FileHashLookupSettings> settings,
+        ILogger<FileHashCalculationService> logger)
     {
         _settings = settings;
         _progress = progress;
+        _logger = logger;
     }
 
     public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files, CancellationToken cancellationToken)
@@ -51,7 +55,21 @@ public class FileHashCalculationService : IFileHashCalculationService
                 updateStatusStopwatch.Restart();
             }
 
-            yield return (File: file, Hash: file.CalculateMD5Hash());
+            var hash = string.Empty;
+
+            try
+            {
+                hash = file.CalculateMD5Hash();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error while read: {file.FullName}");
+            }
+
+            if (!string.IsNullOrEmpty(hash))
+            {
+                yield return (File: file, Hash: hash);
+            }
 
             currentProcessedSize += file.Length;
 
