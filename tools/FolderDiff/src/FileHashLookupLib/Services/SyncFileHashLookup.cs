@@ -9,10 +9,14 @@ namespace PsFolderDiff.FileHashLookupLib.Services;
 public class SyncFileHashLookup
 {
     private readonly FileHashLookup _fileHashLookup;
+    private readonly CancellationTokenSource _cts;
 
-    private SyncFileHashLookup(FileHashLookup fileHashLookup)
+    private SyncFileHashLookup(
+        FileHashLookup fileHashLookup,
+        CancellationTokenSource cts)
     {
         _fileHashLookup = fileHashLookup;
+        _cts = cts;
     }
 
     public IReadOnlyDictionary<string, BasicFileInfo> File => _fileHashLookup.File;
@@ -35,7 +39,7 @@ public class SyncFileHashLookup
     {
         var provider = FileHashLookup.Create(new ServiceCollection(), settings);
 
-        return new SyncFileHashLookup(provider.FileHashLookup);
+        return new SyncFileHashLookup(provider.FileHashLookup, settings.CancellationTokenSource);
     }
 
     public static SyncFileHashLookup Load(string path)
@@ -45,7 +49,7 @@ public class SyncFileHashLookup
 
     public static SyncFileHashLookup Load(string path, FileHashLookupSettings settings)
     {
-        return new SyncFileHashLookup(PersistenceService.LoadFileHashLookup(path, settings));
+        return new SyncFileHashLookup(PersistenceService.LoadFileHashLookup(path, settings), settings.CancellationTokenSource);
     }
 
     public void Save(string? path = null)
@@ -55,12 +59,14 @@ public class SyncFileHashLookup
 
     public void Include(string includeFolderOrPattern)
     {
-        _fileHashLookup.IncludeAsync(includeFolderOrPattern).GetAwaiter().GetResult();
+        ////Debugger.Launch();
+
+        _fileHashLookup.IncludeAsync(includeFolderOrPattern, _cts.Token).GetAwaiter().GetResult();
     }
 
     public void Exclude(string excludeFolderOrPattern)
     {
-        _fileHashLookup.ExcludeAsync(excludeFolderOrPattern).GetAwaiter().GetResult();
+        _fileHashLookup.ExcludeAsync(excludeFolderOrPattern, _cts.Token).GetAwaiter().GetResult();
     }
 
     public List<BasicFileInfo> GetFiles()
@@ -85,22 +91,26 @@ public class SyncFileHashLookup
 
     public void AddFileHashLookup(SyncFileHashLookup other)
     {
-        _fileHashLookup.AddFileHashLookupAsync(other.FileHashLookup).GetAwaiter().GetResult();
+        _fileHashLookup.AddFileHashLookupAsync(other.FileHashLookup, _cts.Token).GetAwaiter().GetResult();
     }
 
     public void Refresh()
     {
-        _fileHashLookup.RefreshAsync().GetAwaiter().GetResult();
+        _fileHashLookup.RefreshAsync(_cts.Token).GetAwaiter().GetResult();
     }
 
     public SyncFileHashLookup GetDifferencesInOther(SyncFileHashLookup other)
     {
-        return new SyncFileHashLookup(_fileHashLookup.GetDifferencesInOtherAsync(other.FileHashLookup).GetAwaiter().GetResult());
+        var differencesInOther = _fileHashLookup.GetDifferencesInOtherAsync(other.FileHashLookup, _cts.Token).GetAwaiter().GetResult();
+
+        return new SyncFileHashLookup(differencesInOther, _cts);
     }
 
     public SyncFileHashLookup GetMatchesInOther(SyncFileHashLookup other)
     {
-        return new SyncFileHashLookup(_fileHashLookup.GetMatchesInOtherAsync(other.FileHashLookup).GetAwaiter().GetResult());
+        var getMatchesInOther = _fileHashLookup.GetMatchesInOtherAsync(other.FileHashLookup, _cts.Token).GetAwaiter().GetResult();
+
+        return new SyncFileHashLookup(getMatchesInOther, _cts);
     }
 
     public override string ToString() => _fileHashLookup.ToString();

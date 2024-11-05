@@ -2,7 +2,6 @@
 using System.IO.Abstractions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
@@ -19,6 +18,7 @@ public class FileHashLookup
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPersistenceService _persistenceService;
     private readonly IHasReadonlySaveInformation _readonlySaveInformation;
+    private readonly CancellationTokenSource _cts;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
@@ -27,8 +27,10 @@ public class FileHashLookup
         IPersistenceService persistenceService,
         IHasLastUpdateInformation lastUpdateInformation,
         IHasReadonlySaveInformation readonlySaveInformation,
-        IMediator mediator)
+        IMediator mediator,
+        CancellationTokenSource cts)
     {
+        _cts = cts;
         _fileHashLookups = fileHashLookups;
         _filePatterns = filePatterns;
         _fileHashLookupState = fileHashLookupState;
@@ -77,7 +79,8 @@ public class FileHashLookup
 
     public async Task IncludeAsync(string includeFolderOrPattern, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new IncludePatternRequest
             {
                 IncludePattern = includeFolderOrPattern,
@@ -87,7 +90,8 @@ public class FileHashLookup
 
     public async Task ExcludeAsync(string excludeFolderOrPattern, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new ExcludePatternRequest
             {
                 ExcludePattern = excludeFolderOrPattern,
@@ -102,7 +106,8 @@ public class FileHashLookup
 
     public async Task AddFileAsync(IFileInfo file, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new AddFilesRequest
             {
                 Files = [file],
@@ -112,7 +117,8 @@ public class FileHashLookup
 
     public async Task AddFileAsync(BasicFileInfo file, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new AddFilesRequest
             {
                 BasicFiles = [file],
@@ -122,7 +128,8 @@ public class FileHashLookup
 
     public async Task AddFilesAsync(IFileInfo[] files, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new AddFilesRequest
             {
                 Files = files,
@@ -132,7 +139,8 @@ public class FileHashLookup
 
     public async Task AddFileHashLookupAsync(FileHashLookup other, CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new AddFileHashLookupRequest
             {
                 FileHashLookup = other,
@@ -142,14 +150,16 @@ public class FileHashLookup
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
-        await _mediator.Send(
+        await _mediator.SendAsyncWithCancellation(
+            _cts,
             new RefreshRequest(),
             cancellationToken);
     }
 
     public async Task<FileHashLookup> GetDifferencesInOtherAsync(FileHashLookup other, CancellationToken cancellationToken = default)
     {
-        var compareResult = await _mediator.Send(
+        var compareResult = await _mediator.SendAsyncWithCancellation(
+            _cts,
             new CompareFileHashLookupRequest
             {
                 FileHashLookup = other,
@@ -161,7 +171,8 @@ public class FileHashLookup
 
     public async Task<FileHashLookup> GetMatchesInOtherAsync(FileHashLookup other, CancellationToken cancellationToken = default)
     {
-        var compareResult = await _mediator.Send(
+        var compareResult = await _mediator.SendAsyncWithCancellation(
+            _cts,
             new CompareFileHashLookupRequest
             {
                 FileHashLookup = other,
@@ -175,10 +186,7 @@ public class FileHashLookup
 
     internal static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) Create(IServiceCollection services, FileHashLookupSettings settings)
     {
-        services
-            .AddSingleton(Options.Create(settings))
-            .AddFileHashLookup()
-            .AddSingleton(settings.FileSystem);
+        services.AddFileHashLookup(settings);
 
         foreach (var configure in settings.ConfigureServices)
         {
@@ -190,6 +198,14 @@ public class FileHashLookup
 
         sp.GetRequiredService<IEventAggregator>()
             .Subscribe(new Progress<ProgressEventArgs>(settings.ReportProgress.Action));
+
+        Console.CancelKeyPress += (_, args) =>
+        {
+            if (args.SpecialKey == ConsoleSpecialKey.ControlC)
+            {
+                settings.CancellationTokenSource.Cancel();
+            }
+        };
 
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),

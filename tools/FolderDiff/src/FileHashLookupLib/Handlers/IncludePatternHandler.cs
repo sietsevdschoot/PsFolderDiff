@@ -35,7 +35,7 @@ public class IncludePatternHandler : IRequestHandler<IncludePatternRequest>
 
         var collectedFiles = _fileCollector.IncludePattern(request.IncludePattern);
 
-        var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles).ToList();
+        var filesWithHash = _fileHashCalculationService.CalculateHash(collectedFiles, cancellationToken).ToList();
 
         for (var i = 0; i < filesWithHash.Count; i++)
         {
@@ -51,6 +51,8 @@ public class IncludePatternHandler : IRequestHandler<IncludePatternRequest>
                 currentProgress: i);
 
             _fileHashLookupState.Add(new BasicFileInfo(entry.File, entry.Hash));
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         return Task.CompletedTask;

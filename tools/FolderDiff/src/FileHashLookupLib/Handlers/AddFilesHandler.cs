@@ -37,7 +37,7 @@ public class AddFilesHandler : IRequestHandler<AddFilesRequest>
         else
         {
             filesToAdd = _fileHashCalculationService
-                .CalculateHash(request.Files.ToList())
+                .CalculateHash(request.Files.ToList(), cancellationToken)
                 .Select(x => new BasicFileInfo(x.File, x.Hash))
                 .ToList();
         }
@@ -56,6 +56,8 @@ public class AddFilesHandler : IRequestHandler<AddFilesRequest>
                 currentProgress: i);
 
             _fileHashLookupState.Add(basicFileInfo);
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         return Task.CompletedTask;

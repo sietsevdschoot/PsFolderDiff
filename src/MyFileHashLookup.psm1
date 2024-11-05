@@ -1,6 +1,6 @@
-using namespace PsFolderDiff.FileHashLookupLib.Services
 using namespace PsFolderDiff.FileHashLookupLib.Domain
 using namespace PsFolderDiff.FileHashLookupLib.Configuration
+using namespace PsFolderDiff.FileHashLookupLib.Services
 using namespace PsFolderDiff.FileHashLookupLib.Utils
 
 <#
@@ -62,11 +62,11 @@ Function Get-FileHashLookupSettings {
   $settings.ReportProgress = [PowershellProgressAction[PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs]]::new($Host, { 
     param ([PsFolderDiff.FileHashLookupLib.Domain.ProgressEventArgs] $progressArgs) 
     
-    # Write-Host "$($progressArgs.Activity) - $($progressArgs.Status)" -fore Green
+    $progress = @{}; 
+    
+    $progressArgs.psobject.properties | Where-Object { $_.Value } | ForEach-Object { $progress[$_.Name] = $_.Value  }; 
 
-    $progressArgs | Get-Member | Out-String | Write-Host -ForegroundColor Green
-
-    Write-Progress @progressArgs 
+    Write-Progress @progress
   })
 
   $settings
@@ -110,7 +110,6 @@ Function Import-RequiredDependencies {
 }
 
 Import-RequiredDependencies
- 
 
 Set-Alias GetFileHashTable Get-FileHashTable
 Set-Alias Get-HashTable Get-FileHashTable

@@ -51,6 +51,8 @@ public class CompareFileHashLookupHandler : IRequestHandler<CompareFileHashLooku
             {
                 await differencesLookup.AddFileAsync(currentFile, cancellationToken);
             }
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
 
         return new CompareFileHashLookupResult

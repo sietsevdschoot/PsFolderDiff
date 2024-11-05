@@ -31,6 +31,8 @@ public class FileHashLookupSettings
 
     public List<Action<IServiceCollection, IServiceProvider>> ConfigureServices { get; set; } = new();
 
+    public CancellationTokenSource CancellationTokenSource { get; set; } = new();
+
     public IProgressAction<ProgressEventArgs> ReportProgress { get; set; } = new ConsoleProgressAction<ProgressEventArgs>(_ =>
     {
         Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(ReportProgress)} to display progress.");

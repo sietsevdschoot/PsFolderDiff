@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
@@ -14,7 +15,7 @@ public class ServiceCollectionExtensionTests
     {
         // Arrange
         var sp = new ServiceCollection()
-            .AddFileHashLookup()
+            .AddFileHashLookup(FileHashLookupSettings.Default)
             .BuildServiceProvider();
 
         // Act
@@ -29,7 +30,7 @@ public class ServiceCollectionExtensionTests
     public void Register_CanResolve_FileHashLookup()
     {
         var sp = new ServiceCollection()
-            .AddFileHashLookup()
+            .AddFileHashLookup(FileHashLookupSettings.Default)
             .BuildServiceProvider();
 
         // Act

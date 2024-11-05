@@ -42,6 +42,8 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
         var allCollectedFiles = _fileCollector.GetFiles();
         var filesInFileHashLookup = _fileHashLookupState.GetFiles().Select(file => file.AsFileInfo(_fileSystem)).ToList();
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         _progress.Report(() => new ProgressEventArgs(
             activity: "Refresh FileHashLookup",
             currentOperation: "Detecting changes..."));
@@ -53,9 +55,15 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
         var modifiedFiles = matchedFiles[FileContainsState.Modified];
         var removedFiles = filesInFileHashLookup.Where(x => !x.Exists).ToList();
 
-        var newAndUpdatedFiles = _fileHashCalculationService.CalculateHash(addedFiles.Concat(modifiedFiles).ToList())
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var filesToAdd = addedFiles.Concat(modifiedFiles).ToList();
+
+        var newAndUpdatedFiles = _fileHashCalculationService.CalculateHash(filesToAdd, cancellationToken)
             .Select(x => new BasicFileInfo(x.File, x.Hash))
             .ToList();
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         _progress.Report(() => new ProgressEventArgs(
             activity: "Refresh FileHashLookup",
@@ -69,6 +77,7 @@ public class RefreshFileHashLookupHandler : IRequestHandler<RefreshRequest>
             currentOperation: "Done."));
 
         _persistenceService.LastUpdated = DateTime.Now;
+
         return Task.CompletedTask;
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Services;
@@ -12,8 +14,11 @@ namespace PsFolderDiff.FileHashLookupLib.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddFileHashLookup(this IServiceCollection services)
+    public static IServiceCollection AddFileHashLookup(this IServiceCollection services, FileHashLookupSettings settings)
     {
+        services
+            .AddSingleton(Options.Create(settings));
+
         services
             .AddOptions()
             .AddLogging(builder =>
@@ -28,7 +33,8 @@ public static class ServiceCollectionExtensions
 
         services
             .AddSingleton<FileHashLookup>()
-            .AddSingleton<IFileSystem, FileSystem>()
+            .AddSingleton<IFileSystem>(settings.FileSystem)
+            .AddSingleton(settings.CancellationTokenSource)
             .AddSingleton<IEventAggregator, EventAggregator>()
             .AddSingleton<IFileHashCalculationService, FileHashCalculationService>()
             .AddSingleton<IPersistenceService, PersistenceService>()

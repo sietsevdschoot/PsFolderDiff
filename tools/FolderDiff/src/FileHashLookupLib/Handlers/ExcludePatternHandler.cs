@@ -47,6 +47,8 @@ public class ExcludePatternHandler : IRequestHandler<ExcludePatternRequest>
                     currentProgress: i);
 
                 _fileHashLookupState.Remove(file);
+
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
 

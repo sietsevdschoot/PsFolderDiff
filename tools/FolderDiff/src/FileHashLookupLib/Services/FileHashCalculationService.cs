@@ -21,7 +21,7 @@ public class FileHashCalculationService : IFileHashCalculationService
         _progress = progress;
     }
 
-    public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files)
+    public IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files, CancellationToken cancellationToken)
     {
         _progress.Report(new ProgressEventArgs(
             activity: "Calculate file hashes.",
@@ -54,6 +54,8 @@ public class FileHashCalculationService : IFileHashCalculationService
             yield return (File: file, Hash: file.CalculateMD5Hash());
 
             currentProcessedSize += file.Length;
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
     }
 }

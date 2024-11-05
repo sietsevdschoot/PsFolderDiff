@@ -4,5 +4,5 @@ namespace PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 
 public interface IFileHashCalculationService
 {
-    IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files);
+    IEnumerable<(IFileInfo File, string Hash)> CalculateHash(List<IFileInfo> files, CancellationToken cancellationToken);
 }
