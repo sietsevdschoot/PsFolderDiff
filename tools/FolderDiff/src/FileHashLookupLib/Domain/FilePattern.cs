@@ -2,7 +2,7 @@
 
 namespace PsFolderDiff.FileHashLookupLib.Domain;
 
-public class FilePattern
+public class FilePattern : IEquatable<FilePattern>
 {
     public string Directory { get; init; } = default!;
 
@@ -52,8 +52,52 @@ public class FilePattern
         };
     }
 
+    #region Equality member implementation
+
     public override string ToString()
     {
         return Value;
     }
+
+    public bool Equals(FilePattern? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return Directory == other.Directory && RelativePattern == other.RelativePattern;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
+
+        if (obj.GetType() != GetType())
+        {
+            return false;
+        }
+
+        return Equals((FilePattern)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Directory, RelativePattern);
+    }
+
+    #endregion
 }

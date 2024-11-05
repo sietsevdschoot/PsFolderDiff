@@ -39,11 +39,16 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
     {
         var parsedIncludePattern = FilePattern.Create(_fileSystem, includePattern);
 
-        _storageModel.IncludePatterns.Add(parsedIncludePattern);
+        var filesToInclude = new List<IFileInfo>();
 
-        var filesToInclude = GetFilesInternal(parsedIncludePattern);
+        if (!_storageModel.IncludePatterns.Contains(FilePattern.Create(_fileSystem, includePattern)))
+        {
+            _storageModel.IncludePatterns.Add(parsedIncludePattern);
 
-        _lastUpdateInformation.LastUpdated = DateTime.Now;
+            filesToInclude = GetFilesInternal(parsedIncludePattern);
+
+            _lastUpdateInformation.LastUpdated = DateTime.Now;
+        }
 
         return filesToInclude;
     }
@@ -52,13 +57,18 @@ public class FileCollector : IHasReadOnlyFilePatterns, IFileCollector
     {
         var parsedExcludePattern = FilePattern.Create(_fileSystem, excludePattern);
 
-        var getFilesToExclude = GetFilesToExclude(parsedExcludePattern);
+        var filesToExclude = new List<IFileInfo>();
 
-        _storageModel.ExcludePatterns.Add(parsedExcludePattern);
+        if (!_storageModel.ExcludePatterns.Contains(FilePattern.Create(_fileSystem, excludePattern)))
+        {
+            filesToExclude = GetFilesToExclude(parsedExcludePattern);
 
-        _lastUpdateInformation.LastUpdated = DateTime.Now;
+            _storageModel.ExcludePatterns.Add(parsedExcludePattern);
 
-        return getFilesToExclude;
+            _lastUpdateInformation.LastUpdated = DateTime.Now;
+        }
+
+        return filesToExclude;
     }
 
     public List<IFileInfo> GetFiles()

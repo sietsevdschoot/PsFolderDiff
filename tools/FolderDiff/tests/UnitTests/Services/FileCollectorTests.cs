@@ -2,6 +2,7 @@
 using System.IO.Abstractions.TestingHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
 using Xunit;
@@ -38,6 +39,27 @@ public class FileCollectorTests
         fixture.AddIncludePattern(@"Folder1\");
 
         // Assert
+        fixture.AssertContainsFileNames([1, 2, 3, 4]);
+    }
+
+    [Fact]
+    public void AddIncludeFolder_Adding_duplicate_pattern_ignores()
+    {
+        // Arrange
+        var fixture = new FileCollectorTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
+        fixture.WithNewFile(@"Folder2\5.txt");
+
+        // Act
+        fixture.AddIncludePattern(@"Folder1\");
+        fixture.AddIncludePattern(@"Folder1\");
+
+        // Assert
+        fixture.AssertIncludePatternsMatch(fixture.FileSystem.Path.Combine(fixture.WorkingDirectory, @"Folder1\**\*"));
+
         fixture.AssertContainsFileNames([1, 2, 3, 4]);
     }
 
@@ -132,6 +154,28 @@ public class FileCollectorTests
         fixture.ExcludePattern(@"**\Sub1\**\*");
 
         // Assert
+        fixture.AssertContainsFileNames([1, 2, 5]);
+    }
+
+    [Fact]
+    public void AddExcludePattern_Adding_duplicate_pattern_ignores()
+    {
+        // Arrange
+        var fixture = new FileCollectorTestFixture();
+        fixture.WithNewFile(@"Folder1\1.txt");
+        fixture.WithNewFile(@"Folder1\2.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\3.txt");
+        fixture.WithNewFile(@"Folder1\Sub1\Sub2\4.txt");
+        fixture.WithNewFile(@"Folder1\5.txt");
+        fixture.WithNewFile(@"Folder2\6.txt");
+
+        // Act
+        fixture.AddIncludePattern(@"\Folder1\");
+        fixture.ExcludePattern(@"**\Sub1\**\*");
+        fixture.ExcludePattern(@"**\Sub1\**\*");
+
+        // Assert
+        fixture.AssertExcludePatternsMatch(@"**\Sub1\**\*");
         fixture.AssertContainsFileNames([1, 2, 5]);
     }
 
@@ -275,6 +319,22 @@ public class FileCollectorTests
         public List<IFileInfo> GetFiles()
         {
             return Sut.GetFiles();
+        }
+
+        public void AssertIncludePatternsMatch(params string[] expected)
+        {
+            var actual = _sut.Value.IncludePatterns;
+            var expectedPatterns = expected.Select(x => FilePattern.Create(FileSystem, x));
+
+            actual.Should().BeEquivalentTo(expectedPatterns);
+        }
+
+        public void AssertExcludePatternsMatch(params string[] expected)
+        {
+            var actual = _sut.Value.ExcludePatterns;
+            var expectedPatterns = expected.Select(x => FilePattern.Create(FileSystem, x));
+
+            actual.Should().BeEquivalentTo(expectedPatterns);
         }
 
         public void AssertContainsFileNames(List<IFileInfo> files, int[] expected)
