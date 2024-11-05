@@ -199,6 +199,14 @@ public class FileHashLookup
 
     internal static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) Create(IServiceCollection services, FileHashLookupSettings settings)
     {
+        Console.CancelKeyPress += (_, args) =>
+        {
+            if (args.SpecialKey == ConsoleSpecialKey.ControlC)
+            {
+                settings.CancellationTokenSource.Cancel();
+            }
+        };
+
         services.AddFileHashLookup(settings);
 
         foreach (var configure in settings.ConfigureServices)
@@ -211,14 +219,6 @@ public class FileHashLookup
 
         sp.GetRequiredService<IEventAggregator>()
             .Subscribe(new Progress<ProgressEventArgs>(settings.ReportProgress.Action));
-
-        Console.CancelKeyPress += (_, args) =>
-        {
-            if (args.SpecialKey == ConsoleSpecialKey.ControlC)
-            {
-                settings.CancellationTokenSource.Cancel();
-            }
-        };
 
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
