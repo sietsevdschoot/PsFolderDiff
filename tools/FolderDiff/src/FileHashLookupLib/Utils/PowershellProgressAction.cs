@@ -1,7 +1,6 @@
 ﻿using System.Management.Automation;
 using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
-using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Utils;
