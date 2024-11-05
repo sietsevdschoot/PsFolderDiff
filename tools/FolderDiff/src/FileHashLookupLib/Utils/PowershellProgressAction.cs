@@ -16,10 +16,6 @@ public class PowershellProgressAction<TProgress> : IProgressAction<TProgress>
     private readonly string _script;
     private readonly PSHost _host;
 
-    /// <summary>
-    /// Based on excellent in-depth knowledge of https://github.com/jborean93
-    /// </summary>
-    /// <typeparam name="TProgress"></typeparam>
     public PowershellProgressAction(PSHost host, ScriptBlock sbk)
     {
         _host = host;
