@@ -217,17 +217,6 @@ public class FileHashLookupStateTests
 
         // Assert
     }
-
-    [Fact]
-    public void Can_add_other_FileHashLookup()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
     private class FileHashLookupStateTestsFixture : FileHashTestFixture
     {
         public FileHashLookupStateTestsFixture()

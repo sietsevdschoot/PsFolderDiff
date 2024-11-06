@@ -34,9 +34,10 @@ public class FileInfoExtensionTests
 
         public void WithPowershellCalculatedMd5Hash()
         {
-            var powershell = PowerShell.Create();
+            using var powerShell = PowerShell.Create();
 
-            var result = powershell.AddCommand("Get-FileHash")
+            var result = powerShell
+                .AddCommand("Get-FileHash")
                 .AddParameter("Path", _tempFile)
                 .AddParameter("Algorithm", "MD5")
                 .Invoke();

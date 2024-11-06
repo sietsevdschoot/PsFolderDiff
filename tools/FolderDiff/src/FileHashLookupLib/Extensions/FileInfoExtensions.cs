@@ -19,7 +19,6 @@ public static class FileInfoExtensions
     // ReSharper disable once InconsistentNaming
     public static string CalculateMD5Hash(this IFileInfo file)
     {
-        // Not sure if BufferedStream should be wrapped in using block
         using var fileStream = file.OpenRead();
         using var bufferedStream = new BufferedStream(fileStream, 1200000);
 
