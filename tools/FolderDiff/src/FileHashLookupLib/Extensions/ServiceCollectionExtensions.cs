@@ -1,7 +1,11 @@
 ﻿using System.IO.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NLog;
+using NLog.Extensions.Logging;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
@@ -9,6 +13,7 @@ using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;
 using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace PsFolderDiff.FileHashLookupLib.Extensions;
 
@@ -66,6 +71,31 @@ public static class ServiceCollectionExtensions
                 var eventAggregator = sp.GetRequiredService<IEventAggregator>();
                 eventAggregator.Publish(message);
             }));
+
+        return services;
+    }
+
+    public static IServiceCollection AddConfiguration(
+        this IServiceCollection services)
+    {
+        // https://github.com/NLog/NLog.Extensions.Logging/wiki/NLog-configuration-with-appsettings.json
+        var configuration = new ConfigurationBuilder()
+            .SetFileProvider(new EmbeddedFileProvider(typeof(FileHashLookup).Assembly))
+            .AddJsonFile("appsettings.json")
+            .Build();
+
+        return services
+            .AddSingleton<IConfiguration>(configuration);
+    }
+
+    public static IServiceCollection AddLogging(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddLogging(builder => builder.AddNLog(configuration));
+
+        var nlogSection = configuration.GetSection("nlog");
+        LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
 
         return services;
     }

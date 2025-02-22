@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookupLib.Configuration;
@@ -206,6 +207,15 @@ public class FileHashLookup
                 settings.CancellationTokenSource.Cancel();
             }
         };
+
+        settings.ConfigureServices.Insert(0, (myServices, _) => myServices.AddConfiguration());
+        settings.ConfigureServices.Insert(1, (myServices, sp) => myServices.AddLogging(sp.GetRequiredService<IConfiguration>()));
+        settings.ConfigureServices.Add((_, sp) =>
+        {
+            var logger = sp.GetRequiredService<ILogger<FileHashLookup>>();
+
+            logger.LogInformation($"{nameof(FileHashLookup)} Created.");
+        });
 
         services.AddFileHashLookup(settings);
 

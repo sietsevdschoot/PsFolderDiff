@@ -1,7 +1,11 @@
-﻿using System.IO.Abstractions;
+﻿using System.Configuration;
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using NLog;
+using NLog.Targets;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
@@ -391,6 +395,50 @@ public class FileHashLookupTests
         var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
 
         // Assert
+        actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
+    }
+
+    [Fact]
+    public async Task Can_Log_Using_NLog()
+    {
+        // Arrange
+        var sb = new StringBuilder();
+
+        var fixture = new FileHashLookupTestFixture();
+
+        var provider = fixture.CreateFileHashLookupWithProvider(settings =>
+        {
+            settings.ConfigureServices.Add((services, sp) =>
+            {
+                var config = LogManager.Configuration;
+
+                var memoryTarget = new MemoryTarget(nameof(MemoryTarget))
+                {
+                    Layout = "${message}",
+                };
+                 
+                config.AddTarget(memoryTarget);
+                config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget, "*", final: true);
+
+                LogManager.Configuration = config;
+            });
+        });
+
+        fixture.WithAddedFiles();
+
+        await fixture.Sut.IncludeAsync(fixture.WorkingDirectory.FullName);
+
+        var expected = fixture.Sut;
+
+        // Act
+        fixture.Sut.Save();
+        var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
+
+        // Assert
+        var allTargets = LogManager.Configuration.AllTargets;
+        var memTarget = LogManager.Configuration.FindTargetByName<MemoryTarget>(nameof(MemoryTarget));
+        var logs = memTarget.Logs;
+
         actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
     }
 
