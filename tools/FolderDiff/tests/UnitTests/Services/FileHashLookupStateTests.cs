@@ -217,6 +217,7 @@ public class FileHashLookupStateTests
 
         // Assert
     }
+
     private class FileHashLookupStateTestsFixture : FileHashTestFixture
     {
         public FileHashLookupStateTestsFixture()
