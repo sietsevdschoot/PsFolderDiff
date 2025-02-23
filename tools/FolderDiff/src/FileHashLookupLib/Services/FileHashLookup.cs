@@ -4,6 +4,8 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NLog.Targets;
+using NLog;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
@@ -227,8 +229,17 @@ public class FileHashLookup
 
         var sp = services.BuildServiceProvider();
 
+        var logger = sp.GetRequiredService<ILogger<FileHashLookup>>();
+
         sp.GetRequiredService<IEventAggregator>()
-            .Subscribe(new Progress<ProgressEventArgs>(settings.ReportProgress.Action));
+            .Subscribe(new Progress<ProgressEventArgs>(progress =>
+            {
+                var progressMessage = settings.BuildProgressMessage(progress);
+
+                Console.WriteLine(progressMessage);
+
+                logger.LogInformation(progressMessage);
+            }));
 
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),

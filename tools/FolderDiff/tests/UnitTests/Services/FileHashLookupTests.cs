@@ -402,11 +402,9 @@ public class FileHashLookupTests
     public async Task Can_Log_Using_NLog()
     {
         // Arrange
-        var sb = new StringBuilder();
-
         var fixture = new FileHashLookupTestFixture();
 
-        var provider = fixture.CreateFileHashLookupWithProvider(settings =>
+        fixture.ConfigureSettings(settings =>
         {
             settings.ConfigureServices.Add((services, sp) =>
             {
@@ -416,7 +414,7 @@ public class FileHashLookupTests
                 {
                     Layout = "${message}",
                 };
-                 
+
                 config.AddTarget(memoryTarget);
                 config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget, "*", final: true);
 
@@ -435,10 +433,12 @@ public class FileHashLookupTests
         var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
 
         // Assert
-        var allTargets = LogManager.Configuration.AllTargets;
         var memTarget = LogManager.Configuration.FindTargetByName<MemoryTarget>(nameof(MemoryTarget));
-        var logs = memTarget.Logs;
+        var logs = string.Join(Environment.NewLine, memTarget.Logs);
 
+        logs.Should().NotBeEmpty();
+        logs.Should().MatchRegex("Saved");
+        logs.Should().MatchRegex("Loaded");
         actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
     }
 
