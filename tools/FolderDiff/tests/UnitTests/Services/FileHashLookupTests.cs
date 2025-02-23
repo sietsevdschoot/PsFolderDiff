@@ -410,15 +410,18 @@ public class FileHashLookupTests
             {
                 var config = LogManager.Configuration;
 
-                var memoryTarget = new MemoryTarget(nameof(MemoryTarget))
+                if (LogManager.Configuration.FindTargetByName<MemoryTarget>(nameof(MemoryTarget)) == null)
                 {
-                    Layout = "${message}",
-                };
+                    var memoryTarget = new MemoryTarget(nameof(MemoryTarget))
+                    {
+                        Layout = "${message}",
+                    };
 
-                config.AddTarget(memoryTarget);
-                config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget, "*", final: true);
+                    config.AddTarget(memoryTarget);
+                    config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget, "*", final: true);
 
-                LogManager.Configuration = config;
+                    LogManager.Configuration = config;
+                }
             });
         });
 

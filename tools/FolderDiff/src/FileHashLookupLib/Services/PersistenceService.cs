@@ -34,7 +34,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         set => _storageModel.LastUpdated = value;
     }
 
-    public static FileHashLookup LoadFileHashLookup(string path, FileHashLookupSettings settings)
+    public FileHashLookup LoadFileHashLookup(string path, FileHashLookupSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings, nameof(settings));
 
@@ -56,7 +56,13 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
 
         settings.ConfigureServices.Add((services, _) => services.AddSingleton(storageModel));
 
-        return FileHashLookup.Create(settings);
+        var loadedFileHashLookup = FileHashLookup.Create(settings);
+
+        _progress.Report(() => new ProgressEventArgs(
+            activity: "Loading FileHashLookup.",
+            currentOperation: $"Loaded FileHashLookup from {path}."));
+
+        return loadedFileHashLookup;
     }
 
     public void Save(FileHashLookup fileHashLookup, string? path)
@@ -94,6 +100,6 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
 
         _progress.Report(() => new ProgressEventArgs(
             activity: "Saving FileHashLookup.",
-            currentOperation: "Finished saving FileHashLookup."));
+            currentOperation: $"Saved FileHashLookup at {_storageModel.SavedAsFile}."));
     }
 }

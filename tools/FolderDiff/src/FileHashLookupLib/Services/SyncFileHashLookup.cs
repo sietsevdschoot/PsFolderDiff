@@ -49,7 +49,7 @@ public class SyncFileHashLookup
 
     public static SyncFileHashLookup Load(string path, FileHashLookupSettings settings)
     {
-        return new SyncFileHashLookup(PersistenceService.LoadFileHashLookup(path, settings), settings.CancellationTokenSource);
+        return new SyncFileHashLookup(_PersistenceService.LoadFileHashLookup(path, settings), settings.CancellationTokenSource);
     }
 
     public void Save(string? path = null)

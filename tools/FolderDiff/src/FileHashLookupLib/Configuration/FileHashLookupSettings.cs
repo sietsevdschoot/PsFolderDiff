@@ -10,7 +10,7 @@ public class FileHashLookupSettings
 {
     static FileHashLookupSettings()
     {
-        var settings = new FileHashLookupSettings
+        var defaultSettings = new FileHashLookupSettings
         {
             FileSystem = new FileSystem(),
             ReportProgressDelay = TimeSpan.FromMilliseconds(500),
@@ -22,14 +22,14 @@ public class FileHashLookupSettings
                 progress.SecondsRemaining > 0 ? $" ({progress.SecondsRemaining} remaining)" : null),
         };
 
-        settings.ReportProgress = new ConsoleProgressAction<ProgressEventArgs>(progress =>
+        defaultSettings.ReportProgress = new ConsoleProgressAction<ProgressEventArgs>().SetReportProgress(progress =>
         {
-            var progressMessage = settings.BuildProgressMessage(progress);
+            var progressMessage = defaultSettings.BuildProgressMessage(progress);
 
             Console.WriteLine(progressMessage);
         });
 
-        Default = settings;
+        Default = defaultSettings;
     }
 
     public static FileHashLookupSettings Default { get; }
@@ -44,7 +44,7 @@ public class FileHashLookupSettings
 
     public Func<ProgressEventArgs, string> BuildProgressMessage { get; set; } = _ => "Configure build message first.";
 
-    public IProgressAction<ProgressEventArgs> ReportProgress { get; set; } = new ConsoleProgressAction<ProgressEventArgs>(_ =>
+    public IProgressAction<ProgressEventArgs> ReportProgress { get; set; } = new ConsoleProgressAction<ProgressEventArgs>().SetReportProgress(_ =>
     {
         Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(BuildProgressMessage)} to display progress.");
     });

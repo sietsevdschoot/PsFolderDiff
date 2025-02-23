@@ -32,7 +32,6 @@ public static class ServiceCollectionExtensions
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
             });
-
         services
             .AddSingleton<FileHashLookup>()
             .AddSingleton<IFileSystem>(settings.FileSystem)
@@ -40,7 +39,9 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IEventAggregator, EventAggregator>()
             .AddSingleton<IFileHashCalculationService, FileHashCalculationService>()
             .AddSingleton<IPersistenceService, PersistenceService>()
+            .AddSingleton(typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IProgress<>), typeof(Progress<>))
+            .AddSingleton(typeof(IProgressAction<>), typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
         services
@@ -95,7 +96,11 @@ public static class ServiceCollectionExtensions
         services.AddLogging(builder => builder.AddNLog(configuration));
 
         var nlogSection = configuration.GetSection("nlog");
-        LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
+
+        if (LogManager.Configuration == null)
+        {
+            LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
+        }
 
         return services;
     }

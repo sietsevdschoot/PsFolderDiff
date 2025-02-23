@@ -4,13 +4,12 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NLog.Targets;
-using NLog;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
+using PsFolderDiff.FileHashLookupLib.Utils;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;
 
@@ -76,7 +75,7 @@ public class FileHashLookup
 
     public static FileHashLookup Load(string path, FileHashLookupSettings settings)
     {
-        return PersistenceService.LoadFileHashLookup(path, settings);
+        return _persistenceService.LoadFileHashLookup(path, settings);
     }
 
     public void Save(string? path = null)
@@ -216,7 +215,7 @@ public class FileHashLookup
         {
             var logger = sp.GetRequiredService<ILogger<FileHashLookup>>();
 
-            logger.LogInformation($"{nameof(FileHashLookup)} Created.");
+            logger.LogInformation($"{nameof(FileHashLookup)} Created. - {Guid.NewGuid()}");
         });
 
         services.AddFileHashLookup(settings);
@@ -229,17 +228,17 @@ public class FileHashLookup
 
         var sp = services.BuildServiceProvider();
 
-        var logger = sp.GetRequiredService<ILogger<FileHashLookup>>();
-
-        sp.GetRequiredService<IEventAggregator>()
-            .Subscribe(new Progress<ProgressEventArgs>(progress =>
+        var consoleProgressAction = sp.GetRequiredService<ConsoleProgressAction<ProgressEventArgs>>()
+            .SetReportProgress((progress, logger) =>
             {
                 var progressMessage = settings.BuildProgressMessage(progress);
 
                 Console.WriteLine(progressMessage);
-
                 logger.LogInformation(progressMessage);
-            }));
+            });
+
+        sp.GetRequiredService<IEventAggregator>()
+            .Subscribe(new Progress<ProgressEventArgs>(consoleProgressAction.Action));
 
         return (
             FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
