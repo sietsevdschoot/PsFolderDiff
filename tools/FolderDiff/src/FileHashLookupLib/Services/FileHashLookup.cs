@@ -1,7 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookupLib.Configuration;
@@ -10,6 +9,7 @@ using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;
+using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;
 
@@ -63,9 +63,10 @@ public class FileHashLookup
 
     public static FileHashLookup Create(FileHashLookupSettings settings)
     {
-        var provider = Create(new ServiceCollection(), settings);
+        var services = new ServiceCollection()
+            .AddFileHashLookup(settings);
 
-        return provider.FileHashLookup;
+        return Create(services, settings);
     }
 
     public static FileHashLookup Load(string path)
@@ -75,7 +76,24 @@ public class FileHashLookup
 
     public static FileHashLookup Load(string path, FileHashLookupSettings settings)
     {
-        return _persistenceService.LoadFileHashLookup(path, settings);
+        settings.ConfigureServices.Add((services, sp) =>
+        {
+            var persistenceService = sp.GetRequiredService<IPersistenceService>();
+            var progress = sp.GetRequiredService<IPeriodicalProgressReporter<ProgressEventArgs>>();
+
+            progress.Report(() => new ProgressEventArgs(
+                activity: "Loading FileHashLookup.",
+                currentOperation: $"Loaded FileHashLookup from {path}."));
+
+            var storageModel = persistenceService.LoadFromFile(path, settings);
+
+            services.AddSingleton<StorageModel>(storageModel);
+        });
+
+        var services = new ServiceCollection()
+            .AddFileHashLookup(settings);
+
+        return Create(services, settings);
     }
 
     public void Save(string? path = null)
@@ -199,7 +217,7 @@ public class FileHashLookup
 
     public override string ToString() => this.GetFileHashLookupDescription();
 
-    internal static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) Create(IServiceCollection services, FileHashLookupSettings settings)
+    internal static FileHashLookup Create(IServiceCollection services, FileHashLookupSettings settings)
     {
         Console.CancelKeyPress += (_, args) =>
         {
@@ -208,23 +226,6 @@ public class FileHashLookup
                 settings.CancellationTokenSource.Cancel();
             }
         };
-
-        settings.ConfigureServices.Insert(0, (myServices, _) => myServices.AddConfiguration());
-        settings.ConfigureServices.Insert(1, (myServices, sp) => myServices.AddLogging(sp.GetRequiredService<IConfiguration>()));
-        settings.ConfigureServices.Add((_, sp) =>
-        {
-            var logger = sp.GetRequiredService<ILogger<FileHashLookup>>();
-
-            logger.LogInformation($"{nameof(FileHashLookup)} Created. - {Guid.NewGuid()}");
-        });
-
-        services.AddFileHashLookup(settings);
-
-        foreach (var configure in settings.ConfigureServices)
-        {
-            var serviceProvider = services.BuildServiceProvider();
-            configure(services, serviceProvider);
-        }
 
         var sp = services.BuildServiceProvider();
 
@@ -240,8 +241,8 @@ public class FileHashLookup
         sp.GetRequiredService<IEventAggregator>()
             .Subscribe(new Progress<ProgressEventArgs>(consoleProgressAction.Action));
 
-        return (
-            FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
-            ServiceProvider: sp);
+        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
+
+        return fileHashLookup;
     }
 }

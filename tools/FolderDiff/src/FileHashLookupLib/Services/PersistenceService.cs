@@ -34,7 +34,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         set => _storageModel.LastUpdated = value;
     }
 
-    public FileHashLookup LoadFileHashLookup(string path, FileHashLookupSettings settings)
+    public StorageModel LoadFromFile(string path, FileHashLookupSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings, nameof(settings));
 
@@ -54,15 +54,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
             throw new InvalidOperationException($"Unable to deserialize '{path}'");
         }
 
-        settings.ConfigureServices.Add((services, _) => services.AddSingleton(storageModel));
-
-        var loadedFileHashLookup = FileHashLookup.Create(settings);
-
-        _progress.Report(() => new ProgressEventArgs(
-            activity: "Loading FileHashLookup.",
-            currentOperation: $"Loaded FileHashLookup from {path}."));
-
-        return loadedFileHashLookup;
+        return storageModel;
     }
 
     public void Save(FileHashLookup fileHashLookup, string? path)

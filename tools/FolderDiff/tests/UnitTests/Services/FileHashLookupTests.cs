@@ -1,7 +1,5 @@
-﻿using System.Configuration;
-using System.IO.Abstractions;
+﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
-using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;

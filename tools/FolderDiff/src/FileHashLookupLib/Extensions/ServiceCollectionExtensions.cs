@@ -23,6 +23,30 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         FileHashLookupSettings settings)
     {
+        // https://github.com/NLog/NLog.Extensions.Logging/wiki/NLog-configuration-with-appsettings.json
+        var configuration = new ConfigurationBuilder()
+            .SetFileProvider(new EmbeddedFileProvider(typeof(FileHashLookup).Assembly))
+            .AddJsonFile("appsettings.json")
+            .Build();
+
+        services
+            .AddSingleton<IConfiguration>(configuration)
+            .AddLogging(configuration)
+            .RegisterFileHashLookupServices(settings);
+
+        foreach (var configure in settings.ConfigureServices)
+        {
+            var serviceProvider = services.BuildServiceProvider();
+            configure(services, serviceProvider);
+        }
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterFileHashLookupServices(
+        this IServiceCollection services,
+        FileHashLookupSettings settings)
+    {
         services
             .AddOptions()
             .AddSingleton(Options.Create(settings))
@@ -74,19 +98,6 @@ public static class ServiceCollectionExtensions
             }));
 
         return services;
-    }
-
-    public static IServiceCollection AddConfiguration(
-        this IServiceCollection services)
-    {
-        // https://github.com/NLog/NLog.Extensions.Logging/wiki/NLog-configuration-with-appsettings.json
-        var configuration = new ConfigurationBuilder()
-            .SetFileProvider(new EmbeddedFileProvider(typeof(FileHashLookup).Assembly))
-            .AddJsonFile("appsettings.json")
-            .Build();
-
-        return services
-            .AddSingleton<IConfiguration>(configuration);
     }
 
     public static IServiceCollection AddLogging(
