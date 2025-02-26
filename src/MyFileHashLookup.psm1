@@ -118,6 +118,7 @@ Function Import-RequiredDependencies {
       @{ NugetPackage = "System.DirectoryServices"; RequiredVersion = "8.0.0" },
       @{ NugetPackage = "System.Formats.Asn1"; RequiredVersion = "8.0.1" },
       @{ NugetPackage = "System.IO.Abstractions"; RequiredVersion = "21.1.3" },
+      @{ NugetPackage = "System.IO.Pipelines"; RequiredVersion = "9.0.2" },
       @{ NugetPackage = "System.Management"; RequiredVersion = "8.0.0" },
       @{ NugetPackage = "System.Management.Automation"; RequiredVersion = "7.4.6" },
       @{ NugetPackage = "System.Security.AccessControl"; RequiredVersion = "6.0.1" },
@@ -125,14 +126,14 @@ Function Import-RequiredDependencies {
       @{ NugetPackage = "System.Security.Cryptography.ProtectedData"; RequiredVersion = "8.0.0" },
       @{ NugetPackage = "System.Security.Permissions"; RequiredVersion = "8.0.0" },
       @{ NugetPackage = "System.Text.Encoding.CodePages"; RequiredVersion = "8.0.0" },
-      @{ NugetPackage = "System.Text.Encodings.Web"; RequiredVersion = "8.0.0" },
-      @{ NugetPackage = "System.Text.Json"; RequiredVersion = "8.0.0" },
+      @{ NugetPackage = "System.Text.Encodings.Web"; RequiredVersion = "9.0.2" },
+      @{ NugetPackage = "System.Text.Json"; RequiredVersion = "9.0.2" },
       @{ NugetPackage = "System.Windows.Extensions"; RequiredVersion = "8.0.0" },
       @{ NugetPackage = "TestableIO.System.IO.Abstractions"; RequiredVersion = "21.1.3" },
       @{ NugetPackage = "TestableIO.System.IO.Abstractions.TestingHelpers"; RequiredVersion = "21.1.3" },
       @{ NugetPackage = "TestableIO.System.IO.Abstractions.Wrappers"; RequiredVersion = "21.1.3" },
       @{ NugetPackage = "Vipentti.IO.Abstractions.FileSystemGlobbing"; RequiredVersion = "1.0.4" }
-    ) | ForEach-Object { $nugetArgs = $_; Install-NugetPackage @nugetArgs -Path "$((Join-Path $PSScriptRoot ..\src\lib\))" -LatestVersion }
+      ) | ForEach-Object { $nugetArgs = $_; Install-NugetPackage @nugetArgs -Path "$((Join-Path $PSScriptRoot ..\src\lib\))" -LatestVersion }
     
     Import-Assemblies -Path "$((Join-Path $PSScriptRoot ..\src\lib\))" -Verbose
     Import-Assemblies -Path "$((Join-Path $PSScriptRoot ..\tools\FolderDiff\src\FileHashLookupLib\bin\Debug\net8.0\))"
