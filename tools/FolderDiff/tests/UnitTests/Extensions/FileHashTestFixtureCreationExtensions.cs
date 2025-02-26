@@ -29,11 +29,10 @@ public static class FileHashTestFixtureCreationExtensions
         this TFixture fixture, FileHashLookupSettings settings)
         where TFixture : FileHashTestFixture
     {
-        var services = new ServiceCollection()
-            .AddFileHashLookup(settings);
+        var sp = new ServiceCollection()
+            .AddFileHashLookup(settings)
+            .BuildServiceProvider();
 
-        var fileHashLookup = FileHashLookup.Create(settings);
-
-        return (fileHashLookup, services.BuildServiceProvider());
+        return (sp.GetRequiredService<FileHashLookup>(), sp);
     }
 }

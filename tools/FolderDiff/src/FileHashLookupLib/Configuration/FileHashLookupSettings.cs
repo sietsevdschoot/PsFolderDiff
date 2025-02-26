@@ -8,31 +8,41 @@ namespace PsFolderDiff.FileHashLookupLib.Configuration;
 
 public class FileHashLookupSettings
 {
-    static FileHashLookupSettings()
+    public static FileHashLookupSettings Default
     {
-        var defaultSettings = new FileHashLookupSettings
+        get
         {
-            FileSystem = new FileSystem(),
-            ReportProgressDelay = TimeSpan.FromMilliseconds(500),
-            BuildProgressMessage = progress => string.Format(
-                "{0,4}{1}{2}{3}",
-                progress.PercentComplete.HasValue ? $"{progress.PercentComplete}% " : null,
-                $"{progress.Activity} - {progress.CurrentOperation}",
-                !string.IsNullOrEmpty(progress.Status) ? $" | {progress.Status}" : null,
-                progress.SecondsRemaining > 0 ? $" ({progress.SecondsRemaining} remaining)" : null),
-        };
+            var defaultSettings = new FileHashLookupSettings
+            {
+                FileSystem = new FileSystem(),
+                ReportProgressDelay = TimeSpan.FromMilliseconds(500),
+                BuildProgressMessage = progress => string.Format(
+                    "{0,4}{1}{2}{3}",
+                    progress.PercentComplete.HasValue ? $"{progress.PercentComplete}% " : null,
+                    $"{progress.Activity} - {progress.CurrentOperation}",
+                    !string.IsNullOrEmpty(progress.Status) ? $" | {progress.Status}" : null,
+                    progress.SecondsRemaining > 0 ? $" ({progress.SecondsRemaining} remaining)" : null),
+            };
 
-        defaultSettings.ReportProgress = new ConsoleProgressAction<ProgressEventArgs>().SetReportProgress(progress =>
-        {
-            var progressMessage = defaultSettings.BuildProgressMessage(progress);
+            defaultSettings.ReportProgress = new ConsoleProgressAction<ProgressEventArgs>()
+                .SetReportProgress(progress =>
+                {
+                    var progressMessage = defaultSettings.BuildProgressMessage(progress);
 
-            Console.WriteLine(progressMessage);
-        });
+                    Console.WriteLine(progressMessage);
+                });
 
-        Default = defaultSettings;
+            Console.CancelKeyPress += (_, args) =>
+            {
+                if (args.SpecialKey == ConsoleSpecialKey.ControlC)
+                {
+                    defaultSettings.CancellationTokenSource.Cancel();
+                }
+            };
+
+            return defaultSettings;
+        }
     }
-
-    public static FileHashLookupSettings Default { get; }
 
     public IFileSystem FileSystem { get; set; } = default!;
 

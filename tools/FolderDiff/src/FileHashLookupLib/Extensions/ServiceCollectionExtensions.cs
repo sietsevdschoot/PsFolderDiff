@@ -60,12 +60,12 @@ public static class ServiceCollectionExtensions
             .AddSingleton<FileHashLookup>()
             .AddSingleton<IFileSystem>(settings.FileSystem)
             .AddSingleton(settings.CancellationTokenSource)
-            .AddSingleton<IEventAggregator, EventAggregator>()
+            ////.AddSingleton<IEventAggregator, EventAggregator>()
             .AddSingleton<IFileHashCalculationService, FileHashCalculationService>()
             .AddSingleton<IPersistenceService, PersistenceService>()
             .AddSingleton(typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IProgress<>), typeof(Progress<>))
-            .AddSingleton(typeof(IProgressAction<>), typeof(ConsoleProgressAction<>))
+            ////.AddSingleton(typeof(IProgressAction<>), typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
         services
@@ -96,6 +96,30 @@ public static class ServiceCollectionExtensions
                 var eventAggregator = sp.GetRequiredService<IEventAggregator>();
                 eventAggregator.Publish(message);
             }));
+
+        services.AddSingleton(typeof(IProgressAction<ProgressEventArgs>), sp =>
+        {
+            return sp.GetRequiredService<ConsoleProgressAction<ProgressEventArgs>>()
+                .SetReportProgress((progress, logger) =>
+                {
+                    var progressMessage = settings.BuildProgressMessage(progress);
+
+                    Console.WriteLine(progressMessage);
+                    logger.LogInformation(progressMessage);
+                });
+        });
+
+        services
+            .AddSingleton<EventAggregator>()
+            .AddSingleton<IEventAggregator>(sp =>
+            {
+                var eventAggregator = sp.GetRequiredService<EventAggregator>();
+                var consoleProgressAction = sp.GetRequiredService<IProgressAction<ProgressEventArgs>>();
+
+                eventAggregator.Subscribe(new Progress<ProgressEventArgs>(consoleProgressAction.Action));
+
+                return eventAggregator;
+            });
 
         return services;
     }

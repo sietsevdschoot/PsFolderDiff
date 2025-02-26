@@ -8,7 +8,6 @@ using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
-using PsFolderDiff.FileHashLookupLib.Utils;
 using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;
@@ -63,10 +62,13 @@ public class FileHashLookup
 
     public static FileHashLookup Create(FileHashLookupSettings settings)
     {
-        var services = new ServiceCollection()
-            .AddFileHashLookup(settings);
+        var sp = new ServiceCollection()
+            .AddFileHashLookup(settings)
+            .BuildServiceProvider();
 
-        return Create(services, settings);
+        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
+
+        return fileHashLookup;
     }
 
     public static FileHashLookup Load(string path)
@@ -87,13 +89,10 @@ public class FileHashLookup
 
             var storageModel = persistenceService.LoadFromFile(path, settings);
 
-            services.AddSingleton<StorageModel>(storageModel);
+            services.AddSingleton(storageModel);
         });
 
-        var services = new ServiceCollection()
-            .AddFileHashLookup(settings);
-
-        return Create(services, settings);
+        return Create(settings);
     }
 
     public void Save(string? path = null)
@@ -216,33 +215,4 @@ public class FileHashLookup
     }
 
     public override string ToString() => this.GetFileHashLookupDescription();
-
-    internal static FileHashLookup Create(IServiceCollection services, FileHashLookupSettings settings)
-    {
-        Console.CancelKeyPress += (_, args) =>
-        {
-            if (args.SpecialKey == ConsoleSpecialKey.ControlC)
-            {
-                settings.CancellationTokenSource.Cancel();
-            }
-        };
-
-        var sp = services.BuildServiceProvider();
-
-        var consoleProgressAction = sp.GetRequiredService<ConsoleProgressAction<ProgressEventArgs>>()
-            .SetReportProgress((progress, logger) =>
-            {
-                var progressMessage = settings.BuildProgressMessage(progress);
-
-                Console.WriteLine(progressMessage);
-                logger.LogInformation(progressMessage);
-            });
-
-        sp.GetRequiredService<IEventAggregator>()
-            .Subscribe(new Progress<ProgressEventArgs>(consoleProgressAction.Action));
-
-        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
-
-        return fileHashLookup;
-    }
 }

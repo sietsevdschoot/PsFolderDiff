@@ -1,6 +1,6 @@
 ﻿using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
@@ -38,12 +38,12 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
     {
         ArgumentNullException.ThrowIfNull(settings, nameof(settings));
 
-        if (!settings.FileSystem.File.Exists(path))
+        if (!_fileSystem.File.Exists(path))
         {
             throw new ArgumentException($"Can't find '{path}'", nameof(path));
         }
 
-        var json = settings.FileSystem.File.ReadAllText(path);
+        var json = _fileSystem.File.ReadAllText(path);
         var storageModel = JsonConvert.DeserializeObject<StorageModel>(json, new JsonSerializerSettings
         {
             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
@@ -81,7 +81,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
 
         _progress.Report(() => new ProgressEventArgs(
             activity: "Saving FileHashLookup.",
-            currentOperation: "Serializing FileHashLookup."));
+            currentOperation: "Saving FileHashLookup."));
 
         var json = JsonConvert.SerializeObject(_storageModel, new JsonSerializerSettings
         {

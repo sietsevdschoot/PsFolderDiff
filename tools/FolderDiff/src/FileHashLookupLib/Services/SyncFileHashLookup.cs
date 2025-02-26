@@ -37,7 +37,7 @@ public class SyncFileHashLookup
 
     public static SyncFileHashLookup Create(FileHashLookupSettings settings)
     {
-        var fileHashLookup = FileHashLookup.Create(new ServiceCollection(), settings);
+        var fileHashLookup = FileHashLookup.Create(settings);
 
         return new SyncFileHashLookup(fileHashLookup, settings.CancellationTokenSource);
     }
