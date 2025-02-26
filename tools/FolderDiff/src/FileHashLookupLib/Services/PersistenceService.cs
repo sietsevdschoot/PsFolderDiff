@@ -1,5 +1,4 @@
 ﻿using System.IO.Abstractions;
-using System.IO.Abstractions.TestingHelpers;
 using System.Text;
 using Newtonsoft.Json;
 using PsFolderDiff.FileHashLookupLib.Configuration;
@@ -80,7 +79,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         }
 
         _progress.Report(() => new ProgressEventArgs(
-            activity: "Saving FileHashLookup.",
+            activity: "Save",
             currentOperation: "Saving FileHashLookup."));
 
         var json = JsonConvert.SerializeObject(_storageModel, new JsonSerializerSettings
@@ -91,7 +90,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         _fileSystem.File.WriteAllText(_storageModel.SavedAsFile, json, Encoding.UTF8);
 
         _progress.Report(() => new ProgressEventArgs(
-            activity: "Saving FileHashLookup.",
+            activity: "Save",
             currentOperation: $"Saved FileHashLookup at {_storageModel.SavedAsFile}."));
     }
 }

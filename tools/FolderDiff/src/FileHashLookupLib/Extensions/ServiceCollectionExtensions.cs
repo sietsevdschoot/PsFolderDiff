@@ -60,12 +60,10 @@ public static class ServiceCollectionExtensions
             .AddSingleton<FileHashLookup>()
             .AddSingleton<IFileSystem>(settings.FileSystem)
             .AddSingleton(settings.CancellationTokenSource)
-            ////.AddSingleton<IEventAggregator, EventAggregator>()
             .AddSingleton<IFileHashCalculationService, FileHashCalculationService>()
             .AddSingleton<IPersistenceService, PersistenceService>()
             .AddSingleton(typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IProgress<>), typeof(Progress<>))
-            ////.AddSingleton(typeof(IProgressAction<>), typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
         services

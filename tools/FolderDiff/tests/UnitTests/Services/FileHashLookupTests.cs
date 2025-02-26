@@ -1,5 +1,6 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
@@ -437,9 +438,7 @@ public class FileHashLookupTests
         var memTarget = LogManager.Configuration.FindTargetByName<MemoryTarget>(nameof(MemoryTarget));
         var logs = string.Join(Environment.NewLine, memTarget.Logs);
 
-        logs.Should().NotBeEmpty();
-        logs.Should().MatchRegex("Saved");
-        logs.Should().MatchRegex("Loaded");
+        logs.Should().MatchRegex(new Regex("(.*)Saved(.*)Loaded(.*)", RegexOptions.Singleline));
         actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
     }
 

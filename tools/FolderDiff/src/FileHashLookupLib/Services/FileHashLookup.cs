@@ -14,14 +14,15 @@ namespace PsFolderDiff.FileHashLookupLib.Services;
 
 public class FileHashLookup
 {
-    private readonly IMediator _mediator;
     private readonly IHasReadOnlyFilePatterns _filePatterns;
     private readonly IHasReadonlyLookups _fileHashLookups;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPersistenceService _persistenceService;
     private readonly IHasReadonlySaveInformation _readonlySaveInformation;
-    private readonly CancellationTokenSource _cts;
+    private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
+    private readonly IMediator _mediator;
     private readonly ILogger<FileHashLookup> _logger;
+    private readonly CancellationTokenSource _cts;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
@@ -30,10 +31,12 @@ public class FileHashLookup
         IPersistenceService persistenceService,
         IHasLastUpdateInformation lastUpdateInformation,
         IHasReadonlySaveInformation readonlySaveInformation,
+        IPeriodicalProgressReporter<ProgressEventArgs> progress,
         IMediator mediator,
         ILogger<FileHashLookup> logger,
         CancellationTokenSource cts)
     {
+        _progress = progress;
         _logger = logger;
         _cts = cts;
         _fileHashLookups = fileHashLookups;
@@ -84,15 +87,21 @@ public class FileHashLookup
             var progress = sp.GetRequiredService<IPeriodicalProgressReporter<ProgressEventArgs>>();
 
             progress.Report(() => new ProgressEventArgs(
-                activity: "Loading FileHashLookup.",
-                currentOperation: $"Loaded FileHashLookup from {path}."));
+                activity: "Load",
+                currentOperation: $"Loading FileHashLookup from {path}."));
 
             var storageModel = persistenceService.LoadFromFile(path, settings);
 
             services.AddSingleton(storageModel);
+
+            progress.Report(() => new ProgressEventArgs(
+                activity: "Load",
+                currentOperation: $"Loaded FileHashLookup."));
         });
 
-        return Create(settings);
+        var fileHashLookup = Create(settings);
+
+        return fileHashLookup;
     }
 
     public void Save(string? path = null)
