@@ -37,9 +37,9 @@ public class SyncFileHashLookup
 
     public static SyncFileHashLookup Create(FileHashLookupSettings settings)
     {
-        var provider = FileHashLookup.Create(new ServiceCollection(), settings);
+        var fileHashLookup = FileHashLookup.Create(settings);
 
-        return new SyncFileHashLookup(provider.FileHashLookup, settings.CancellationTokenSource);
+        return new SyncFileHashLookup(fileHashLookup, settings.CancellationTokenSource);
     }
 
     public static SyncFileHashLookup Load(string path)
@@ -49,7 +49,9 @@ public class SyncFileHashLookup
 
     public static SyncFileHashLookup Load(string path, FileHashLookupSettings settings)
     {
-        return new SyncFileHashLookup(PersistenceService.LoadFileHashLookup(path, settings), settings.CancellationTokenSource);
+        var fileHashLookup = FileHashLookup.Load(path, settings);
+
+        return new SyncFileHashLookup(fileHashLookup, settings.CancellationTokenSource);
     }
 
     public void Save(string? path = null)

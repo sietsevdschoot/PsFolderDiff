@@ -15,7 +15,7 @@ public class ServiceCollectionExtensionTests
     {
         // Arrange
         var sp = new ServiceCollection()
-            .AddFileHashLookup(FileHashLookupSettings.Default)
+            .RegisterFileHashLookupServices(FileHashLookupSettings.Default)
             .BuildServiceProvider();
 
         // Act
@@ -30,7 +30,7 @@ public class ServiceCollectionExtensionTests
     public void Register_CanResolve_FileHashLookup()
     {
         var sp = new ServiceCollection()
-            .AddFileHashLookup(FileHashLookupSettings.Default)
+            .RegisterFileHashLookupServices(FileHashLookupSettings.Default)
             .BuildServiceProvider();
 
         // Act

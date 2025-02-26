@@ -1,6 +1,5 @@
 ﻿using System.IO.Abstractions;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
@@ -34,16 +33,16 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         set => _storageModel.LastUpdated = value;
     }
 
-    public static FileHashLookup LoadFileHashLookup(string path, FileHashLookupSettings settings)
+    public StorageModel LoadFromFile(string path, FileHashLookupSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings, nameof(settings));
 
-        if (!settings.FileSystem.File.Exists(path))
+        if (!_fileSystem.File.Exists(path))
         {
             throw new ArgumentException($"Can't find '{path}'", nameof(path));
         }
 
-        var json = settings.FileSystem.File.ReadAllText(path);
+        var json = _fileSystem.File.ReadAllText(path);
         var storageModel = JsonConvert.DeserializeObject<StorageModel>(json, new JsonSerializerSettings
         {
             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
@@ -54,9 +53,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
             throw new InvalidOperationException($"Unable to deserialize '{path}'");
         }
 
-        settings.ConfigureServices.Add((services, _) => services.AddSingleton(storageModel));
-
-        return FileHashLookup.Create(settings);
+        return storageModel;
     }
 
     public void Save(FileHashLookup fileHashLookup, string? path)
@@ -82,8 +79,8 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         }
 
         _progress.Report(() => new ProgressEventArgs(
-            activity: "Saving FileHashLookup.",
-            currentOperation: "Serializing FileHashLookup."));
+            activity: "Save",
+            currentOperation: "Saving FileHashLookup."));
 
         var json = JsonConvert.SerializeObject(_storageModel, new JsonSerializerSettings
         {
@@ -93,7 +90,7 @@ public class PersistenceService : IPersistenceService, IHasReadonlySaveInformati
         _fileSystem.File.WriteAllText(_storageModel.SavedAsFile, json, Encoding.UTF8);
 
         _progress.Report(() => new ProgressEventArgs(
-            activity: "Saving FileHashLookup.",
-            currentOperation: "Finished saving FileHashLookup."));
+            activity: "Save",
+            currentOperation: $"Saved FileHashLookup at {_storageModel.SavedAsFile}."));
     }
 }

@@ -1,7 +1,10 @@
 ﻿using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using NLog;
+using NLog.Targets;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
@@ -391,6 +394,51 @@ public class FileHashLookupTests
         var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
 
         // Assert
+        actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
+    }
+
+    [Fact]
+    public async Task Can_Log_Using_NLog()
+    {
+        // Arrange
+        var fixture = new FileHashLookupTestFixture();
+
+        fixture.ConfigureSettings(settings =>
+        {
+            settings.ConfigureServices.Add((services, sp) =>
+            {
+                var config = LogManager.Configuration;
+
+                if (LogManager.Configuration.FindTargetByName<MemoryTarget>(nameof(MemoryTarget)) == null)
+                {
+                    var memoryTarget = new MemoryTarget(nameof(MemoryTarget))
+                    {
+                        Layout = "${message}",
+                    };
+
+                    config.AddTarget(memoryTarget);
+                    config.AddRule(LogLevel.Trace, LogLevel.Fatal, memoryTarget, "*", final: true);
+
+                    LogManager.Configuration = config;
+                }
+            });
+        });
+
+        fixture.WithAddedFiles();
+
+        await fixture.Sut.IncludeAsync(fixture.WorkingDirectory.FullName);
+
+        var expected = fixture.Sut;
+
+        // Act
+        fixture.Sut.Save();
+        var actual = FileHashLookup.Load(fixture.Sut.SavedAsFile!, fixture.FileHashLookupSettings);
+
+        // Assert
+        var memTarget = LogManager.Configuration.FindTargetByName<MemoryTarget>(nameof(MemoryTarget));
+        var logs = string.Join(Environment.NewLine, memTarget.Logs);
+
+        logs.Should().MatchRegex(new Regex("(.*)Saved(.*)Loaded(.*)", RegexOptions.Singleline));
         actual.Should().BeEquivalentTo(expected, opt => opt.Excluding(x => x.LastUpdated));
     }
 

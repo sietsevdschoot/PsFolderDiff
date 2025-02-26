@@ -5,7 +5,12 @@ Todo:
 - DONE StorageModel, needs to contain all state.
 - DONE Intermediate object with all FileHashLookup props, with getters and setters for serializing / deseralizing
 - DONE Copy contructor on FileHashLookupState to load from Intermediate object.
-- Remove Include / Exclude patterns.
+- DONE Added logger
+- TODO Change FileHashLookup static load and SyncFileHashLookup to work with IPersistenceService in ctor
+	> SyncFileHashLookup Factory?
+	> FileHashLookup.Create has IServiceProvider
+
+- Remove Include / Exclude patterns... Why? Still relevant?
 - Refresh: Check if directories for include -exclude still exists
 
 - DONE Relative paths for include / expclude paths.
@@ -15,7 +20,6 @@ Todo:
 - DONE ToString override
 - Test Hash performance icm BufferedReader
 - Multi threaded hashing.
-
 - Create missing unitTests
 
 Nice to have.

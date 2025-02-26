@@ -12,6 +12,7 @@ public abstract class FileHashTestFixture
     #pragma warning disable SA1401 // Field is used by other private fixtures.
 
     private readonly string _workingDirectory;
+    private readonly List<Action<FileHashLookupSettings>> _settingConfigurations = new();
     private readonly Lazy<FileHashLookupSettings> _fileHashLookupSettings;
     private readonly Lazy<IServiceProvider> _provider;
     private int _i = 1;
@@ -25,6 +26,11 @@ public abstract class FileHashTestFixture
             var settings = FileHashLookupSettings.Default;
             settings.FileSystem = FileSystem;
             settings.ReportProgressDelay = TimeSpan.MinValue;
+
+            foreach (var configure in _settingConfigurations)
+            {
+                configure(settings);
+            }
 
             return settings;
         });
@@ -46,7 +52,15 @@ public abstract class FileHashTestFixture
 
     public IDirectoryInfo WorkingDirectory => FileSystem.DirectoryInfo.New(_workingDirectory);
 
-    public BasicFileInfo[] AllFiles => WorkingDirectory.GetFiles("*.*", SearchOption.AllDirectories).Select(HashingUtil.CreateBasicFileInfo).ToArray();
+    public BasicFileInfo[] AllFiles => WorkingDirectory
+        .GetFiles("*.*", SearchOption.AllDirectories)
+        .Select(HashingUtil.CreateBasicFileInfo)
+        .ToArray();
+
+    public void ConfigureSettings(Action<FileHashLookupSettings> configure)
+    {
+        _settingConfigurations.Add(configure);
+    }
 
     public int GetNextIdentifier()
     {

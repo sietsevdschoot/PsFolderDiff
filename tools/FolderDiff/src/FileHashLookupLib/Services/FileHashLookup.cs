@@ -8,19 +8,21 @@ using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Requests;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
+using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Services;
 
 public class FileHashLookup
 {
-    private readonly IMediator _mediator;
     private readonly IHasReadOnlyFilePatterns _filePatterns;
     private readonly IHasReadonlyLookups _fileHashLookups;
     private readonly IFileHashLookupState _fileHashLookupState;
     private readonly IPersistenceService _persistenceService;
     private readonly IHasReadonlySaveInformation _readonlySaveInformation;
-    private readonly CancellationTokenSource _cts;
+    private readonly IPeriodicalProgressReporter<ProgressEventArgs> _progress;
+    private readonly IMediator _mediator;
     private readonly ILogger<FileHashLookup> _logger;
+    private readonly CancellationTokenSource _cts;
 
     public FileHashLookup(
         IHasReadOnlyFilePatterns filePatterns,
@@ -29,10 +31,12 @@ public class FileHashLookup
         IPersistenceService persistenceService,
         IHasLastUpdateInformation lastUpdateInformation,
         IHasReadonlySaveInformation readonlySaveInformation,
+        IPeriodicalProgressReporter<ProgressEventArgs> progress,
         IMediator mediator,
         ILogger<FileHashLookup> logger,
         CancellationTokenSource cts)
     {
+        _progress = progress;
         _logger = logger;
         _cts = cts;
         _fileHashLookups = fileHashLookups;
@@ -61,9 +65,13 @@ public class FileHashLookup
 
     public static FileHashLookup Create(FileHashLookupSettings settings)
     {
-        var provider = Create(new ServiceCollection(), settings);
+        var sp = new ServiceCollection()
+            .AddFileHashLookup(settings)
+            .BuildServiceProvider();
 
-        return provider.FileHashLookup;
+        var fileHashLookup = sp.GetRequiredService<FileHashLookup>();
+
+        return fileHashLookup;
     }
 
     public static FileHashLookup Load(string path)
@@ -73,7 +81,27 @@ public class FileHashLookup
 
     public static FileHashLookup Load(string path, FileHashLookupSettings settings)
     {
-        return PersistenceService.LoadFileHashLookup(path, settings);
+        settings.ConfigureServices.Add((services, sp) =>
+        {
+            var persistenceService = sp.GetRequiredService<IPersistenceService>();
+            var progress = sp.GetRequiredService<IPeriodicalProgressReporter<ProgressEventArgs>>();
+
+            progress.Report(() => new ProgressEventArgs(
+                activity: "Load",
+                currentOperation: $"Loading FileHashLookup from {path}."));
+
+            var storageModel = persistenceService.LoadFromFile(path, settings);
+
+            services.AddSingleton(storageModel);
+
+            progress.Report(() => new ProgressEventArgs(
+                activity: "Load",
+                currentOperation: $"Loaded FileHashLookup."));
+        });
+
+        var fileHashLookup = Create(settings);
+
+        return fileHashLookup;
     }
 
     public void Save(string? path = null)
@@ -196,32 +224,4 @@ public class FileHashLookup
     }
 
     public override string ToString() => this.GetFileHashLookupDescription();
-
-    internal static (FileHashLookup FileHashLookup, IServiceProvider ServiceProvider) Create(IServiceCollection services, FileHashLookupSettings settings)
-    {
-        Console.CancelKeyPress += (_, args) =>
-        {
-            if (args.SpecialKey == ConsoleSpecialKey.ControlC)
-            {
-                settings.CancellationTokenSource.Cancel();
-            }
-        };
-
-        services.AddFileHashLookup(settings);
-
-        foreach (var configure in settings.ConfigureServices)
-        {
-            var serviceProvider = services.BuildServiceProvider();
-            configure(services, serviceProvider);
-        }
-
-        var sp = services.BuildServiceProvider();
-
-        sp.GetRequiredService<IEventAggregator>()
-            .Subscribe(new Progress<ProgressEventArgs>(settings.ReportProgress.Action));
-
-        return (
-            FileHashLookup: sp.GetRequiredService<FileHashLookup>(),
-            ServiceProvider: sp);
-    }
 }

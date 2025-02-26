@@ -1,7 +1,11 @@
 ﻿using System.IO.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NLog;
+using NLog.Extensions.Logging;
 using PsFolderDiff.FileHashLookupLib.Configuration;
 using PsFolderDiff.FileHashLookupLib.Domain;
 using PsFolderDiff.FileHashLookupLib.Domain.Interfaces;
@@ -9,12 +13,37 @@ using PsFolderDiff.FileHashLookupLib.Services;
 using PsFolderDiff.FileHashLookupLib.Services.Interfaces;
 using PsFolderDiff.FileHashLookupLib.Utils;
 using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace PsFolderDiff.FileHashLookupLib.Extensions;
 
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFileHashLookup(
+        this IServiceCollection services,
+        FileHashLookupSettings settings)
+    {
+        // https://github.com/NLog/NLog.Extensions.Logging/wiki/NLog-configuration-with-appsettings.json
+        var configuration = new ConfigurationBuilder()
+            .SetFileProvider(new EmbeddedFileProvider(typeof(FileHashLookup).Assembly))
+            .AddJsonFile("appsettings.json")
+            .Build();
+
+        services
+            .AddSingleton<IConfiguration>(configuration)
+            .AddLogging(configuration)
+            .RegisterFileHashLookupServices(settings);
+
+        foreach (var configure in settings.ConfigureServices)
+        {
+            var serviceProvider = services.BuildServiceProvider();
+            configure(services, serviceProvider);
+        }
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterFileHashLookupServices(
         this IServiceCollection services,
         FileHashLookupSettings settings)
     {
@@ -27,14 +56,13 @@ public static class ServiceCollectionExtensions
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
             });
-
         services
             .AddSingleton<FileHashLookup>()
             .AddSingleton<IFileSystem>(settings.FileSystem)
             .AddSingleton(settings.CancellationTokenSource)
-            .AddSingleton<IEventAggregator, EventAggregator>()
             .AddSingleton<IFileHashCalculationService, FileHashCalculationService>()
             .AddSingleton<IPersistenceService, PersistenceService>()
+            .AddSingleton(typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IProgress<>), typeof(Progress<>))
             .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
@@ -66,6 +94,46 @@ public static class ServiceCollectionExtensions
                 var eventAggregator = sp.GetRequiredService<IEventAggregator>();
                 eventAggregator.Publish(message);
             }));
+
+        services.AddSingleton(typeof(IProgressAction<ProgressEventArgs>), sp =>
+        {
+            return sp.GetRequiredService<ConsoleProgressAction<ProgressEventArgs>>()
+                .SetReportProgress((progress, logger) =>
+                {
+                    var progressMessage = settings.BuildProgressMessage(progress);
+
+                    Console.WriteLine(progressMessage);
+                    logger.LogInformation(progressMessage);
+                });
+        });
+
+        services
+            .AddSingleton<EventAggregator>()
+            .AddSingleton<IEventAggregator>(sp =>
+            {
+                var eventAggregator = sp.GetRequiredService<EventAggregator>();
+                var consoleProgressAction = sp.GetRequiredService<IProgressAction<ProgressEventArgs>>();
+
+                eventAggregator.Subscribe(new Progress<ProgressEventArgs>(consoleProgressAction.Action));
+
+                return eventAggregator;
+            });
+
+        return services;
+    }
+
+    public static IServiceCollection AddLogging(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddLogging(builder => builder.AddNLog(configuration));
+
+        var nlogSection = configuration.GetSection("nlog");
+
+        if (LogManager.Configuration == null)
+        {
+            LogManager.Configuration = new NLogLoggingConfiguration(nlogSection);
+        }
 
         return services;
     }

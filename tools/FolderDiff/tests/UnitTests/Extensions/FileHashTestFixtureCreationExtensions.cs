@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PsFolderDiff.FileHashLookupLib.Configuration;
+using PsFolderDiff.FileHashLookupLib.Extensions;
 using PsFolderDiff.FileHashLookupLib.Services;
 
 namespace PsFolderDiff.FileHashLookupLib.UnitTests.Extensions;
@@ -28,8 +29,10 @@ public static class FileHashTestFixtureCreationExtensions
         this TFixture fixture, FileHashLookupSettings settings)
         where TFixture : FileHashTestFixture
     {
-        var services = new ServiceCollection();
+        var sp = new ServiceCollection()
+            .AddFileHashLookup(settings)
+            .BuildServiceProvider();
 
-        return FileHashLookup.Create(services, settings);
+        return (sp.GetRequiredService<FileHashLookup>(), sp);
     }
 }
