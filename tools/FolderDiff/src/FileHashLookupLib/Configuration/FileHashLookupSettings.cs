@@ -1,8 +1,7 @@
 ﻿using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using PsFolderDiff.FileHashLookupLib.Domain;
-using PsFolderDiff.FileHashLookupLib.Utils;
-using PsFolderDiff.FileHashLookupLib.Utils.Interfaces;
 
 namespace PsFolderDiff.FileHashLookupLib.Configuration;
 
@@ -24,13 +23,12 @@ public class FileHashLookupSettings
                     progress.SecondsRemaining > 0 ? $" ({progress.SecondsRemaining} remaining)" : null),
             };
 
-            defaultSettings.ReportProgress = new ConsoleProgressAction<ProgressEventArgs>()
-                .SetReportProgress(progress =>
-                {
-                    var progressMessage = defaultSettings.BuildProgressMessage(progress);
+            defaultSettings.ReportProgress = (progress, logger) =>
+            {
+                var progressMessage = defaultSettings.BuildProgressMessage(progress);
 
-                    Console.WriteLine(progressMessage);
-                });
+                logger.LogInformation(progressMessage);
+            };
 
             Console.CancelKeyPress += (_, args) =>
             {
@@ -54,8 +52,8 @@ public class FileHashLookupSettings
 
     public Func<ProgressEventArgs, string> BuildProgressMessage { get; set; } = _ => "Configure build message first.";
 
-    public IProgressAction<ProgressEventArgs> ReportProgress { get; set; } = new ConsoleProgressAction<ProgressEventArgs>().SetReportProgress(_ =>
+    public Action<ProgressEventArgs, ILogger> ReportProgress { get; set; } = (_, _) =>
     {
         Console.WriteLine($"Configure {nameof(FileHashLookupSettings)}.{nameof(BuildProgressMessage)} to display progress.");
-    });
+    };
 }

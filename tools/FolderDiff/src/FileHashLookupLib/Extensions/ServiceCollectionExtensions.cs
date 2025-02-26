@@ -1,4 +1,5 @@
-﻿using System.IO.Abstractions;
+﻿using System.Configuration;
+using System.IO.Abstractions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -64,6 +65,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IPersistenceService, PersistenceService>()
             .AddSingleton(typeof(ConsoleProgressAction<>))
             .AddSingleton(typeof(IProgress<>), typeof(Progress<>))
+            .AddSingleton(typeof(IProgressAction<ProgressEventArgs>), sp =>
+                sp.GetRequiredService<ConsoleProgressAction<ProgressEventArgs>>().SetReportProgress(settings.ReportProgress))
             .AddSingleton(typeof(IPeriodicalProgressReporter<>), typeof(PeriodicalProgressReporter<>));
 
         services
@@ -94,18 +97,6 @@ public static class ServiceCollectionExtensions
                 var eventAggregator = sp.GetRequiredService<IEventAggregator>();
                 eventAggregator.Publish(message);
             }));
-
-        services.AddSingleton(typeof(IProgressAction<ProgressEventArgs>), sp =>
-        {
-            return sp.GetRequiredService<ConsoleProgressAction<ProgressEventArgs>>()
-                .SetReportProgress((progress, logger) =>
-                {
-                    var progressMessage = settings.BuildProgressMessage(progress);
-
-                    Console.WriteLine(progressMessage);
-                    logger.LogInformation(progressMessage);
-                });
-        });
 
         services
             .AddSingleton<EventAggregator>()
