@@ -6,7 +6,7 @@ param ()
 . ([ScriptBlock]::Create("using module $PSScriptRoot\BasicFileInfo.psm1"))
 . ([ScriptBlock]::Create("using module $PSScriptRoot\FileHashLookup.Impl.psm1"))
 
-$modules = Get-ChildItem $PSScriptRoot\*.psm1 -Recurse
+$modules = Get-ChildItem $PSScriptRoot\*.psm1 -Exclude "MyFileHashLookup.psm1"
 
 foreach ($module in $modules) {
 
