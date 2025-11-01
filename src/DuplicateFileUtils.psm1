@@ -2,11 +2,32 @@ using module '.\FileHashLookup.Impl.psm1'
 using module '.\BasicFileInfo.psm1'
 using namespace System.Collections.Generic
 
+<#
+    .SYNOPSIS
+    Allows finding duplicate files
+    
+    .DESCRIPTION
+    Finds duplicate entries by FileHash, Optionally pass a SortOrder for files to keep
+    Returns a structure per duplicate, containing the file to keep, and a list of duplicates of that entry.
+    
+    .PARAMETER FileHashLookup
+    The FileHashLookup to check for duplicates
+    
+    .PARAMETER SortExpression
+    ScriptBlock containing a sort expression, given an array of files as argument.
+    
+    .EXAMPLE
+
+    $duplicates = Get-Duplicates $myFileHashTable -SortExpression { param([IO.FileInfo[]] $files) $files | Sort-Object @{ Expression={$_.Directory.Name.Length }; Ascending=$true }  }
+
+    .EXAMPLE
+    Second Example
+#>
 Function Get-Duplicates {
   [CmdletBinding()]
   param(
     [Parameter(Mandatory,ValueFromPipeline, Position=0)]
-    [FileHashLookup] $fileHashLookup,
+    [FileHashLookup] $FileHashLookup,
     [Alias("SortBy")]
     [Parameter(Mandatory=$false)]
     [ScriptBlock] $SortExpression

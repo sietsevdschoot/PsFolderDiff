@@ -80,6 +80,11 @@ class BasicFileInfo : IComparable
         return $compare
     }    
 
+    [string] ToString() 
+    {
+      return $this.FullName
+    }
+
     static [IO.FileInfo] op_Implicit([BasicFileInfo] $instance) {
         
         return [IO.FileInfo] $instance.FullName
