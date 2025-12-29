@@ -35,7 +35,7 @@ Describe "DuplicateFileUtils" {
 
         $fileHashTable = GetFileHashTable $TestDrive
 
-        $actual = Get-Duplicates $fileHashTable -SortScriptBlock { param([IO.FileInfo[]] $files) $files | Sort-Object -prop @{ Expression={$_.FullName}; Descending=$true } } 
+        $actual = Get-Duplicates $fileHashTable -SortScriptBlock { param([IO.FileInfo[]] $files) $files | Sort-Object -prop @{ Expression={$_.FullName}; Descending=$true } }  
 
         $simplifiedActual = $actual | Select-Object `
             @{ Name="Keep"; Expression={$_.Keep.FullName} },
@@ -61,7 +61,7 @@ Describe "DuplicateFileUtils" {
 
         $simplifiedActual = $actual | Select-Object `
             @{ Name="Keep"; Expression={$_.Keep.FullName} },
-            @{ Name="Duplicates"; Expression={ [string[]](,@($_.Duplicates | ForEach-Object { $_.FullName })) } }
+            @{ Name="Duplicates"; Expression={ ,@($_.Duplicates | ForEach-Object { $_.FullName }) } }
 
         $simplifiedActual | Should -BeEquivalentTo @(
             [PsCustomObject]@{ Keep="$TestDrive\Folder4\4.txt"; Duplicates=@("$TestDrive\Folder3\3.txt", "$TestDrive\Folder2\2.txt", "$TestDrive\Folder1\1.txt") },

@@ -69,14 +69,14 @@ Function Get-Duplicates {
   
       if ($SortScriptBlock) {
 
-        $unsortedFiles = $entry.Value | ForEach-Object { [IO.FileInfo]$_ } 
+        $unsortedFiles = [IO.FileInfo[]]$entry.Value 
         
-        $files = ($SortScriptBlock.Invoke($unsortedFiles) | ForEach-Object{ [BasicFileInfo] $_ })
+        $files = ($SortScriptBlock.Invoke((,$unsortedFiles)) | ForEach-Object{ [BasicFileInfo]::new($_) })
 
       }
       elseif ($SortExpression) {
 
-        $unsortedFiles = $entry.Value | ForEach-Object { [IO.FileInfo]$_ } 
+        $unsortedFiles = [IO.FileInfo[]]$entry.Value 
 
         $files = $unsortedFiles | Sort-Object -Property $SortExpression
 
