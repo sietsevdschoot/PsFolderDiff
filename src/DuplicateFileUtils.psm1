@@ -1,3 +1,5 @@
+#Requires -Modules FileUtils
+
 using module '.\FileHashLookup.Impl.psm1'
 using module '.\BasicFileInfo.psm1'
 using namespace System.Collections.Generic
@@ -91,8 +93,25 @@ Function Get-Duplicates {
   END {
     
     Write-Progress @progressArgs -Completed
+
     $foundDuplicates
   }
+}
+
+Function Copy-Duplicates {
+  [CmdletBinding(SupportsShouldProcess)]
+  param(
+    [Parameter(Mandatory,ValueFromPipeline, Position=0)]
+    [DuplicateFileEntry] $DuplicateEntry,
+    [Parameter(Mandatory)]
+    [IO.DirectoryInfo] $Destination
+  )
+
+  PROCESS {
+
+    $DuplicateEntry.Duplicates | Copy-KeepExisting -Destination $Destination 
+  }
+
 }
 
 class DuplicateFileEntry 
@@ -113,3 +132,4 @@ class DuplicateFileEntry
 }
 
 Export-ModuleMember -Function Get-Duplicates
+Export-ModuleMember -Function Copy-Duplicates

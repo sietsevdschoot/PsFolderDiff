@@ -1,3 +1,4 @@
+using module '..\src\FileUtils.psm1'
 using module '..\src\DuplicateFileUtils.psm1'
 using module '..\src\FileHashLookup.Impl.psm1'
 using module '..\src\BasicFileInfo.psm1'
@@ -47,6 +48,7 @@ Describe "DuplicateFileUtils" {
             [PsCustomObject]@{ Keep="$TestDrive\Folder21\21.txt"; Duplicates=@("$TestDrive\Folder20\20.txt") }
         ) 
     }
+   
 
     It "Get-Duplicates: Can pass custom sort expressions - SortExpression" {
 
@@ -68,6 +70,31 @@ Describe "DuplicateFileUtils" {
             [PsCustomObject]@{ Keep="$TestDrive\Folder12\12.txt"; Duplicates=@("$TestDrive\Folder11\11.txt", "$TestDrive\Folder10\10.txt") },
             [PsCustomObject]@{ Keep="$TestDrive\Folder21\21.txt"; Duplicates=@("$TestDrive\Folder20\20.txt") }
         ) 
+    }
+
+    It "Copy-Duplicates: Copies all duplicate files, keeping folder structure" {
+
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
+        10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
+        20..21 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File C" -Force }
+        30..30 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File D" -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        $actual = Get-Duplicates $fileHashTable
+
+        $actual | Copy-Duplicates -Destination "$TestDrive\Duplicates"
+
+        Get-ChildItem "$TestDrive\Duplicates" -Recurse | Select-Object -exp FullName | Should -BeEquivalentTo @(
+            "$TestDrive\Duplicates\Folder2\2.txt",
+            "$TestDrive\Duplicates\Folder3\3.txt",
+            "$TestDrive\Duplicates\Folder4\4.txt",
+            "$TestDrive\Duplicates\Folder11\11.txt",
+            "$TestDrive\Duplicates\Folder12\12.txt",
+            "$TestDrive\Duplicates\Folder21\21.txt"
+        )
+
+        # Fix Copy-Duplicates matching Directory structure detection.
     }
 
     BeforeEach {
