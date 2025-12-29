@@ -7,7 +7,7 @@ using namespace System.Collections.Generic
     Allows finding duplicate files
     
     .DESCRIPTION
-    Finds duplicate entries by FileHash, Optionally pass a SortOrder for files to keep
+    Finds duplicate entries by FileHash, Optionally pass a SortOrder for files to keep, the default sort order is by FileName
     Returns a structure per duplicate, containing the file to keep, and a list of duplicates of that entry.
     
     .PARAMETER FileHashLookup
@@ -24,13 +24,15 @@ using namespace System.Collections.Generic
     Second Example
 #>
 Function Get-Duplicates {
-  [CmdletBinding()]
+  [CmdletBinding(DefaultParameterSetName="SortExpression")]
   param(
     [Parameter(Mandatory,ValueFromPipeline, Position=0)]
     [FileHashLookup] $FileHashLookup,
     [Alias("SortBy")]
-    [Parameter(Mandatory=$false)]
-    [ScriptBlock] $SortExpression
+    [Parameter(ParameterSetName="ScriptBlock")]
+    [ScriptBlock] $SortScriptBlock,
+    [Parameter(ParameterSetName="SortExpression")]
+    [PsCustomObject] $SortExpression
   ) 
 
   BEGIN {
@@ -65,18 +67,37 @@ Function Get-Duplicates {
         $sw.Restart()
       }
   
-      $files = $SortExpression `
-        ? ($SortExpression.Invoke((,@($entry.Value | ForEach-Object {[IO.FileInfo]$_}))) | ForEach-Object{ [BasicFileInfo] $_ })
-        : @($entry.Value | Sort-Object -prop FullName)
+      if ($SortScriptBlock) {
+
+        $unsortedFiles = $entry.Value | ForEach-Object { [IO.FileInfo]$_ } 
+        
+        $files = ($SortScriptBlock.Invoke($unsortedFiles) | ForEach-Object{ [BasicFileInfo] $_ })
+
+      }
+      elseif ($SortExpression) {
+
+        $unsortedFiles = $entry.Value | ForEach-Object { [IO.FileInfo]$_ } 
+
+        $files = $unsortedFiles | Sort-Object -Property $SortExpression
+
+      }
+      else {
       
-      $foundDuplicates.Add([PsCustomObject] @{ 
+        $files = @($entry.Value | Sort-Object -prop FullName)  
+      }
+
+      $newEntry = [PsCustomObject] @{ 
         Keep = ($files | Select-Object -First 1);
-        Duplicates = (,@($files | Select-Object -Skip 1));
-      })
+        Duplicates = @($files | Select-Object -Skip 1);
+      }
+
+      $foundDuplicates.Add($newEntry)
     }
   }
 
   END {
+    
+    Write-Progress @progressArgs -Completed
     $foundDuplicates
   }
 }

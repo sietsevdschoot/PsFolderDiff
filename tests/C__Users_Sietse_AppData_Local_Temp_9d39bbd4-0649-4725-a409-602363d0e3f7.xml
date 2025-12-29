@@ -1,0 +1,342 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>FileHashLookup</T>
+      <T>System.Object</T>
+    </TN>
+    <ToString>_x000A_FileHashTable contains 10 files (0 Mb)._x000A__x000A_Monitored Folders: _x000A__x000A_  &gt; C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7_x000D__x000A__x000A_Last saved: C:\Development\Github\PsFolderDiff\tests\C__Users_Sietse_AppData_Local_Temp_9d39bbd4-0649-4725-a409-602363d0e3f7.xml_x000D__x000A__x000A_Last updated: 22-12-2025 21:44:29_x000A__x000D__x000A_</ToString>
+    <Props>
+      <Obj N="File" RefId="1">
+        <TN RefId="1">
+          <T>System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[BasicFileInfo, PowerShell Class Assembly, Version=1.0.0.3, Culture=neutral, PublicKeyToken=null]]</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder1\1.txt</S>
+            <Obj N="Value" RefId="2">
+              <TN RefId="2">
+                <T>BasicFileInfo</T>
+                <T>System.Object</T>
+              </TN>
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder1\1.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder1\1.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1819163+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1819163+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="3">
+                  <TN RefId="3">
+                    <T>System.String[]</T>
+                    <T>System.Array</T>
+                    <T>System.Object</T>
+                  </TN>
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </Props>
+              <MS>
+                <S N="Hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder10\10.txt</S>
+            <Obj N="Value" RefId="4">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder10\10.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder10\10.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1849182+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1849182+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="5">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+              </Props>
+              <MS>
+                <S N="Hash">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder11\11.txt</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder11\11.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder11\11.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1859169+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1859169+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="7">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+              </Props>
+              <MS>
+                <S N="Hash">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder12\12.txt</S>
+            <Obj N="Value" RefId="8">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder12\12.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder12\12.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1859169+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1859169+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="9">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+              </Props>
+              <MS>
+                <S N="Hash">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder2\2.txt</S>
+            <Obj N="Value" RefId="10">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder2\2.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder2\2.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1829177+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1829177+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="11">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </Props>
+              <MS>
+                <S N="Hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder20\20.txt</S>
+            <Obj N="Value" RefId="12">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder20\20.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder20\20.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1869182+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1879189+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="13">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">5D0FAAD6DFC45C7AEEAC1E5BD2A5657C</S>
+              </Props>
+              <MS>
+                <S N="Hash">5D0FAAD6DFC45C7AEEAC1E5BD2A5657C</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder21\21.txt</S>
+            <Obj N="Value" RefId="14">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder21\21.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder21\21.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1879189+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1879189+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="15">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">5D0FAAD6DFC45C7AEEAC1E5BD2A5657C</S>
+              </Props>
+              <MS>
+                <S N="Hash">5D0FAAD6DFC45C7AEEAC1E5BD2A5657C</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder3\3.txt</S>
+            <Obj N="Value" RefId="16">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder3\3.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder3\3.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1829177+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1829177+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="17">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </Props>
+              <MS>
+                <S N="Hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder30\30.txt</S>
+            <Obj N="Value" RefId="18">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder30\30.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder30\30.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1889181+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1889181+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="19">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">77B0F96603D3AB3C57CF8E59292D39C5</S>
+              </Props>
+              <MS>
+                <S N="Hash">77B0F96603D3AB3C57CF8E59292D39C5</S>
+              </MS>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder4\4.txt</S>
+            <Obj N="Value" RefId="20">
+              <TNRef RefId="2" />
+              <ToString>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder4\4.txt</ToString>
+              <Props>
+                <S N="FullName">C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7\Folder4\4.txt</S>
+                <DT N="CreationTime">2025-12-22T21:44:29.1839173+01:00</DT>
+                <DT N="LastWriteTime">2025-12-22T21:44:29.1839173+01:00</DT>
+                <I64 N="Length">6</I64>
+                <Obj N="_validTypes" RefId="21">
+                  <TNRef RefId="3" />
+                  <LST>
+                    <S>FileInfo</S>
+                    <S>BasicFileInfo</S>
+                  </LST>
+                </Obj>
+                <S N="_hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </Props>
+              <MS>
+                <S N="Hash">409113AF37CA03DB453EE3E793FCF64D</S>
+              </MS>
+            </Obj>
+          </En>
+        </DCT>
+      </Obj>
+      <Obj N="Hash" RefId="22">
+        <TN RefId="4">
+          <T>System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.List`1[[BasicFileInfo, PowerShell Class Assembly, Version=1.0.0.3, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">409113AF37CA03DB453EE3E793FCF64D</S>
+            <Obj N="Value" RefId="23">
+              <TN RefId="5">
+                <T>System.Collections.Generic.List`1[[BasicFileInfo, PowerShell Class Assembly, Version=1.0.0.3, Culture=neutral, PublicKeyToken=null]]</T>
+                <T>System.Object</T>
+              </TN>
+              <LST>
+                <Ref RefId="2" />
+                <Ref RefId="10" />
+                <Ref RefId="16" />
+                <Ref RefId="20" />
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">C4CCBDF7EFE5E2844AD758B10D25ED07</S>
+            <Obj N="Value" RefId="24">
+              <TNRef RefId="5" />
+              <LST>
+                <Ref RefId="4" />
+                <Ref RefId="6" />
+                <Ref RefId="8" />
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">5D0FAAD6DFC45C7AEEAC1E5BD2A5657C</S>
+            <Obj N="Value" RefId="25">
+              <TNRef RefId="5" />
+              <LST>
+                <Ref RefId="12" />
+                <Ref RefId="14" />
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">77B0F96603D3AB3C57CF8E59292D39C5</S>
+            <Obj N="Value" RefId="26">
+              <TNRef RefId="5" />
+              <LST>
+                <Ref RefId="18" />
+              </LST>
+            </Obj>
+          </En>
+        </DCT>
+      </Obj>
+      <Obj N="Paths" RefId="27">
+        <TN RefId="6">
+          <T>System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>C:\Users\Sietse\AppData\Local\Temp\9d39bbd4-0649-4725-a409-602363d0e3f7</S>
+        </LST>
+      </Obj>
+      <Obj N="ExcludedFilePatterns" RefId="28">
+        <TNRef RefId="6" />
+        <LST />
+      </Obj>
+      <Obj N="IncludedFilePatterns" RefId="29">
+        <TNRef RefId="6" />
+        <LST />
+      </Obj>
+      <Obj N="ExcludedFolders" RefId="30">
+        <TNRef RefId="6" />
+        <LST />
+      </Obj>
+      <DT N="LastUpdated">2025-12-22T21:44:29.2514474+01:00</DT>
+      <S N="SavedAsFile">C:\Development\Github\PsFolderDiff\tests\C__Users_Sietse_AppData_Local_Temp_9d39bbd4-0649-4725-a409-602363d0e3f7.xml</S>
+    </Props>
+  </Obj>
+</Objs>
