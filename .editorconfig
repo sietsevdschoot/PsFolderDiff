@@ -1,0 +1,31 @@
+root = true
+# EditorConfig is awesome: http://EditorConfig.org
+
+# derived from: https://raw.githubusercontent.com/PowerShell/PowerShell/refs/heads/master/.editorconfig
+# derived from: https://raw.githubusercontent.com/PowerShell/PowerShell/refs/heads/master/.editorconfig
+
+
+# top-most EditorConfig file
+
+# Global settings
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Source code
+[*.{cs,ps1,psd1,psm1}]
+indent_size = 4
+
+# Xml project files
+[*.{csproj,resx,ps1xml}]
+indent_size = 2
+
+# Data serialization
+[*.{json,yaml,yml}]
+indent_size = 2
+
+# Markdown
+[*.md]
+indent_size = 2
