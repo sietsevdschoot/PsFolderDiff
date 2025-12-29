@@ -24,8 +24,6 @@ Describe "FileUtils" {
 
         1..3 | ForEach-Object { New-Item -ItemType File Testdrive:\MyFolder\$_.txt -Value "My Test Value $_" -Force }
         Set-Location $TestDrive
-
-        $VerbosePreference = 'Continue'
     }
 
     AfterEach {

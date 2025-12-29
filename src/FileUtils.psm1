@@ -24,8 +24,7 @@
 
         $firstMatchingExistingFolder = $fileParentFolders | Where-Object { Test-Path (Join-Path $destinationPath $_) } | Select-Object -First 1
 
-        if ($destinationPath.FullName -eq $file.Directory.FullName)
-        {
+        if ($destinationPath.FullName -eq $file.Directory.FullName) {
             $destinationFolder = $destinationPath
         }
         elseif ($firstMatchingExistingFolder) {
@@ -34,12 +33,12 @@
         }
         else {
 
-            $destinationFolder  = [IO.Path]::Combine([string[]](,$destinationPath.Root.ToString() + ,$destinationParentFolders + ,$fileParentFolders | ForEach-Object { $_ } | Select-Object -Unique))
+            $destinationFolder = [IO.Path]::Combine([string[]](, $destinationPath.Root.ToString() + , $destinationParentFolders + , $fileParentFolders | ForEach-Object { $_ } | Select-Object -Unique))
 
         }
 
 
-        Internal-Copy-KeepExisting -file $file -destinationPath $destinationFolder
+        Copy-InternalFileCopyKeepExisting -file $file -destinationPath $destinationFolder
     }
 }
 
@@ -73,7 +72,7 @@ function Copy-FolderKeepExisting {
 
             $fileDestinationFolder = (Join-Path $destinationFolder ($file.Directory.FullName -replace [regex]::Escape($folder.FullName)).TrimStart([IO.Path]::DirectorySeparatorChar))
 
-            Internal-Copy-KeepExisting -file $file -destinationPath $fileDestinationFolder
+            Copy-InternalFileCopyKeepExisting -file $file -destinationPath $fileDestinationFolder
         }
     }
 }
@@ -136,8 +135,8 @@ function Move-KeepExisting {
     }
 }
 
-Function Internal-Copy-KeepExisting {
-    [Cmdletbinding(SupportsShouldProcess)]
+Function Copy-InternalFileCopyKeepExisting {
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Position = 0, Mandatory)]
         [IO.FileInfo]$file,
@@ -145,45 +144,54 @@ Function Internal-Copy-KeepExisting {
         [IO.DirectoryInfo] $destinationPath
     )
 
-    if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
-    if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    BEGIN {
 
-    $destinationFile = [IO.FileInfo](Join-Path $destinationPath $file.Name)
 
-    if ($PSCmdlet.ShouldProcess("`n    $($file.FullName) `n    $($destinationFile.FullName)", "Copy-KeepExisting")) {
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
 
-        if (!(Test-Path $destinationFile.Directory)) {
+    PROCESS {
 
-            New-Item -ItemType Directory $destinationFile.Directory -Force -Verbose:$false > $null
-        }
+        $destinationFile = [IO.FileInfo](Join-Path $destinationPath $file.Name)
 
-        if (!(Test-Path $destinationFile)) {
+        if ($PSCmdlet.ShouldProcess("`n    $($file.FullName) `n    $($destinationFile.FullName)", "Copy-KeepExisting")) {
 
-            Copy-Item -Path $file.FullName -Destination $destinationFile -Force -Verbose:($verbosePreference -eq 'Continue')
-        }
-        else {
+            if (!(Test-Path $destinationFile.Directory)) {
 
-            $i = 1
-
-            do {
-
-                if ($i -eq 1) {
-
-                    $destinationFile = ("{0} - Copy{1}" -f (Join-Path $destinationPath ($file.Name -replace $file.Extension)), $file.Extension)
-
-                }
-                else {
-
-                    $destinationFile = ("{0} - Copy ({1}){2}" -f (Join-Path $destinationPath ($file.Name -replace $file.Extension)), $i, $file.Extension)
-                }
-
-                $i += 1
+                New-Item -ItemType Directory $destinationFile.Directory -Force -Verbose:$false > $null
             }
-            while (Test-Path $destinationFile)
 
-            Copy-Item -Path $file.FullName -Destination $destinationFile -Force -Verbose:($verbosePreference -eq 'Continue')
+            if (!(Test-Path $destinationFile)) {
+
+                Copy-Item -Path $file.FullName -Destination $destinationFile -Force -Verbose:($verbosePreference -eq 'Continue')
+            }
+            else {
+
+                $i = 1
+
+                do {
+
+                    if ($i -eq 1) {
+
+                        $destinationFile = ("{0} - Copy{1}" -f (Join-Path $destinationPath ($file.Name -replace $file.Extension)), $file.Extension)
+
+                    }
+                    else {
+
+                        $destinationFile = ("{0} - Copy ({1}){2}" -f (Join-Path $destinationPath ($file.Name -replace $file.Extension)), $i, $file.Extension)
+                    }
+
+                    $i += 1
+                }
+                while (Test-Path $destinationFile)
+
+                Copy-Item -Path $file.FullName -Destination $destinationFile -Force -Verbose:($verbosePreference -eq 'Continue')
+            }
         }
     }
+
+
 }
 
 Function Remove-EmptyFolders {

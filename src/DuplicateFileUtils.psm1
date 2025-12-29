@@ -1,8 +1,10 @@
-#Requires -Modules FileUtils
-
 using module '.\FileHashLookup.Impl.psm1'
 using module '.\BasicFileInfo.psm1'
 using namespace System.Collections.Generic
+
+if (!(Get-Module FileUtils)) {
+    Import-Module $PSScriptRoot\FileUtils.psm1 -Force
+}
 
 <#
     .SYNOPSIS
