@@ -59,7 +59,7 @@ Describe "DuplicateFileUtils" {
         )
     }
 
-    It "Copy-Duplicates: Copies all duplicate files, keeping folder structure" -skip {
+    It "Copy-Duplicates: Copies all duplicate files, keeping folder structure" {
 
         1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
         10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
@@ -68,11 +68,9 @@ Describe "DuplicateFileUtils" {
 
         $fileHashTable = GetFileHashTable $TestDrive
 
-        $actual = Get-Duplicates $fileHashTable
+        $actual = Get-Duplicates $fileHashTable | Copy-Duplicates -Destination "$TestDrive\Duplicates" -PassThru
 
-        $actual | Copy-Duplicates -Destination "$TestDrive\Duplicates"
-
-        Get-ChildItem "$TestDrive\Duplicates" -Recurse | Select-Object -exp FullName | Should -BeEquivalentTo @(
+        Get-ChildItem "$TestDrive\Duplicates" -Recurse -File | Select-Object -exp FullName | Should -BeEquivalentTo @(
             "$TestDrive\Duplicates\Folder2\2.txt",
             "$TestDrive\Duplicates\Folder3\3.txt",
             "$TestDrive\Duplicates\Folder4\4.txt",
@@ -80,8 +78,6 @@ Describe "DuplicateFileUtils" {
             "$TestDrive\Duplicates\Folder12\12.txt",
             "$TestDrive\Duplicates\Folder21\21.txt"
         )
-
-        # Fix Copy-Duplicates matching Directory structure detection.
     }
 
     BeforeEach {
