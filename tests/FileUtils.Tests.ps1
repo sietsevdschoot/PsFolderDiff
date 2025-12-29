@@ -48,7 +48,7 @@ Describe "FileUtils" {
         
         "$Testdrive\MyDocuments\SubFolder\MyInvoice.doc" | Should -Exist
     }
-    
+ 
     It "CopyFolder-KeepExisting: Copies folder to targetFolder" {
     
         New-Item -ItemType File "$Testdrive\backup\MyDocuments2015\Administration\Invoices\MyInvoice.doc" -Force
@@ -68,22 +68,35 @@ Describe "FileUtils" {
         $filenames = Get-ChildItem "$Testdrive\MyFolder\test - Copy*.txt" | Foreach-Object { $_.Name -replace $_.Extension } | Sort-Object
         $filenames | Should -Be @("test - Copy", "test - Copy (2)", "test - Copy (3)")
     }
+
+    It "Copy-KeepExisting: skips creation of parent folder" {
     
-    # Path matching examples:
+        $file = New-Item -ItemType File "$Testdrive\Folder1\1.txt" -Force
+        New-Item -ItemType Directory $Testdrive\Destination -Force
+    
+        $file | Copy-KeepExisting -dest $Testdrive\destination -verbose
+        
+        "$Testdrive\Destination\Folder1\1.txt" | Should -Exist
+    }
  
+    # Path matching examples:
+
+    # File:   $Testdrive\Folder1\1.txt
+    # Dest:   $Testdrive\Destination\
+    
+    # Result: $Testdrive\Destination\Folder1\1.txt
+
     # Given:  $Testdrive\MyDocuments\administration\Invoices
     # File:   $Testdrive\backup\MyDocuments2015\Administration\Invoices\MyInvoice.doc
     # Dest:   $Testdrive\MyDocuments\
     
     # Result: $Testdrive\MyDocuments\Administration\Invoices\MyInvoice.doc
 
-
     # Given:  $Testdrive\MyDocuments\administration\Invoices
     # File:   $Testdrive\backup\MyDocuments2015\Administration\Registrations\MyRegistration.doc
     # Dest:   $Testdrive\MyDocuments\
     
     # Result: $Testdrive\MyDocuments\Administration\Registrations\MyRegistration.doc
-
 
     # Given:  $Testdrive\MyDocuments\Administration\Invoices
     # File:   $Testdrive\backup\mp3\somesong.mp3
