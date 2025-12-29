@@ -41,7 +41,7 @@ Function Get-Duplicates {
     
     $sw = [Diagnostics.Stopwatch]::StartNew()
 
-    $foundDuplicates = [List[PsCustomObject]]@()
+    $foundDuplicates = [List[DuplicateFileEntry]]@()
   }
 
   PROCESS {
@@ -82,10 +82,7 @@ Function Get-Duplicates {
         $files = @($entry.Value | Sort-Object -prop FullName)  
       }
 
-      $newEntry = [PsCustomObject] @{ 
-        Keep = ($files | Select-Object -First 1);
-        Duplicates = @($files | Select-Object -Skip 1);
-      }
+      $newEntry = [DuplicateFileEntry]::new($files)
 
       $foundDuplicates.Add($newEntry)
     }
@@ -96,6 +93,23 @@ Function Get-Duplicates {
     Write-Progress @progressArgs -Completed
     $foundDuplicates
   }
+}
+
+class DuplicateFileEntry 
+{
+  DuplicateFileEntry([IO.FileInfo[]] $files)
+  {
+    if ($files.Count -lt 2) {
+        Throw "At least two files are required to create a DuplicateFileEntry"
+    }
+
+    $this.Keep = ($files | Select-Object -First 1)
+    $this.Duplicates = @($files | Select-Object -Skip 1)
+  }
+
+  [IO.FileInfo] $Keep
+  [IO.FileInfo[]] $Duplicates
+
 }
 
 Export-ModuleMember -Function Get-Duplicates
