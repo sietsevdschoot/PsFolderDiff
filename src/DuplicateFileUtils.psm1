@@ -21,122 +21,181 @@ if (!(Get-Module FileUtils)) {
     ScriptBlock containing a sort expression, given an array of files as argument.
 
     .EXAMPLE
-
     $duplicates = Get-Duplicates $myFileHashTable -SortExpression { param([IO.FileInfo[]] $files) $files | Sort-Object @{ Expression={$_.Directory.Name.Length }; Ascending=$true }  }
 
     .EXAMPLE
     Second Example
 #>
 Function Get-Duplicates {
-  [CmdletBinding(DefaultParameterSetName="SortExpression")]
-  param(
-    [Parameter(Mandatory,ValueFromPipeline, Position=0)]
-    [FileHashLookup] $FileHashLookup,
-    [Alias("SortBy")]
-    [Parameter(ParameterSetName="ScriptBlock")]
-    [ScriptBlock] $SortScriptBlock,
-    [Parameter(ParameterSetName="SortExpression")]
-    [PsCustomObject] $SortExpression
-  )
+    [CmdletBinding(DefaultParameterSetName = "SortExpression")]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
+        [FileHashLookup] $FileHashLookup,
+        [Alias("SortBy")]
+        [Parameter(ParameterSetName = "ScriptBlock")]
+        [ScriptBlock] $SortScriptBlock,
+        [Parameter(ParameterSetName = "SortExpression")]
+        [PsCustomObject] $SortExpression
+    )
 
-  BEGIN {
+    BEGIN {
 
-    if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
 
-    $sw = [Diagnostics.Stopwatch]::StartNew()
+        $sw = [Diagnostics.Stopwatch]::StartNew()
 
-    $foundDuplicates = [List[DuplicateFileEntry]]@()
-  }
-
-  PROCESS {
-
-    $progressArgs = @{
-      Activity = "Find duplicates.";
-      Status = "[1 / 2] Selecting Duplicates"
+        $foundDuplicates = [List[DuplicateFileEntry]]@()
     }
 
-    Write-Progress @progressArgs
+    PROCESS {
 
-    $duplicateHashEntries = $fileHashLookup.Hash.GetEnumerator() | Where-Object{ @($_.Value).Count -gt 1 }
+        $progressArgs = @{
+            Activity = "Find duplicates.";
+            Status   = "[1 / 2] Selecting Duplicates"
+        }
 
-    for($i = 0; $i -lt $duplicateHashEntries.Count; $i++) {
-
-      $entry = $duplicateHashEntries[$i]
-
-      if ($sw.ElapsedMilliseconds -ge 500) {
-
-        $progressArgs.('Status') = "[2 / 2] Sorting duplicates and selecting items to keep. ($i of $($duplicateHashEntries.Count)) $($entry[0].FullName)"
-        $progressArgs.('PercentComplete') = $i / $duplicateHashEntries.Count * 100
         Write-Progress @progressArgs
-        $sw.Restart()
-      }
 
-      if ($SortScriptBlock) {
+        $duplicateHashEntries = $fileHashLookup.Hash.GetEnumerator() | Where-Object { @($_.Value).Count -gt 1 }
 
-        $files = ($SortScriptBlock.Invoke((,$entry.Value)) | ForEach-Object{ [BasicFileInfo]$_ })
+        for ($i = 0; $i -lt $duplicateHashEntries.Count; $i++) {
 
-      }
-      elseif ($SortExpression) {
+            $entry = $duplicateHashEntries[$i]
 
-        $files = $entry.Value | Sort-Object -Property $SortExpression
+            if ($sw.ElapsedMilliseconds -ge 500) {
 
-      }
-      else {
+                $progressArgs.('Status') = "[2 / 2] Sorting duplicates and selecting items to keep. ($i of $($duplicateHashEntries.Count)) $($entry[0].FullName)"
+                $progressArgs.('PercentComplete') = $i / $duplicateHashEntries.Count * 100
+                Write-Progress @progressArgs
+                $sw.Restart()
+            }
 
-        $files = @($entry.Value | Sort-Object -prop FullName)
-      }
+            if ($SortScriptBlock) {
 
-      $newEntry = [DuplicateFileEntry]::new($files)
+                $files = ($SortScriptBlock.Invoke((, $entry.Value)) | ForEach-Object { [BasicFileInfo]$_ })
 
-      $foundDuplicates.Add($newEntry)
+            }
+            elseif ($SortExpression) {
+
+                $files = $entry.Value | Sort-Object -Property $SortExpression
+
+            }
+            else {
+
+                $files = @($entry.Value | Sort-Object -prop FullName)
+            }
+
+            $newEntry = [DuplicateFileEntry]::new($files)
+
+            $foundDuplicates.Add($newEntry)
+        }
     }
-  }
 
-  END {
+    END {
 
-    Write-Progress @progressArgs -Completed
+        Write-Progress @progressArgs -Completed
 
-    $foundDuplicates
-  }
+        $foundDuplicates
+    }
 }
 
+# ShouldProcess is propagated downstream.
 Function Copy-Duplicates {
-  [CmdletBinding(SupportsShouldProcess)]
-  param(
-    [Parameter(Mandatory,ValueFromPipeline, Position=0)]
-    [DuplicateFileEntry] $DuplicateEntry,
-    [Parameter(Mandatory)]
-    [IO.DirectoryInfo] $Destination,
-    [Switch] $PassThru
-  )
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
+        [DuplicateFileEntry] $DuplicateEntry,
+        [Parameter(Mandatory)]
+        [IO.DirectoryInfo] $Destination,
+        [Switch] $PassThru
+    )
 
-  PROCESS {
+    BEGIN {
 
-    $DuplicateEntry.Duplicates | Copy-KeepExisting -Destination $Destination
-
-    if ($PassThru) {
-        $DuplicateEntry
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
     }
-  }
 
+    PROCESS {
+
+        $DuplicateEntry.Duplicates | Copy-KeepExisting -Destination $Destination
+
+        if ($PassThru) {
+            $DuplicateEntry
+        }
+    }
 }
 
-class DuplicateFileEntry
-{
-  DuplicateFileEntry([IO.FileInfo[]] $files)
-  {
-    if ($files.Count -lt 2) {
-        Throw "At least two files are required to create a DuplicateFileEntry"
+# ShouldProcess is propagated downstream.
+Function Move-Duplicates {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
+        [DuplicateFileEntry] $DuplicateEntry,
+        [Parameter(Mandatory)]
+        [IO.DirectoryInfo] $Destination,
+        [Switch] $PassThru
+    )
+
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
     }
 
-    $this.Keep = ($files | Select-Object -First 1)
-    $this.Duplicates = @($files | Select-Object -Skip 1)
-  }
+    PROCESS {
 
-  [IO.FileInfo] $Keep
-  [IO.FileInfo[]] $Duplicates
+        $DuplicateEntry.Duplicates | Move-KeepExisting -Destination $Destination
+
+        if ($PassThru) {
+            $DuplicateEntry
+        }
+    }
+}
+
+# ShouldProcess is propagated downstream.
+Function Remove-Duplicates {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
+        [DuplicateFileEntry] $DuplicateEntry,
+        [Switch] $PassThru
+    )
+
+    BEGIN {
+
+        if (!$PSBoundParameters.ContainsKey('Verbose')) { $VerbosePreference = $PSCmdlet.GetVariableValue('VerbosePreference') }
+        if (!$PSBoundParameters.ContainsKey('WhatIf')) { $WhatIfPreference = $PSCmdlet.GetVariableValue('WhatIfPreference') }
+    }
+
+    PROCESS {
+
+        $DuplicateEntry.Duplicates | ForEach-Object { $_ | Remove-Item }
+
+        if ($PassThru) {
+            $DuplicateEntry
+        }
+    }
+}
+
+
+
+class DuplicateFileEntry {
+    DuplicateFileEntry([IO.FileInfo[]] $files) {
+        if ($files.Count -lt 2) {
+            Throw "At least two files are required to create a DuplicateFileEntry"
+        }
+
+        $this.Keep = ($files | Select-Object -First 1)
+        $this.Duplicates = @($files | Select-Object -Skip 1)
+    }
+
+    [IO.FileInfo] $Keep
+    [IO.FileInfo[]] $Duplicates
 
 }
 
 Export-ModuleMember -Function Get-Duplicates
 Export-ModuleMember -Function Copy-Duplicates
+Export-ModuleMember -Function Move-Duplicates
+Export-ModuleMember -Function Remove-Duplicates

@@ -108,7 +108,7 @@ function Move-FolderKeepExisting {
 
 function Move-KeepExisting {
 
-    [cmdletbinding(SupportsShouldProcess)]
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [Alias('FullName')]
@@ -130,7 +130,7 @@ function Move-KeepExisting {
 
         if ((Test-Path $file.FullName)) {
 
-            $file | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose:($verbosePreference -eq 'Continue')
+            $file | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose:($verbosePreference -eq 'Continue') -WhatIf:$WhatIfPreference
         }
     }
 }

@@ -80,6 +80,90 @@ Describe "DuplicateFileUtils" {
         )
     }
 
+    It "Copy-Duplicates: Copies all duplicate files, keeping folder structure - Supports -WhatIf" {
+
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
+        10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
+        20..21 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File C" -Force }
+        30..30 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File D" -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        Get-Duplicates $fileHashTable | Copy-Duplicates -Destination "$TestDrive\Duplicates" -WhatIf
+
+        "$TestDrive\Duplicates" | Should -Not -Exist
+    }
+
+    It "Move-Duplicates: Moves all duplicate files, keeping folder structure" {
+
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
+        10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
+        20..21 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File C" -Force }
+        30..30 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File D" -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        Get-Duplicates $fileHashTable | Move-Duplicates -Destination "$TestDrive\Duplicates"
+
+        Get-ChildItem "$TestDrive\Duplicates" -Recurse -File | Select-Object -exp FullName | Should -BeEquivalentTo @(
+            "$TestDrive\Duplicates\Folder2\2.txt",
+            "$TestDrive\Duplicates\Folder3\3.txt",
+            "$TestDrive\Duplicates\Folder4\4.txt",
+            "$TestDrive\Duplicates\Folder11\11.txt",
+            "$TestDrive\Duplicates\Folder12\12.txt",
+            "$TestDrive\Duplicates\Folder21\21.txt"
+        )
+
+        Get-ChildItem "$TestDrive\File*" -File -Recurse | Should -BeNullOrEmpty
+    }
+
+    It "Move-Duplicates: Moves all duplicate files, keeping folder structure - Supports -WhatIf" {
+
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
+        10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
+        20..21 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File C" -Force }
+        30..30 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File D" -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        Get-Duplicates $fileHashTable | Move-Duplicates -Destination "$TestDrive\Duplicates" -WhatIf
+
+        "$TestDrive\Duplicates" | Should -Not -Exist
+
+        Get-ChildItem "$TestDrive\Folder*" -File -Recurse | Should -BeNullOrEmpty
+    }
+
+    It "Remove-Duplicates: Deletes all duplicate files" {
+
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
+        10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
+        20..21 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File C" -Force }
+        30..30 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File D" -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        $duplicates = Get-Duplicates $fileHashTable | Remove-Duplicates -PassThru
+
+        $duplicates | ForEach-Object{ $_.Keep | Should -Exist }
+        $duplicates | ForEach-Object { $_.Duplicates } | ForEach-Object { $_ | Should -Not -Exist }
+    }
+
+    It "Remove-Duplicates: Deletes all duplicate files - Supports -WhatIf" {
+
+        1..4 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File A" -Force }
+        10..12 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File B" -Force }
+        20..21 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File C" -Force }
+        30..30 | ForEach-Object { New-Item -ItemType File "$TestDrive\Folder$_\$_.txt" -Value "File D" -Force }
+
+        $fileHashTable = GetFileHashTable $TestDrive
+
+        $duplicates = Get-Duplicates $fileHashTable | Remove-Duplicates -PassThru -WhatIf
+
+        $duplicates | ForEach-Object{ $_.Keep | Should -Exist }
+        $duplicates | ForEach-Object { $_.Duplicates } | ForEach-Object { $_ | Should -Exist }
+    }
+
+
     BeforeEach {
 
         Set-Location $TestDrive
